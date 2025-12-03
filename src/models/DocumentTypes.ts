@@ -1,0 +1,45 @@
+/**
+ * Types related to OpenAPI documents
+ */
+
+import { Document } from '@apicurio/data-models';
+
+/**
+ * Represents the state of an OpenAPI document in the editor
+ */
+export interface DocumentState {
+    /**
+     * The parsed OpenAPI document (from apicurio-data-models)
+     */
+    document: Document | null;
+
+    /**
+     * The original content as provided to the editor
+     */
+    originalContent: object | null;
+
+    /**
+     * Whether the document has been modified since loading
+     */
+    isDirty: boolean;
+
+    /**
+     * Loading state
+     */
+    isLoading: boolean;
+
+    /**
+     * Error state if document failed to load/parse
+     */
+    error: string | null;
+}
+
+/**
+ * Validation problem from the data-models library
+ */
+export interface ValidationProblem {
+    code: string;
+    message: string;
+    severity: 'error' | 'warning' | 'info';
+    nodePath: string;
+}

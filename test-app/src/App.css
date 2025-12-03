@@ -1,0 +1,39 @@
+.app {
+    width: 100%;
+}
+
+.app-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.app-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.app-header p {
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.app-main {
+    margin: 2rem 0;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 400px;
+}
+
+.app-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+}

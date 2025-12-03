@@ -4,23 +4,24 @@
 
 import React from 'react';
 import { OpenAPIEditorProps } from '@models/EditorProps';
+import { EditorProvider } from '@services/EditorContext';
+import { OpenAPIEditorContent } from './OpenAPIEditorContent';
 
 /**
  * The main OpenAPI Editor component.
  * This is a reusable React component for visual OpenAPI editing.
+ *
+ * This component wraps the editor content with the EditorProvider to make
+ * all services available via context.
  */
-export const OpenAPIEditor: React.FC<OpenAPIEditorProps> = ({ initialContent }) => {
+export const OpenAPIEditor: React.FC<OpenAPIEditorProps> = ({ initialContent, onChange, features }) => {
     return (
-        <div className="apicurio-openapi-editor">
-            <h1>Apicurio OpenAPI Editor</h1>
-            <p>Initial implementation in progress...</p>
-            {initialContent && (
-                <pre>
-                    {typeof initialContent === 'string'
-                        ? initialContent
-                        : JSON.stringify(initialContent, null, 2)}
-                </pre>
-            )}
-        </div>
+        <EditorProvider>
+            <OpenAPIEditorContent
+                initialContent={initialContent}
+                onChange={onChange}
+                features={features}
+            />
+        </EditorProvider>
     );
 };
