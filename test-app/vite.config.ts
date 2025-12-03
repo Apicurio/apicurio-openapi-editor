@@ -16,7 +16,14 @@ export default defineConfig({
             '@models': resolve(__dirname, '../src/models'),
             '@commands': resolve(__dirname, '../src/commands'),
             '@utils': resolve(__dirname, '../src/utils'),
+            // Force all React imports to resolve to test-app's node_modules
+            // This prevents multiple React instances when importing from parent src
+            'react': resolve(__dirname, './node_modules/react'),
+            'react-dom': resolve(__dirname, './node_modules/react-dom'),
+            'react/jsx-runtime': resolve(__dirname, './node_modules/react/jsx-runtime'),
+            'zustand': resolve(__dirname, './node_modules/zustand'),
         },
+        dedupe: ['react', 'react-dom', 'zustand'],
     },
     server: {
         port: 3000,
