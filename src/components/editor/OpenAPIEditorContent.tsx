@@ -29,31 +29,36 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     initialContent,
     onChange,
 }) => {
-    const { document, loadDocument, toObject } = useDocument();
+    const { document, isDirty, loadDocument, toObject } = useDocument();
     const { canUndo, canRedo, undo, redo } = useCommand();
     const { selectRoot } = useSelection();
 
     /**
-     * Load initial content when component mounts
+     * Load initial content when component mounts (only once)
      */
     useEffect(() => {
         if (initialContent) {
             loadDocument(initialContent);
             selectRoot();
         }
-    }, [initialContent]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run once on mount
 
     /**
-     * Notify parent when document changes
+     * Notify parent when document changes (but not on initial load)
+     * We use isDirty to track if the document has been modified by user actions
      */
     useEffect(() => {
-        if (document && onChange) {
+        // Only call onChange if the document is dirty (has been modified)
+        // This prevents infinite loops from initial document load
+        if (document && isDirty && onChange) {
             const obj = toObject();
             if (obj) {
                 onChange(obj);
             }
         }
-    }, [document, onChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [document, isDirty]); // Don't include onChange to avoid re-firing on prop change
 
     /**
      * Handle undo button click
