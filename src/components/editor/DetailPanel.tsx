@@ -6,6 +6,7 @@ import React from 'react';
 import { useSelection } from '@hooks/useSelection';
 import { MainForm } from '@components/forms/MainForm';
 import { PathForm } from '@components/forms/PathForm';
+import { OperationForm } from '@components/forms/OperationForm';
 
 /**
  * Detail panel component
@@ -27,6 +28,8 @@ export const DetailPanel: React.FC = () => {
         switch (selectedType) {
             case 'path':
                 return <PathForm />;
+            case 'operation':
+                return <OperationForm />;
             case 'schema':
                 return <div>Schema form coming soon...</div>;
             case 'info':

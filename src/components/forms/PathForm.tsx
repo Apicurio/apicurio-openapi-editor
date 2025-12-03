@@ -13,6 +13,7 @@ import {
     List,
     ListItem,
     Badge,
+    Button,
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
@@ -28,7 +29,7 @@ const DEBOUNCE_DELAY = 500; // milliseconds
 export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-    const { selectedPath } = useSelection();
+    const { selectedPath, selectByPath } = useSelection();
 
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
@@ -174,6 +175,15 @@ export const PathForm: React.FC = () => {
 
     const operations = getOperations();
 
+    /**
+     * Handle operation click to select it for editing
+     */
+    const handleOperationClick = (method: string) => {
+        // Format: /paths/{pathName}/{method}
+        const operationPath = `/paths/${pathName}/${method.toLowerCase()}`;
+        selectByPath(operationPath);
+    };
+
     return (
         <div>
             <Title headingLevel="h2" size="xl">
@@ -222,10 +232,17 @@ export const PathForm: React.FC = () => {
                 <List isPlain>
                     {operations.map(({ method, operation }) => (
                         <ListItem key={method}>
-                            <Badge isRead>{method}</Badge>
-                            <span style={{ marginLeft: '0.5rem' }}>
-                                {operation.getSummary?.() || 'No summary'}
-                            </span>
+                            <Button
+                                variant="link"
+                                isInline
+                                onClick={() => handleOperationClick(method)}
+                                style={{ padding: 0 }}
+                            >
+                                <Badge isRead>{method}</Badge>
+                                <span style={{ marginLeft: '0.5rem' }}>
+                                    {operation.getSummary?.() || 'No summary'}
+                                </span>
+                            </Button>
                         </ListItem>
                     ))}
                 </List>

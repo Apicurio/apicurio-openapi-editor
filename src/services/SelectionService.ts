@@ -37,7 +37,14 @@ export class SelectionService {
             // Determine type from path
             let nodeType = 'unknown';
             if (path.startsWith('/paths/')) {
-                nodeType = 'path';
+                // Check if this is an operation path (has a method at the end)
+                const pathParts = path.split('/');
+                const httpMethods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace'];
+                if (pathParts.length >= 4 && httpMethods.includes(pathParts[3]?.toLowerCase())) {
+                    nodeType = 'operation';
+                } else {
+                    nodeType = 'path';
+                }
             } else if (path.startsWith('/components/schemas/')) {
                 nodeType = 'schema';
             } else if (path.startsWith('/components/responses/')) {
