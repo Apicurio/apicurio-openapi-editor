@@ -13,6 +13,7 @@ import {
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { OpenApi30Document } from '@apicurio/data-models';
+import './NavigationPanel.css';
 
 /**
  * Navigation panel component
@@ -81,7 +82,7 @@ export const NavigationPanel: React.FC = () => {
     };
 
     return (
-        <Nav>
+        <Nav aria-label="Navigation" onSelect={() => {}}>
             <NavList>
                 {/* Main/Info Section */}
                 <NavItem
@@ -103,16 +104,19 @@ export const NavigationPanel: React.FC = () => {
                         No paths defined
                     </NavItem>
                 ) : (
-                    paths.map((path) => (
-                        <NavItem
-                            key={path}
-                            itemId={`path-${path}`}
-                            isActive={selectedPath === `/paths/${path}`}
-                            onClick={() => handlePathClick(path)}
-                        >
-                            {path}
-                        </NavItem>
-                    ))
+                    paths.map((path) => {
+                        const isActive = selectedPath === `/paths/${path}`;
+                        return (
+                            <NavItem
+                                key={path}
+                                itemId={`path-${path}`}
+                                isActive={isActive}
+                                onClick={() => handlePathClick(path)}
+                            >
+                                {path}
+                            </NavItem>
+                        );
+                    })
                 )}
 
                 <Divider />
@@ -126,16 +130,19 @@ export const NavigationPanel: React.FC = () => {
                         No schemas defined
                     </NavItem>
                 ) : (
-                    schemas.map((schemaName) => (
-                        <NavItem
-                            key={schemaName}
-                            itemId={`schema-${schemaName}`}
-                            isActive={selectedPath === `/components/schemas/${schemaName}`}
-                            onClick={() => handleSchemaClick(schemaName)}
-                        >
-                            {schemaName}
-                        </NavItem>
-                    ))
+                    schemas.map((schemaName) => {
+                        const isActive = selectedPath === `/components/schemas/${schemaName}`;
+                        return (
+                            <NavItem
+                                key={schemaName}
+                                itemId={`schema-${schemaName}`}
+                                isActive={isActive}
+                                onClick={() => handleSchemaClick(schemaName)}
+                            >
+                                {schemaName}
+                            </NavItem>
+                        );
+                    })
                 )}
             </NavList>
         </Nav>

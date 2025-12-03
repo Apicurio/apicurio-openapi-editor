@@ -1,0 +1,16 @@
+/**
+ * Custom styles for NavigationPanel to make selection more obvious
+ */
+
+/* Override PatternFly's CSS variables for selected navigation items */
+.pf-v6-c-nav__link.pf-m-current,
+.pf-v6-c-nav__link[aria-current="page"] {
+    --pf-v6-c-nav__link--m-current--BackgroundColor: #0066cc !important;
+    --pf-v6-c-nav__link--m-current--Color: #ffffff !important;
+    --pf-v6-c-nav__link--FontWeight: 600 !important;
+}
+
+/* Hover state for non-selected items */
+.pf-v6-c-nav__link:not(.pf-m-current):hover {
+    background-color: #f0f0f0;
+}

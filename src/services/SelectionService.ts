@@ -34,8 +34,22 @@ export class SelectionService {
                 return;
             }
 
-            // For now, just store the path - we'll implement full resolution later
-            useSelectionStore.getState().selectNode(path, null, 'unknown');
+            // Determine type from path
+            let nodeType = 'unknown';
+            if (path.startsWith('/paths/')) {
+                nodeType = 'path';
+            } else if (path.startsWith('/components/schemas/')) {
+                nodeType = 'schema';
+            } else if (path.startsWith('/components/responses/')) {
+                nodeType = 'response';
+            } else if (path.startsWith('/components/parameters/')) {
+                nodeType = 'parameter';
+            } else if (path.startsWith('/components/securitySchemes/')) {
+                nodeType = 'security-scheme';
+            }
+
+            // Store the path with determined type
+            useSelectionStore.getState().selectNode(path, null, nodeType);
 
             if (highlight) {
                 useSelectionStore.getState().setHighlight(true);
