@@ -2,7 +2,7 @@
  * Zustand store for command history (undo/redo)
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { ICommand } from '@apicurio/data-models';
 import { CommandState, CommandHistoryEntry } from '@models/CommandTypes';
 

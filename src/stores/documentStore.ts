@@ -2,7 +2,7 @@
  * Zustand store for OpenAPI document state
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { Document } from '@apicurio/data-models';
 import { DocumentState } from '@models/DocumentTypes';
 

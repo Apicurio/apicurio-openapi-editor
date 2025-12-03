@@ -2,7 +2,7 @@
  * Zustand store for UI state
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { UIState, ModalType } from '@models/UITypes';
 
 interface UIStore extends UIState {

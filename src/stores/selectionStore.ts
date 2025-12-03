@@ -2,7 +2,7 @@
  * Zustand store for selection state
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { Node } from '@apicurio/data-models';
 import { SelectionState } from '@models/SelectionTypes';
 
