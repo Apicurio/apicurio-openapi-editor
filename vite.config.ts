@@ -26,6 +26,8 @@ export default defineConfig({
                 '@patternfly/react-core',
                 '@patternfly/react-table',
                 '@patternfly/react-icons',
+                'zustand',
+                '@apicurio/data-models',
             ],
             output: {
                 globals: {

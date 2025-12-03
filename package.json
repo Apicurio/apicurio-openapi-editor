@@ -45,7 +45,18 @@
     "url": "https://github.com/Apicurio/apicurio-openapi-editor/issues"
   },
   "homepage": "https://github.com/Apicurio/apicurio-openapi-editor#readme",
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "@patternfly/react-core": "^6.0.0",
+    "@patternfly/react-table": "^6.0.0",
+    "@patternfly/react-icons": "^6.0.0",
+    "@apicurio/data-models": "^2.2.6",
+    "zustand": "^5.0.0"
+  },
   "devDependencies": {
+    "@apicurio/data-models": "^2.2.6",
+    "zustand": "^5.0.9",
     "@eslint/js": "^9.39.1",
     "@patternfly/react-core": "^6.4.0",
     "@patternfly/react-icons": "^6.4.0",
@@ -66,9 +77,5 @@
     "typescript-eslint": "^8.48.1",
     "vite": "^7.2.6",
     "vite-plugin-dts": "^4.5.4"
-  },
-  "dependencies": {
-    "@apicurio/data-models": "^2.2.6",
-    "zustand": "^5.0.9"
   }
 }
