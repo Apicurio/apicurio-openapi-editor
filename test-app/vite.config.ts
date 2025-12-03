@@ -22,6 +22,7 @@ export default defineConfig({
             'react-dom': resolve(__dirname, './node_modules/react-dom'),
             'react/jsx-runtime': resolve(__dirname, './node_modules/react/jsx-runtime'),
             'zustand': resolve(__dirname, './node_modules/zustand'),
+            'zustand/react': resolve(__dirname, './node_modules/zustand/react.js'),
         },
         dedupe: ['react', 'react-dom', 'zustand'],
     },
