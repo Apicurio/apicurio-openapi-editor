@@ -31,7 +31,6 @@ export class CommandService {
             cmdStore.addCommand(command, description);
 
             // Mark document as dirty and trigger update
-            docStore.markDirty();
             docStore.updateDocument(doc);
         } catch (error) {
             console.error('Failed to execute command:', error);
@@ -70,7 +69,6 @@ export class CommandService {
             cmdStore.pushRedo(entry);
 
             // Update document
-            docStore.markDirty();
             docStore.updateDocument(doc);
 
             return true;
@@ -107,12 +105,10 @@ export class CommandService {
             // Re-execute the command (mutates the document)
             entry.command.execute(doc);
 
-            // Add back to undo stack
-            const newCmdStore = useCommandStore.getState();
-            newCmdStore.addCommand(entry.command, entry.description);
+            // Push back to undo stack (without clearing redo stack)
+            cmdStore.pushUndo(entry);
 
             // Update document
-            docStore.markDirty();
             docStore.updateDocument(doc);
 
             return true;

@@ -44,6 +44,7 @@ const initialState: DocumentState = {
     isDirty: false,
     isLoading: false,
     error: null,
+    version: 0,
 };
 
 export const useDocumentStore = create<DocumentStore>((set) => ({
@@ -69,11 +70,11 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     },
 
     updateDocument: (document: Document) => {
-        set({ document, isDirty: true });
+        set((state) => ({ document, isDirty: true, version: state.version + 1 }));
     },
 
     markDirty: () => {
-        set({ isDirty: true });
+        set((state) => ({ isDirty: true, version: state.version + 1 }));
     },
 
     markClean: () => {

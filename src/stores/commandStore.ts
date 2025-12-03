@@ -38,6 +38,11 @@ interface CommandStore extends CommandState {
     pushRedo: (entry: CommandHistoryEntry) => void;
 
     /**
+     * Push a command onto the undo stack (without clearing redo)
+     */
+    pushUndo: (entry: CommandHistoryEntry) => void;
+
+    /**
      * Clear the redo stack (called after a new command is executed)
      */
     clearRedo: () => void;
@@ -129,6 +134,22 @@ export const useCommandStore = create<CommandStore>((set, get) => ({
         set((state) => ({
             redoStack: [...state.redoStack, entry],
         }));
+    },
+
+    pushUndo: (entry: CommandHistoryEntry) => {
+        set((state) => {
+            const newUndoStack = [...state.undoStack, entry];
+
+            // Limit stack size
+            if (newUndoStack.length > state.maxUndoStackSize) {
+                newUndoStack.shift();
+            }
+
+            return {
+                undoStack: newUndoStack,
+                // Don't clear redo stack - this is for redo operation
+            };
+        });
     },
 
     clearRedo: () => {

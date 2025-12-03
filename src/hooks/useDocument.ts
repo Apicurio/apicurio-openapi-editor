@@ -16,6 +16,7 @@ export const useDocument = () => {
     const isDirty = useDocumentStore((state) => state.isDirty);
     const isLoading = useDocumentStore((state) => state.isLoading);
     const error = useDocumentStore((state) => state.error);
+    const version = useDocumentStore((state) => state.version);
 
     return {
         // State
@@ -23,6 +24,7 @@ export const useDocument = () => {
         isDirty,
         isLoading,
         error,
+        version,
 
         // Actions
         loadDocument: (content: object | string) => documentService.loadDocument(content),

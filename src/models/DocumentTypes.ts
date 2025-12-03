@@ -32,6 +32,12 @@ export interface DocumentState {
      * Error state if document failed to load/parse
      */
     error: string | null;
+
+    /**
+     * Version counter that increments on every document change
+     * Used to trigger re-renders when document is mutated
+     */
+    version: number;
 }
 
 /**

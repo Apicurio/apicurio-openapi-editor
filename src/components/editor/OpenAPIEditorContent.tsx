@@ -16,11 +16,13 @@ import {
     ToolbarItem,
     Button,
 } from '@patternfly/react-core';
-import { UndoIcon, RedoIcon } from '@patternfly/react-icons';
+import { UndoIcon, RedoIcon, BarsIcon } from '@patternfly/react-icons';
 import { OpenAPIEditorProps } from '@models/EditorProps';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
+import { useUI } from '@hooks/useUI';
+import { EditorLayout } from './EditorLayout';
 
 /**
  * The content of the OpenAPI Editor (requires EditorProvider)
@@ -32,6 +34,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { document, isDirty, loadDocument, toObject } = useDocument();
     const { canUndo, canRedo, undo, redo } = useCommand();
     const { selectRoot } = useSelection();
+    const { isMasterPanelExpanded, toggleMasterPanel } = useUI();
 
     /**
      * Load initial content when component mounts (only once)
@@ -107,6 +110,15 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                                     <ToolbarItem>
                                         <Button
                                             variant="plain"
+                                            aria-label="Toggle navigation"
+                                            onClick={toggleMasterPanel}
+                                        >
+                                            <BarsIcon />
+                                        </Button>
+                                    </ToolbarItem>
+                                    <ToolbarItem>
+                                        <Button
+                                            variant="plain"
                                             aria-label="Undo"
                                             isDisabled={!canUndo}
                                             onClick={handleUndo}
@@ -131,9 +143,9 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                 </Masthead>
             }
         >
-            <PageSection>
+            <PageSection padding={{ default: 'noPadding' }}>
                 {!document ? (
-                    <div>
+                    <div style={{ padding: '1rem' }}>
                         <p>Loading OpenAPI document...</p>
                         {initialContent && (
                             <pre style={{ fontSize: '0.85em', maxHeight: '400px', overflow: 'auto' }}>
@@ -144,20 +156,10 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         )}
                     </div>
                 ) : (
-                    <div>
-                        <p>Document loaded successfully!</p>
-                        <p>
-                            <strong>OpenAPI Version:</strong> {(document as any).openapi || 'N/A'}
-                        </p>
-                        <p>
-                            <strong>Title:</strong> {(document as any).info?.title || 'N/A'}
-                        </p>
-                        <p>
-                            <strong>Version:</strong> {(document as any).info?.version || 'N/A'}
-                        </p>
-                        <p>Phase 2 Core Infrastructure Complete!</p>
-                        <p>Next: Implement master/detail layout and forms...</p>
-                    </div>
+                    <EditorLayout
+                        isDrawerExpanded={isMasterPanelExpanded}
+                        onDrawerToggle={toggleMasterPanel}
+                    />
                 )}
             </PageSection>
         </Page>
