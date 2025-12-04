@@ -14,3 +14,11 @@
 .pf-v6-c-nav__link:not(.pf-m-current):hover {
     background-color: #f0f0f0;
 }
+
+/* Make navigation items more compact */
+.pf-v6-c-nav__link {
+    --pf-v6-c-nav__link--PaddingTop: 0.25rem !important;
+    --pf-v6-c-nav__link--PaddingBottom: 0.25rem !important;
+    --pf-v6-c-nav__link--PaddingRight: 0.5rem !important;
+    --pf-v6-c-nav__link--PaddingLeft: 0.5rem !important;
+}
