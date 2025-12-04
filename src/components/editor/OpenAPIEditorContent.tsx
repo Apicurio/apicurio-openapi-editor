@@ -4,12 +4,6 @@
 
 import React, { useEffect } from 'react';
 import {
-    Page,
-    PageSection,
-    Masthead,
-    MastheadMain,
-    MastheadContent,
-    Title,
     Toolbar,
     ToolbarContent,
     ToolbarGroup,
@@ -23,6 +17,7 @@ import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
 import { useUI } from '@hooks/useUI';
 import { EditorLayout } from './EditorLayout';
+import './OpenAPIEditorContent.css';
 
 /**
  * The content of the OpenAPI Editor (requires EditorProvider)
@@ -77,73 +72,49 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
         redo();
     };
 
-    /**
-     * Get document title for display
-     */
-    const getDocumentTitle = (): string => {
-        if (!document) {
-            return 'OpenAPI Editor';
-        }
-
-        const info = (document as any).info;
-        if (info && info.title) {
-            return info.title;
-        }
-
-        return 'Untitled API';
-    };
-
     return (
-        <Page
-            className="apicurio-openapi-editor"
-            masthead={
-                <Masthead>
-                    <MastheadMain>
-                        <Title headingLevel="h1" size="lg">
-                            {getDocumentTitle()}
-                        </Title>
-                    </MastheadMain>
-                    <MastheadContent>
-                        <Toolbar>
-                            <ToolbarContent>
-                                <ToolbarGroup>
-                                    <ToolbarItem>
-                                        <Button
-                                            variant="plain"
-                                            aria-label="Toggle navigation"
-                                            onClick={toggleMasterPanel}
-                                        >
-                                            <BarsIcon />
-                                        </Button>
-                                    </ToolbarItem>
-                                    <ToolbarItem>
-                                        <Button
-                                            variant="plain"
-                                            aria-label="Undo"
-                                            isDisabled={!canUndo}
-                                            onClick={handleUndo}
-                                        >
-                                            <UndoIcon />
-                                        </Button>
-                                    </ToolbarItem>
-                                    <ToolbarItem>
-                                        <Button
-                                            variant="plain"
-                                            aria-label="Redo"
-                                            isDisabled={!canRedo}
-                                            onClick={handleRedo}
-                                        >
-                                            <RedoIcon />
-                                        </Button>
-                                    </ToolbarItem>
-                                </ToolbarGroup>
-                            </ToolbarContent>
-                        </Toolbar>
-                    </MastheadContent>
-                </Masthead>
-            }
-        >
-            <PageSection padding={{ default: 'noPadding' }}>
+        <div className="apicurio-openapi-editor">
+            {/* Toolbar */}
+            <div className="editor-toolbar">
+                <Toolbar>
+                    <ToolbarContent>
+                        <ToolbarGroup>
+                            <ToolbarItem>
+                                <Button
+                                    variant="plain"
+                                    aria-label="Toggle navigation"
+                                    onClick={toggleMasterPanel}
+                                >
+                                    <BarsIcon />
+                                </Button>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                                <Button
+                                    variant="plain"
+                                    aria-label="Undo"
+                                    isDisabled={!canUndo}
+                                    onClick={handleUndo}
+                                >
+                                    <UndoIcon />
+                                </Button>
+                            </ToolbarItem>
+                            <ToolbarItem>
+                                <Button
+                                    variant="plain"
+                                    aria-label="Redo"
+                                    isDisabled={!canRedo}
+                                    onClick={handleRedo}
+                                >
+                                    <RedoIcon />
+                                </Button>
+                            </ToolbarItem>
+                        </ToolbarGroup>
+                    </ToolbarContent>
+                </Toolbar>
+            </div>
+
+            {/* Editor content */}
+            <div className="editor-content">
                 {!document ? (
                     <div style={{ padding: '1rem' }}>
                         <p>Loading OpenAPI document...</p>
@@ -161,7 +132,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         onDrawerToggle={toggleMasterPanel}
                     />
                 )}
-            </PageSection>
-        </Page>
+            </div>
+        </div>
     );
 };

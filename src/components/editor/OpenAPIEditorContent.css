@@ -1,0 +1,23 @@
+/**
+ * Styles for the OpenAPI Editor component
+ */
+
+.apicurio-openapi-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: var(--pf-v6-global--BackgroundColor--100);
+}
+
+.editor-toolbar {
+    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100);
+    background-color: var(--pf-v6-global--BackgroundColor--100);
+}
+
+.editor-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}

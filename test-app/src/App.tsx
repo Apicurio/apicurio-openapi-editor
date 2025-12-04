@@ -1,4 +1,13 @@
 import { useState } from 'react';
+import {
+    Page,
+    PageSection,
+    Masthead,
+    MastheadMain,
+    MastheadContent,
+    Title,
+    Button,
+} from '@patternfly/react-core';
 import { OpenAPIEditor } from '../../src/components/editor/OpenAPIEditor';
 import './App.css';
 
@@ -274,25 +283,38 @@ function App() {
     };
 
     return (
-        <div className="app">
-            <header className="app-header">
-                <h1>Apicurio OpenAPI Editor - Test Application</h1>
-                <p>This is a test application for manually testing the OpenAPI Editor component.</p>
-                <div className="button-group">
-                    <button onClick={handleLoadEmpty}>Empty API</button>
-                    <button onClick={handleLoadPetStore}>Pet Store API</button>
-                    <button onClick={handleLoadApicurioRegistry} disabled={loading}>
-                        {loading ? 'Loading...' : 'Apicurio Registry API'}
-                    </button>
-                </div>
-                {error && (
-                    <div style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                        {error}
-                    </div>
-                )}
-            </header>
-
-            <main className="app-main">
+        <Page
+            masthead={
+                <Masthead>
+                    <MastheadMain>
+                        <Title headingLevel="h1" size="lg">
+                            Apicurio OpenAPI Editor - Test Application
+                        </Title>
+                    </MastheadMain>
+                    <MastheadContent>
+                        <div className="sample-selector">
+                            <span className="sample-label">Load Sample:</span>
+                            <Button variant="secondary" onClick={handleLoadEmpty} size="sm">
+                                Empty API
+                            </Button>
+                            <Button variant="secondary" onClick={handleLoadPetStore} size="sm">
+                                Pet Store API
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={handleLoadApicurioRegistry}
+                                isDisabled={loading}
+                                size="sm"
+                            >
+                                {loading ? 'Loading...' : 'Apicurio Registry API'}
+                            </Button>
+                        </div>
+                        {error && <div className="error-message">{error}</div>}
+                    </MastheadContent>
+                </Masthead>
+            }
+        >
+            <PageSection padding={{ default: 'noPadding' }} isFilled>
                 <OpenAPIEditor
                     initialContent={content}
                     onChange={handleChange}
@@ -301,12 +323,8 @@ function App() {
                         allowCustomValidations: true,
                     }}
                 />
-            </main>
-
-            <footer className="app-footer">
-                <p>Check the browser console for onChange events</p>
-            </footer>
-        </div>
+            </PageSection>
+        </Page>
     );
 }
 
