@@ -57,8 +57,8 @@ export const NavigationPanel: React.FC = () => {
         return Object.keys(schemas);
     };
 
-    const paths = getPaths();
-    const schemas = getSchemas();
+    const paths = getPaths().sort();
+    const schemas = getSchemas().sort();
 
     /**
      * Handle path selection
