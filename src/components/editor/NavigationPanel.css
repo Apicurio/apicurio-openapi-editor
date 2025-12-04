@@ -16,9 +16,22 @@
 }
 
 /* Make navigation items more compact */
+.pf-v6-c-nav__item {
+    margin-bottom: 0 !important;
+}
+
 .pf-v6-c-nav__link {
-    --pf-v6-c-nav__link--PaddingTop: 0.25rem !important;
-    --pf-v6-c-nav__link--PaddingBottom: 0.25rem !important;
-    --pf-v6-c-nav__link--PaddingRight: 0.5rem !important;
-    --pf-v6-c-nav__link--PaddingLeft: 0.5rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-right: 0.5rem !important;
+    padding-left: 0.5rem !important;
+}
+
+.pf-v6-c-nav__list {
+    gap: 0 !important;
+}
+
+.pf-v6-c-divider {
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
