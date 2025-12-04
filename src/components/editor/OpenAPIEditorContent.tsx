@@ -32,7 +32,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { isMasterPanelExpanded, toggleMasterPanel } = useUI();
 
     /**
-     * Load initial content when component mounts (only once)
+     * Load content when initialContent changes
      */
     useEffect(() => {
         if (initialContent) {
@@ -40,7 +40,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
             selectRoot();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run once on mount
+    }, [initialContent]); // Reload when initialContent changes
 
     /**
      * Notify parent when document changes (but not on initial load)
