@@ -31,29 +31,15 @@ export const PathForm: React.FC = () => {
     const { executeCommand } = useCommand();
     const { selectedPath, selectByPath } = useSelection();
 
-    if (!document || !selectedPath) {
-        return <div>No path selected</div>;
-    }
-
-    // Extract the path name from the selection path (e.g., "/paths//pets" -> "/pets")
-    const pathName = selectedPath.replace('/paths/', '');
-
+    // Extract path information early (before hooks)
+    const pathName = selectedPath ? selectedPath.replace('/paths/', '') : '';
     const oaiDoc = document as OpenApi30Document;
-    const paths = oaiDoc.getPaths();
+    const paths = oaiDoc?.getPaths();
+    const pathItem = paths?.getItem(pathName) as OpenApi30PathItem;
 
-    if (!paths) {
-        return <div>No paths defined</div>;
-    }
-
-    const pathItem = paths.getItem(pathName) as OpenApi30PathItem;
-
-    if (!pathItem) {
-        return <div>Path not found: {pathName}</div>;
-    }
-
-    // Local state for field values
-    const [summary, setSummary] = useState(pathItem.getSummary() || '');
-    const [description, setDescription] = useState(pathItem.getDescription() || '');
+    // Local state for field values - must be called unconditionally
+    const [summary, setSummary] = useState(pathItem?.getSummary() || '');
+    const [description, setDescription] = useState(pathItem?.getDescription() || '');
 
     // Refs to track current state values (to avoid stale closures in subscription)
     const summaryRef = useRef(summary);
@@ -66,8 +52,8 @@ export const PathForm: React.FC = () => {
     }, [summary, description]);
 
     // Refs to track previous committed values
-    const prevSummaryRef = useRef(pathItem.getSummary() || '');
-    const prevDescriptionRef = useRef(pathItem.getDescription() || '');
+    const prevSummaryRef = useRef(pathItem?.getSummary() || '');
+    const prevDescriptionRef = useRef(pathItem?.getDescription() || '');
 
     // Debounce timers
     const summaryTimerRef = useRef<number | null>(null);
@@ -76,9 +62,11 @@ export const PathForm: React.FC = () => {
     // Sync local state with document when document changes externally (e.g., undo/redo)
     // Use a manual subscription to avoid re-rendering the component on every version change
     useEffect(() => {
+        if (!pathItem) return;
+
         const unsubscribe = useDocumentStore.subscribe(() => {
-            const currentSummary = pathItem.getSummary() || '';
-            const currentDescription = pathItem.getDescription() || '';
+            const currentSummary = pathItem?.getSummary() || '';
+            const currentDescription = pathItem?.getDescription() || '';
 
             // Update local state if document value differs from current state
             // Use refs to get current state values (avoid stale closure)
@@ -94,10 +82,12 @@ export const PathForm: React.FC = () => {
 
         return unsubscribe;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only set up subscription once
+    }, [pathItem]); // Re-subscribe when pathItem changes
 
     // Update local state when path selection changes
     useEffect(() => {
+        if (!pathItem) return;
+
         setSummary(pathItem.getSummary() || '');
         setDescription(pathItem.getDescription() || '');
         prevSummaryRef.current = pathItem.getSummary() || '';
@@ -183,6 +173,19 @@ export const PathForm: React.FC = () => {
         const operationPath = `/paths/${pathName}/${method.toLowerCase()}`;
         selectByPath(operationPath);
     };
+
+    // Conditional checks after all hooks
+    if (!document || !selectedPath) {
+        return <div>No path selected</div>;
+    }
+
+    if (!paths) {
+        return <div>No paths defined</div>;
+    }
+
+    if (!pathItem) {
+        return <div>Path not found: {pathName}</div>;
+    }
 
     return (
         <div>

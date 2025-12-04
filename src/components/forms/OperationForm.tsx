@@ -28,45 +28,23 @@ export const OperationForm: React.FC = () => {
     const { executeCommand } = useCommand();
     const { selectedPath } = useSelection();
 
-    if (!document || !selectedPath) {
-        return <div>No operation selected</div>;
-    }
-
-    // Parse the selection path to get path name and method
-    // Format: /paths/{pathName}/{method}
-    const pathParts = selectedPath.split('/');
-    if (pathParts.length < 4 || pathParts[1] !== 'paths') {
-        return <div>Invalid operation path</div>;
-    }
-
-    const pathName = pathParts[2];
-    const method = pathParts[3];
+    // Parse the selection path early (before hooks)
+    const pathParts = selectedPath?.split('/') || [];
+    const pathName = pathParts[2] || '';
+    const method = pathParts[3] || '';
 
     const oaiDoc = document as OpenApi30Document;
-    const paths = oaiDoc.getPaths();
-
-    if (!paths) {
-        return <div>No paths defined</div>;
-    }
-
-    const pathItem = paths.getItem(pathName);
-
-    if (!pathItem) {
-        return <div>Path not found: {pathName}</div>;
-    }
+    const paths = oaiDoc?.getPaths();
+    const pathItem = paths?.getItem(pathName);
 
     // Get the operation using the method name
-    const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1).toLowerCase()}`;
-    const operation = (pathItem as any)[getter]?.() as OpenApi30Operation;
+    const getter = method ? `get${method.charAt(0).toUpperCase()}${method.slice(1).toLowerCase()}` : '';
+    const operation = pathItem && getter ? (pathItem as any)[getter]?.() as OpenApi30Operation : null;
 
-    if (!operation) {
-        return <div>Operation not found: {method.toUpperCase()}</div>;
-    }
-
-    // Local state for field values
-    const [summary, setSummary] = useState(operation.getSummary() || '');
-    const [description, setDescription] = useState(operation.getDescription() || '');
-    const [operationId, setOperationId] = useState(operation.getOperationId() || '');
+    // Local state for field values - must be called unconditionally
+    const [summary, setSummary] = useState(operation?.getSummary() || '');
+    const [description, setDescription] = useState(operation?.getDescription() || '');
+    const [operationId, setOperationId] = useState(operation?.getOperationId() || '');
 
     // Refs to track current state values
     const summaryRef = useRef(summary);
@@ -81,9 +59,9 @@ export const OperationForm: React.FC = () => {
     }, [summary, description, operationId]);
 
     // Refs to track previous committed values
-    const prevSummaryRef = useRef(operation.getSummary() || '');
-    const prevDescriptionRef = useRef(operation.getDescription() || '');
-    const prevOperationIdRef = useRef(operation.getOperationId() || '');
+    const prevSummaryRef = useRef(operation?.getSummary() || '');
+    const prevDescriptionRef = useRef(operation?.getDescription() || '');
+    const prevOperationIdRef = useRef(operation?.getOperationId() || '');
 
     // Debounce timers
     const summaryTimerRef = useRef<number | null>(null);
@@ -92,10 +70,12 @@ export const OperationForm: React.FC = () => {
 
     // Sync local state with document when document changes externally
     useEffect(() => {
+        if (!operation) return;
+
         const unsubscribe = useDocumentStore.subscribe(() => {
-            const currentSummary = operation.getSummary() || '';
-            const currentDescription = operation.getDescription() || '';
-            const currentOperationId = operation.getOperationId() || '';
+            const currentSummary = operation?.getSummary() || '';
+            const currentDescription = operation?.getDescription() || '';
+            const currentOperationId = operation?.getOperationId() || '';
 
             if (currentSummary !== summaryRef.current) {
                 setSummary(currentSummary);
@@ -113,10 +93,12 @@ export const OperationForm: React.FC = () => {
 
         return unsubscribe;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [operation]);
 
     // Update local state when operation selection changes
     useEffect(() => {
+        if (!operation) return;
+
         setSummary(operation.getSummary() || '');
         setDescription(operation.getDescription() || '');
         setOperationId(operation.getOperationId() || '');
@@ -190,6 +172,27 @@ export const OperationForm: React.FC = () => {
             if (operationIdTimerRef.current) clearTimeout(operationIdTimerRef.current);
         };
     }, []);
+
+    // Conditional checks after all hooks
+    if (!document || !selectedPath) {
+        return <div>No operation selected</div>;
+    }
+
+    if (pathParts.length < 4 || pathParts[1] !== 'paths') {
+        return <div>Invalid operation path</div>;
+    }
+
+    if (!paths) {
+        return <div>No paths defined</div>;
+    }
+
+    if (!pathItem) {
+        return <div>Path not found: {pathName}</div>;
+    }
+
+    if (!operation) {
+        return <div>Operation not found: {method.toUpperCase()}</div>;
+    }
 
     return (
         <div>
