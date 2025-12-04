@@ -144,6 +144,19 @@ export const PathForm: React.FC = () => {
         };
     }, []);
 
+    // Conditional checks after all hooks
+    if (!document || !selectedPath) {
+        return <div>No path selected</div>;
+    }
+
+    if (!paths) {
+        return <div>No paths defined</div>;
+    }
+
+    if (!pathItem) {
+        return <div>Path not found: {pathName}</div>;
+    }
+
     /**
      * Get list of operations defined for this path
      */
@@ -173,19 +186,6 @@ export const PathForm: React.FC = () => {
         const operationPath = `/paths/${pathName}/${method.toLowerCase()}`;
         selectByPath(operationPath);
     };
-
-    // Conditional checks after all hooks
-    if (!document || !selectedPath) {
-        return <div>No path selected</div>;
-    }
-
-    if (!paths) {
-        return <div>No paths defined</div>;
-    }
-
-    if (!pathItem) {
-        return <div>Path not found: {pathName}</div>;
-    }
 
     return (
         <div>
