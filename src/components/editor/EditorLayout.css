@@ -1,0 +1,30 @@
+/**
+ * Styles for the EditorLayout component
+ */
+
+.editor-layout {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+}
+
+.editor-layout .main-panel {
+    width: 30%;
+    min-width: 250px;
+    border-right: 1px solid #ccc;
+    border-radius: 0;
+    resize: horizontal;
+    overflow: auto;
+}
+
+.editor-layout .detail-panel {
+    flex: 1;
+    overflow-y: auto;
+}
+
+
+div.navigation-scroll-panel {
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 100%;
+}

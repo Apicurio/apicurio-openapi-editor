@@ -3,55 +3,39 @@
  */
 
 import React from 'react';
-import {
-    Drawer,
-    DrawerContent,
-    DrawerContentBody,
-    DrawerPanelContent,
-    DrawerHead,
-    DrawerActions,
-    DrawerCloseButton,
-} from '@patternfly/react-core';
-import { NavigationPanel } from './NavigationPanel';
-import { DetailPanel } from './DetailPanel';
+import {Panel,} from '@patternfly/react-core';
+import {NavigationPanel} from './NavigationPanel';
+import {DetailPanel} from './DetailPanel';
+import './EditorLayout.css';
 
 interface EditorLayoutProps {
-    /**
-     * Whether the drawer is expanded
-     */
-    isDrawerExpanded: boolean;
-
-    /**
-     * Toggle drawer expanded state
-     */
-    onDrawerToggle: () => void;
 }
 
 /**
  * Editor layout component with resizable drawer
  */
-export const EditorLayout: React.FC<EditorLayoutProps> = ({ isDrawerExpanded, onDrawerToggle }) => {
-    const panelContent = (
-        <DrawerPanelContent isResizable defaultSize="300px" minSize="200px" maxSize="600px">
-            <DrawerHead>
-                <span tabIndex={isDrawerExpanded ? 0 : -1}>Navigation</span>
-                <DrawerActions>
-                    <DrawerCloseButton onClick={onDrawerToggle} />
-                </DrawerActions>
-            </DrawerHead>
-            <div style={{ padding: '1rem', height: '100%', overflow: 'auto' }}>
-                <NavigationPanel />
-            </div>
-        </DrawerPanelContent>
+export const EditorLayout: React.FC<EditorLayoutProps> = () => {
+
+    const mainPanel = (
+        <Panel isScrollable={true} className="main-panel scroll-panel navigation-scroll-panel">
+            <NavigationPanel />
+        </Panel>
+    );
+
+    const detailPanel = (
+        <Panel isScrollable={true} className="detail-panel scroll-panel">
+            <DetailPanel />
+        </Panel>
     );
 
     return (
-        <Drawer isExpanded={isDrawerExpanded} isInline>
-            <DrawerContent panelContent={panelContent}>
-                <DrawerContentBody>
-                    <DetailPanel />
-                </DrawerContentBody>
-            </DrawerContent>
-        </Drawer>
-    );
+        <div className="editor-layout">
+            {
+                mainPanel
+            }
+            {
+                detailPanel
+            }
+        </div>
+    )
 };

@@ -2,21 +2,14 @@
  * OpenAPI Editor content (wrapped by EditorProvider)
  */
 
-import React, { useEffect } from 'react';
-import {
-    Toolbar,
-    ToolbarContent,
-    ToolbarGroup,
-    ToolbarItem,
-    Button,
-} from '@patternfly/react-core';
-import { UndoIcon, RedoIcon, BarsIcon } from '@patternfly/react-icons';
-import { OpenAPIEditorProps } from '@models/EditorProps';
-import { useDocument } from '@hooks/useDocument';
-import { useCommand } from '@hooks/useCommand';
-import { useSelection } from '@hooks/useSelection';
-import { useUI } from '@hooks/useUI';
-import { EditorLayout } from './EditorLayout';
+import React, {useEffect} from 'react';
+import {Button, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem,} from '@patternfly/react-core';
+import {RedoIcon, UndoIcon} from '@patternfly/react-icons';
+import {OpenAPIEditorProps} from '@models/EditorProps';
+import {useDocument} from '@hooks/useDocument';
+import {useCommand} from '@hooks/useCommand';
+import {useSelection} from '@hooks/useSelection';
+import {EditorLayout} from './EditorLayout';
 import './OpenAPIEditorContent.css';
 
 /**
@@ -29,7 +22,6 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { document, isDirty, loadDocument, toObject } = useDocument();
     const { canUndo, canRedo, undo, redo } = useCommand();
     const { selectRoot } = useSelection();
-    const { isMasterPanelExpanded, toggleMasterPanel } = useUI();
 
     /**
      * Load content when initialContent changes
@@ -82,15 +74,6 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                             <ToolbarItem>
                                 <Button
                                     variant="plain"
-                                    aria-label="Toggle navigation"
-                                    onClick={toggleMasterPanel}
-                                >
-                                    <BarsIcon />
-                                </Button>
-                            </ToolbarItem>
-                            <ToolbarItem>
-                                <Button
-                                    variant="plain"
                                     aria-label="Undo"
                                     isDisabled={!canUndo}
                                     onClick={handleUndo}
@@ -127,10 +110,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         )}
                     </div>
                 ) : (
-                    <EditorLayout
-                        isDrawerExpanded={isMasterPanelExpanded}
-                        onDrawerToggle={toggleMasterPanel}
-                    />
+                    <EditorLayout />
                 )}
             </div>
         </div>

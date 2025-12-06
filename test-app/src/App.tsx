@@ -284,6 +284,7 @@ function App() {
 
     return (
         <Page
+            isContentFilled={true}
             masthead={
                 <Masthead>
                     <MastheadMain>
@@ -314,7 +315,7 @@ function App() {
                 </Masthead>
             }
         >
-            <PageSection padding={{ default: 'noPadding' }} isFilled>
+            <PageSection padding={{ default: 'noPadding' }} isFilled className="editor-page-section">
                 <OpenAPIEditor
                     initialContent={content}
                     onChange={handleChange}

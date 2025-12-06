@@ -19,3 +19,7 @@
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
 }
+
+.editor-page-section, .editor-page-section > div {
+    height: 100%;
+}
