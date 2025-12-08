@@ -19,9 +19,9 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
-import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
+import { CreateOperationCommand } from '@commands/CreateOperationCommand';
 
 /**
  * Path form component for editing path metadata and operations
@@ -157,28 +157,14 @@ export const PathForm: React.FC = () => {
         }
     };
 
-    // Handle creating a new operation
+    /**
+     * Handle creating a new operation using the command pattern
+     */
     const handleCreateOperation = () => {
-        if (!pathItem || !document) return;
+        if (!selectedPath) return;
 
-        // Create the operation using the pathItem's create method
-        const createMethod = `create${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
-        const newOperation = (pathItem as any)[createMethod]?.();
-
-        if (newOperation) {
-            // The operation is already added to the path item
-            // Trigger a document update to reflect the change
-            const docStore = useDocumentStore.getState();
-            docStore.updateDocument(document);
-
-            // Initialize the operation state
-            setOpSummary('');
-            setOpDescription('');
-            setOpId('');
-            initialOpSummaryRef.current = '';
-            initialOpDescriptionRef.current = '';
-            initialOpIdRef.current = '';
-        }
+        const command = new CreateOperationCommand(selectedPath, selectedOperation);
+        executeCommand(command, `Create ${selectedOperation.toUpperCase()} operation`);
     };
 
     // Conditional checks after all hooks
