@@ -28,6 +28,7 @@ import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30O
 import { useSelection } from '@hooks/useSelection';
 import { CreateOperationCommand } from '@commands/CreateOperationCommand';
 import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
+import { DeletePathCommand } from '@commands/DeletePathCommand';
 import { CompositeCommand } from '@commands/CompositeCommand';
 
 /**
@@ -49,7 +50,7 @@ const HTTP_METHODS = [
 export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-    const { selectedPath } = useSelection();
+    const { selectedPath, selectRoot } = useSelection();
 
     // Extract path information early (before hooks)
     const pathName = selectedPath ? selectedPath.replace('/paths/', '') : '';
@@ -62,6 +63,7 @@ export const PathForm: React.FC = () => {
 
     // Track dropdown open state
     const [isOperationMenuOpen, setIsOperationMenuOpen] = useState(false);
+    const [isPathMenuOpen, setIsPathMenuOpen] = useState(false);
 
     // Get the current operation
     const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
@@ -224,6 +226,20 @@ export const PathForm: React.FC = () => {
         setIsOperationMenuOpen(false);
     };
 
+    /**
+     * Handle deleting the path
+     */
+    const handleDeletePath = () => {
+        if (!selectedPath) return;
+
+        const command = new DeletePathCommand(pathName);
+        executeCommand(command, `Delete path ${pathName}`);
+
+        // Navigate to root after deletion
+        selectRoot();
+        setIsPathMenuOpen(false);
+    };
+
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
@@ -239,9 +255,35 @@ export const PathForm: React.FC = () => {
 
     return (
         <div>
-            <Title headingLevel="h2" size="xl">
-                Path: {pathName}
-            </Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <Title headingLevel="h2" size="xl">
+                    Path: {pathName}
+                </Title>
+                <Dropdown
+                    isOpen={isPathMenuOpen}
+                    onOpenChange={setIsPathMenuOpen}
+                    popperProps={{ position: 'right' }}
+                    toggle={(toggleRef) => (
+                        <MenuToggle
+                            ref={toggleRef}
+                            variant="plain"
+                            onClick={() => setIsPathMenuOpen(!isPathMenuOpen)}
+                            aria-label="Path menu"
+                        >
+                            <EllipsisVIcon />
+                        </MenuToggle>
+                    )}
+                >
+                    <DropdownList>
+                        <DropdownItem
+                            key="delete-path"
+                            onClick={handleDeletePath}
+                        >
+                            Delete path
+                        </DropdownItem>
+                    </DropdownList>
+                </Dropdown>
+            </div>
             <p style={{ marginBottom: '1rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Edit path metadata and operations
             </p>
