@@ -2,17 +2,22 @@
  * Navigation panel for the master section
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Nav,
     NavList,
     NavItem,
     Divider,
     Title,
+    Button,
 } from '@patternfly/react-core';
+import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
+import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document } from '@apicurio/data-models';
+import { CreatePathModal } from '@components/modals/CreatePathModal';
+import { CreatePathCommand } from '@commands/CreatePathCommand';
 import './NavigationPanel.css';
 
 /**
@@ -22,6 +27,8 @@ import './NavigationPanel.css';
 export const NavigationPanel: React.FC = () => {
     const { document } = useDocument();
     const { selectedPath, selectByPath, selectRoot } = useSelection();
+    const { executeCommand } = useCommand();
+    const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
 
     /**
      * Get list of paths from the document
@@ -81,24 +88,45 @@ export const NavigationPanel: React.FC = () => {
         selectRoot();
     };
 
+    /**
+     * Handle creating a new path
+     */
+    const handleCreatePath = (pathName: string) => {
+        const command = new CreatePathCommand(pathName);
+        executeCommand(command, `Create path ${pathName}`);
+
+        // Select the newly created path
+        selectByPath(`/paths/${pathName}`);
+    };
+
     return (
-        <Nav aria-label="Navigation" onSelect={() => {}}>
-            <NavList>
-                {/* Main/Info Section */}
-                <NavItem
-                    itemId="main"
-                    isActive={selectedPath === '/' || selectedPath === null}
-                    onClick={handleMainClick}
-                >
-                    API Info
-                </NavItem>
+        <>
+            <Nav aria-label="Navigation" onSelect={() => {}}>
+                <NavList>
+                    {/* Main/Info Section */}
+                    <NavItem
+                        itemId="main"
+                        isActive={selectedPath === '/' || selectedPath === null}
+                        onClick={handleMainClick}
+                    >
+                        API Info
+                    </NavItem>
 
-                <Divider />
+                    <Divider />
 
-                {/* Paths Section */}
-                <Title headingLevel="h3" size="md" style={{ padding: '0.5rem 1rem' }}>
-                    Paths
-                </Title>
+                    {/* Paths Section */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem' }}>
+                        <Title headingLevel="h3" size="md">
+                            Paths
+                        </Title>
+                        <Button
+                            variant="plain"
+                            aria-label="Add path"
+                            onClick={() => setIsCreatePathModalOpen(true)}
+                            icon={<PlusCircleIcon />}
+                            style={{ minWidth: 'auto', padding: '0.25rem' }}
+                        />
+                    </div>
                 {paths.length === 0 ? (
                     <NavItem itemId="no-paths" disabled>
                         No paths defined
@@ -146,5 +174,13 @@ export const NavigationPanel: React.FC = () => {
                 )}
             </NavList>
         </Nav>
+
+        {/* Create Path Modal */}
+        <CreatePathModal
+            isOpen={isCreatePathModalOpen}
+            onClose={() => setIsCreatePathModalOpen(false)}
+            onConfirm={handleCreatePath}
+        />
+        </>
     );
 };
