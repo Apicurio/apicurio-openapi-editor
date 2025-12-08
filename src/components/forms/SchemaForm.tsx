@@ -14,7 +14,8 @@ import {
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
-import { ChangePropertyCommand, OpenApi30Document } from '@apicurio/data-models';
+import { OpenApi30Document } from '@apicurio/data-models';
+import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 
 /**
  * Schema form component for editing schema definitions

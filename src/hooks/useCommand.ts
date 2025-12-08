@@ -4,7 +4,7 @@
 
 import { useCommandStore } from '@stores/commandStore';
 import { useEditorServices } from '@services/EditorContext';
-import { ICommand } from '@apicurio/data-models';
+import { ICommand } from '@commands/ICommand';
 
 /**
  * Hook for working with commands and undo/redo

@@ -2,7 +2,7 @@
  * Types related to commands and undo/redo functionality
  */
 
-import { ICommand } from '@apicurio/data-models';
+import { ICommand } from '@commands/ICommand';
 
 /**
  * Represents a command in the history stack

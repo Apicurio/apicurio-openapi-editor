@@ -24,8 +24,9 @@ import {
 import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
-import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
+import { OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
+import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 import { CreateOperationCommand } from '@commands/CreateOperationCommand';
 import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
 import { DeletePathCommand } from '@commands/DeletePathCommand';

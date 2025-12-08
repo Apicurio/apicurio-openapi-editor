@@ -13,7 +13,8 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
-import { ChangePropertyCommand, OpenApi30Document } from '@apicurio/data-models';
+import { OpenApi30Document } from '@apicurio/data-models';
+import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 
 /**
  * Main form component for editing API info

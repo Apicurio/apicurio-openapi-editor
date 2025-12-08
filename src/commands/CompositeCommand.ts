@@ -3,12 +3,14 @@
  * Useful for batch operations that should be undone/redone together
  */
 
-import { ICommand, Document } from '@apicurio/data-models';
+import { Document } from '@apicurio/data-models';
+import { BaseCommand } from './BaseCommand';
+import { ICommand } from './ICommand';
 
 /**
  * Composite command that wraps multiple commands and executes them as one
  */
-export class CompositeCommand implements ICommand {
+export class CompositeCommand extends BaseCommand {
     private _commands: ICommand[];
     private _description: string;
 
@@ -18,6 +20,7 @@ export class CompositeCommand implements ICommand {
      * @param description Optional description for the composite command
      */
     constructor(commands: ICommand[], description?: string) {
+        super();
         this._commands = commands;
         this._description = description || 'CompositeCommand';
     }

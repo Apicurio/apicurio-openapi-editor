@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand/react';
-import { ICommand } from '@apicurio/data-models';
+import { ICommand } from '@commands/ICommand';
 import { CommandState, CommandHistoryEntry } from '@models/CommandTypes';
 
 interface CommandStore extends CommandState {

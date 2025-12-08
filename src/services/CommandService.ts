@@ -2,14 +2,21 @@
  * Service for executing commands and managing undo/redo
  */
 
-import { ICommand } from '@apicurio/data-models';
+import { ICommand } from '@commands/ICommand';
 import { useCommandStore } from '@stores/commandStore';
 import { useDocumentStore } from '@stores/documentStore';
+import { useSelectionStore } from '@stores/selectionStore';
+import { SelectionService } from './SelectionService';
 
 /**
  * CommandService handles command execution with undo/redo support
  */
 export class CommandService {
+    private selectionService: SelectionService;
+
+    constructor() {
+        this.selectionService = new SelectionService();
+    }
     /**
      * Execute a command on the current document
      */
@@ -23,6 +30,10 @@ export class CommandService {
         }
 
         try {
+            // Capture current selection before executing command
+            const selStore = useSelectionStore.getState();
+            command.setSelection(selStore.selectedPath);
+
             // Execute the command (mutates the document)
             command.execute(doc);
 
@@ -65,6 +76,12 @@ export class CommandService {
             // Undo the command (mutates the document)
             entry.command.undo(doc);
 
+            // Restore the selection that was active when the command was created
+            const selection = entry.command.getSelection();
+            if (selection) {
+                this.selectionService.selectByPath(selection);
+            }
+
             // Push to redo stack
             cmdStore.pushRedo(entry);
 
@@ -104,6 +121,12 @@ export class CommandService {
         try {
             // Re-execute the command (mutates the document)
             entry.command.execute(doc);
+
+            // Restore the selection that was active when the command was created
+            const selection = entry.command.getSelection();
+            if (selection) {
+                this.selectionService.selectByPath(selection);
+            }
 
             // Push back to undo stack (without clearing redo stack)
             cmdStore.pushUndo(entry);

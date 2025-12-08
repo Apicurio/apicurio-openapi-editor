@@ -2,12 +2,13 @@
  * Command to create a new operation on a path item
  */
 
-import { ICommand, Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
+import { Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
+import { BaseCommand } from './BaseCommand';
 
 /**
  * Command to create a new operation (GET, POST, PUT, DELETE, etc.) on a path item
  */
-export class CreateOperationCommand implements ICommand {
+export class CreateOperationCommand extends BaseCommand {
     private _pathItemPath: string;
     private _method: string;
     private _operationCreated: boolean = false;
@@ -18,6 +19,7 @@ export class CreateOperationCommand implements ICommand {
      * @param method The HTTP method (get, post, put, delete, options, head, patch, trace)
      */
     constructor(pathItemPath: string, method: string) {
+        super();
         this._pathItemPath = pathItemPath;
         this._method = method.toLowerCase();
     }

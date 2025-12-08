@@ -2,12 +2,13 @@
  * Command to delete an operation from a path item
  */
 
-import { ICommand, Document, OpenApi30PathItem, OpenApi30Operation, Library } from '@apicurio/data-models';
+import { Document, OpenApi30PathItem, OpenApi30Operation, Library } from '@apicurio/data-models';
+import { BaseCommand } from './BaseCommand';
 
 /**
  * Command to delete an operation (GET, POST, PUT, DELETE, etc.) from a path item
  */
-export class DeleteOperationCommand implements ICommand {
+export class DeleteOperationCommand extends BaseCommand {
     private _pathItemPath: string;
     private _method: string;
     private _oldOperation: any = null;
@@ -19,6 +20,7 @@ export class DeleteOperationCommand implements ICommand {
      * @param method The HTTP method (get, post, put, delete, options, head, patch, trace)
      */
     constructor(pathItemPath: string, method: string) {
+        super();
         this._pathItemPath = pathItemPath;
         this._method = method.toLowerCase();
     }

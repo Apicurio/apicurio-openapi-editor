@@ -2,12 +2,13 @@
  * Command to create a new path item in the document
  */
 
-import { ICommand, Document, OpenApi30Document, OpenApi30PathItem } from '@apicurio/data-models';
+import { Document, OpenApi30Document, OpenApi30PathItem } from '@apicurio/data-models';
+import { BaseCommand } from './BaseCommand';
 
 /**
  * Command to create a new path item (e.g., /pets, /users/{id})
  */
-export class CreatePathCommand implements ICommand {
+export class CreatePathCommand extends BaseCommand {
     private _pathName: string;
     private _pathCreated: boolean = false;
 
@@ -16,6 +17,7 @@ export class CreatePathCommand implements ICommand {
      * @param pathName The path to create (e.g., "/pets", "/users/{id}")
      */
     constructor(pathName: string) {
+        super();
         // Ensure path starts with /
         this._pathName = pathName.startsWith('/') ? pathName : `/${pathName}`;
     }

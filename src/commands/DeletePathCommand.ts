@@ -2,12 +2,13 @@
  * Command to delete a path item from the document
  */
 
-import { ICommand, Document, OpenApi30Document, OpenApi30PathItem, Library } from '@apicurio/data-models';
+import { Document, OpenApi30Document, OpenApi30PathItem, Library } from '@apicurio/data-models';
+import { BaseCommand } from './BaseCommand';
 
 /**
  * Command to delete a path item (e.g., /pets, /users/{id})
  */
-export class DeletePathCommand implements ICommand {
+export class DeletePathCommand extends BaseCommand {
     private _pathName: string;
     private _oldPathItem: any = null;
     private _pathExisted: boolean = false;
@@ -17,6 +18,7 @@ export class DeletePathCommand implements ICommand {
      * @param pathName The path to delete (e.g., "/pets", "/users/{id}")
      */
     constructor(pathName: string) {
+        super();
         this._pathName = pathName;
     }
 
