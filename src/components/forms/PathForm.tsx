@@ -16,12 +16,19 @@ import {
     EmptyStateFooter,
     EmptyStateActions,
     Button,
+    Dropdown,
+    DropdownList,
+    DropdownItem,
+    MenuToggle,
 } from '@patternfly/react-core';
+import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
 import { CreateOperationCommand } from '@commands/CreateOperationCommand';
+import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
+import { CompositeCommand } from '@commands/CompositeCommand';
 
 /**
  * Path form component for editing path metadata and operations
@@ -52,6 +59,9 @@ export const PathForm: React.FC = () => {
 
     // Track selected operation tab
     const [selectedOperation, setSelectedOperation] = useState<string>('get');
+
+    // Track dropdown open state
+    const [isOperationMenuOpen, setIsOperationMenuOpen] = useState(false);
 
     // Get the current operation
     const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
@@ -167,6 +177,53 @@ export const PathForm: React.FC = () => {
         executeCommand(command, `Create ${selectedOperation.toUpperCase()} operation`);
     };
 
+    /**
+     * Handle deleting the selected operation
+     */
+    const handleDeleteSelectedOperation = () => {
+        if (!selectedPath || !operation) return;
+
+        const command = new DeleteOperationCommand(selectedPath, selectedOperation);
+        executeCommand(command, `Delete ${selectedOperation.toUpperCase()} operation`);
+
+        // Switch to 'get' after deletion
+        setSelectedOperation('get');
+        setIsOperationMenuOpen(false);
+    };
+
+    /**
+     * Handle deleting all operations
+     */
+    const handleDeleteAllOperations = () => {
+        if (!selectedPath || !pathItem) return;
+
+        // Find all existing operations
+        const existingMethods = HTTP_METHODS.filter(({ method }) => {
+            const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
+            return !!(pathItem as any)[getter]?.();
+        }).map(m => m.method);
+
+        if (existingMethods.length === 0) return;
+
+        // Create a command for each operation to delete
+        const deleteCommands = existingMethods.map(method =>
+            new DeleteOperationCommand(selectedPath, method)
+        );
+
+        // Wrap all delete commands in a composite command
+        const compositeCommand = new CompositeCommand(
+            deleteCommands,
+            `Delete all operations (${existingMethods.length})`
+        );
+
+        // Execute the composite command
+        executeCommand(compositeCommand, `Delete all operations`);
+
+        // Switch to 'get' after deletion
+        setSelectedOperation('get');
+        setIsOperationMenuOpen(false);
+    };
+
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
@@ -225,7 +282,7 @@ export const PathForm: React.FC = () => {
                 Operations
             </Title>
 
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 {HTTP_METHODS.map(({ method, label, color }) => {
                     const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
                     const exists = !!(pathItem as any)[getter]?.();
@@ -248,6 +305,40 @@ export const PathForm: React.FC = () => {
                         </Label>
                     );
                 })}
+                <Dropdown
+                    isOpen={isOperationMenuOpen}
+                    onOpenChange={setIsOperationMenuOpen}
+                    toggle={(toggleRef) => (
+                        <MenuToggle
+                            ref={toggleRef}
+                            variant="plain"
+                            onClick={() => setIsOperationMenuOpen(!isOperationMenuOpen)}
+                            aria-label="Operation menu"
+                        >
+                            <EllipsisVIcon />
+                        </MenuToggle>
+                    )}
+                >
+                    <DropdownList>
+                        <DropdownItem
+                            key="delete-selected"
+                            onClick={handleDeleteSelectedOperation}
+                            isDisabled={!operation}
+                        >
+                            Delete selected operation
+                        </DropdownItem>
+                        <DropdownItem
+                            key="delete-all"
+                            onClick={handleDeleteAllOperations}
+                            isDisabled={!HTTP_METHODS.some(({ method }) => {
+                                const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
+                                return !!(pathItem as any)[getter]?.();
+                            })}
+                        >
+                            Delete all operations
+                        </DropdownItem>
+                    </DropdownList>
+                </Dropdown>
             </div>
 
             {/* Operation details or empty state */}
