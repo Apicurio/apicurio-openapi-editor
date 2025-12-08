@@ -2,14 +2,12 @@
  * OpenAPI Editor content (wrapped by EditorProvider)
  */
 
-import React, {useEffect} from 'react';
-import {Button, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem,} from '@patternfly/react-core';
-import {RedoIcon, UndoIcon} from '@patternfly/react-icons';
-import {OpenAPIEditorProps} from '@models/EditorProps';
-import {useDocument} from '@hooks/useDocument';
-import {useCommand} from '@hooks/useCommand';
-import {useSelection} from '@hooks/useSelection';
-import {EditorLayout} from './EditorLayout';
+import React, { useEffect, useRef } from 'react';
+import { OpenAPIEditorProps } from '@models/EditorProps';
+import { useDocument } from '@hooks/useDocument';
+import { useSelection } from '@hooks/useSelection';
+import { EditorLayout } from './EditorLayout';
+import { EditorToolbar } from './EditorToolbar';
 import './OpenAPIEditorContent.css';
 
 /**
@@ -20,16 +18,20 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     onChange,
 }) => {
     const { document, isDirty, loadDocument, toObject } = useDocument();
-    const { canUndo, canRedo, undo, redo } = useCommand();
     const { selectRoot } = useSelection();
+    const prevInitialContentRef = useRef<object | string | undefined>(undefined);
 
     /**
-     * Load content when initialContent changes
+     * Load content when initialContent changes (but only select root on first load)
      */
     useEffect(() => {
-        if (initialContent) {
+        if (initialContent && initialContent !== prevInitialContentRef.current) {
+            const isFirstLoad = prevInitialContentRef.current === undefined;
             loadDocument(initialContent);
-            selectRoot();
+            if (isFirstLoad) {
+                selectRoot();
+            }
+            prevInitialContentRef.current = initialContent;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialContent]); // Reload when initialContent changes
@@ -50,51 +52,10 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [document, isDirty]); // Don't include onChange to avoid re-firing on prop change
 
-    /**
-     * Handle undo button click
-     */
-    const handleUndo = () => {
-        undo();
-    };
-
-    /**
-     * Handle redo button click
-     */
-    const handleRedo = () => {
-        redo();
-    };
-
     return (
         <div className="apicurio-openapi-editor">
             {/* Toolbar */}
-            <div className="editor-toolbar">
-                <Toolbar>
-                    <ToolbarContent>
-                        <ToolbarGroup>
-                            <ToolbarItem>
-                                <Button
-                                    variant="plain"
-                                    aria-label="Undo"
-                                    isDisabled={!canUndo}
-                                    onClick={handleUndo}
-                                >
-                                    <UndoIcon />
-                                </Button>
-                            </ToolbarItem>
-                            <ToolbarItem>
-                                <Button
-                                    variant="plain"
-                                    aria-label="Redo"
-                                    isDisabled={!canRedo}
-                                    onClick={handleRedo}
-                                >
-                                    <RedoIcon />
-                                </Button>
-                            </ToolbarItem>
-                        </ToolbarGroup>
-                    </ToolbarContent>
-                </Toolbar>
-            </div>
+            <EditorToolbar />
 
             {/* Editor content */}
             <div className="editor-content">

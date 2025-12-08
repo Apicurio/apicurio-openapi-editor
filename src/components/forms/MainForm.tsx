@@ -13,13 +13,11 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
-import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand, OpenApi30Document } from '@apicurio/data-models';
 
 /**
  * Main form component for editing API info
  */
-const DEBOUNCE_DELAY = 500; // milliseconds
 
 export const MainForm: React.FC = () => {
     const { document } = useDocument();
@@ -38,127 +36,59 @@ export const MainForm: React.FC = () => {
     const [apiVersion, setApiVersion] = useState(info?.getVersion() || '');
     const [description, setDescription] = useState(info?.getDescription() || '');
 
-    // Refs to track current state values (to avoid stale closures in subscription)
-    const titleRef = useRef(title);
-    const apiVersionRef = useRef(apiVersion);
-    const descriptionRef = useRef(description);
+    // Refs to track initial values
+    const initialTitleRef = useRef(info?.getTitle() || '');
+    const initialVersionRef = useRef(info?.getVersion() || '');
+    const initialDescriptionRef = useRef(info?.getDescription() || '');
 
-    // Update refs whenever state changes
+    // Update local state when document changes externally (e.g., undo/redo or initial load)
     useEffect(() => {
-        titleRef.current = title;
-        apiVersionRef.current = apiVersion;
-        descriptionRef.current = description;
-    }, [title, apiVersion, description]);
+        if (!info) return;
 
-    // Refs to track previous committed values
-    const prevTitleRef = useRef(info?.getTitle() || '');
-    const prevVersionRef = useRef(info?.getVersion() || '');
-    const prevDescriptionRef = useRef(info?.getDescription() || '');
+        const newTitle = info.getTitle() || '';
+        const newVersion = info.getVersion() || '';
+        const newDescription = info.getDescription() || '';
 
-    // Debounce timers
-    const titleTimerRef = useRef<number | null>(null);
-    const versionTimerRef = useRef<number | null>(null);
-    const descriptionTimerRef = useRef<number | null>(null);
+        setTitle(newTitle);
+        setApiVersion(newVersion);
+        setDescription(newDescription);
+        initialTitleRef.current = newTitle;
+        initialVersionRef.current = newVersion;
+        initialDescriptionRef.current = newDescription;
+    }, [info]);
 
-    // Sync local state with document when document changes externally (e.g., undo/redo)
-    // Use a manual subscription to avoid re-rendering the component on every version change
-    useEffect(() => {
-        const unsubscribe = useDocumentStore.subscribe(() => {
-            const currentTitle = info?.getTitle() || '';
-            const currentVersion = info?.getVersion() || '';
-            const currentDescription = info?.getDescription() || '';
-
-            // Update local state if document value differs from current state
-            // Use refs to get current state values (avoid stale closure)
-            if (currentTitle !== titleRef.current) {
-                setTitle(currentTitle);
-                prevTitleRef.current = currentTitle;
-            }
-            if (currentVersion !== apiVersionRef.current) {
-                setApiVersion(currentVersion);
-                prevVersionRef.current = currentVersion;
-            }
-            if (currentDescription !== descriptionRef.current) {
-                setDescription(currentDescription);
-                prevDescriptionRef.current = currentDescription;
-            }
-        });
-
-        return unsubscribe;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only set up subscription once
-
-    /**
-     * Handle change to title field (debounced)
-     */
-    const handleTitleChange = (value: string) => {
-        setTitle(value);
-
-        // Clear existing timer
-        if (titleTimerRef.current) {
-            clearTimeout(titleTimerRef.current);
+    // Field commit handlers - update on blur or Enter
+    const handleTitleCommit = () => {
+        if (info && title !== initialTitleRef.current) {
+            const command = new ChangePropertyCommand(info, 'title', title);
+            executeCommand(command, `Change API title to "${title}"`);
+            initialTitleRef.current = title;
         }
-
-        // Set new timer to execute command after delay
-        titleTimerRef.current = setTimeout(() => {
-            if (info && value !== prevTitleRef.current) {
-                const command = new ChangePropertyCommand(info, 'title', value);
-                executeCommand(command, `Change API title to "${value}"`);
-                prevTitleRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
     };
 
-    /**
-     * Handle change to version field (debounced)
-     */
-    const handleVersionChange = (value: string) => {
-        setApiVersion(value);
-
-        // Clear existing timer
-        if (versionTimerRef.current) {
-            clearTimeout(versionTimerRef.current);
+    const handleVersionCommit = () => {
+        if (info && apiVersion !== initialVersionRef.current) {
+            const command = new ChangePropertyCommand(info, 'version', apiVersion);
+            executeCommand(command, `Change API version to "${apiVersion}"`);
+            initialVersionRef.current = apiVersion;
         }
-
-        // Set new timer to execute command after delay
-        versionTimerRef.current = setTimeout(() => {
-            if (info && value !== prevVersionRef.current) {
-                const command = new ChangePropertyCommand(info, 'version', value);
-                executeCommand(command, `Change API version to "${value}"`);
-                prevVersionRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
     };
 
-    /**
-     * Handle change to description field (debounced)
-     */
-    const handleDescriptionChange = (value: string) => {
-        setDescription(value);
-
-        // Clear existing timer
-        if (descriptionTimerRef.current) {
-            clearTimeout(descriptionTimerRef.current);
+    const handleDescriptionCommit = () => {
+        if (info && description !== initialDescriptionRef.current) {
+            const command = new ChangePropertyCommand(info, 'description', description);
+            executeCommand(command, 'Update API description');
+            initialDescriptionRef.current = description;
         }
-
-        // Set new timer to execute command after delay
-        descriptionTimerRef.current = setTimeout(() => {
-            if (info && value !== prevDescriptionRef.current) {
-                const command = new ChangePropertyCommand(info, 'description', value);
-                executeCommand(command, `Update API description`);
-                prevDescriptionRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
     };
 
-    // Cleanup timers on unmount
-    useEffect(() => {
-        return () => {
-            if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
-            if (versionTimerRef.current) clearTimeout(versionTimerRef.current);
-            if (descriptionTimerRef.current) clearTimeout(descriptionTimerRef.current);
-        };
-    }, []);
+    // Handle Enter key press
+    const handleKeyDown = (e: React.KeyboardEvent, commitFn: () => void) => {
+        if (e.key === 'Enter' && !(e.target as HTMLElement).matches('textarea')) {
+            e.preventDefault(); // Prevent form submission
+            commitFn();
+        }
+    };
 
     return (
         <div>
@@ -185,7 +115,9 @@ export const MainForm: React.FC = () => {
                     <TextInput
                         id="api-title"
                         value={title}
-                        onChange={(_event, value) => handleTitleChange(value)}
+                        onChange={(_event, value) => setTitle(value)}
+                        onBlur={handleTitleCommit}
+                        onKeyDown={(e) => handleKeyDown(e, handleTitleCommit)}
                         aria-label="API title"
                     />
                 </FormGroup>
@@ -194,7 +126,9 @@ export const MainForm: React.FC = () => {
                     <TextInput
                         id="api-version"
                         value={apiVersion}
-                        onChange={(_event, value) => handleVersionChange(value)}
+                        onChange={(_event, value) => setApiVersion(value)}
+                        onBlur={handleVersionCommit}
+                        onKeyDown={(e) => handleKeyDown(e, handleVersionCommit)}
                         aria-label="API version"
                     />
                 </FormGroup>
@@ -203,7 +137,8 @@ export const MainForm: React.FC = () => {
                     <TextArea
                         id="api-description"
                         value={description}
-                        onChange={(_event, value) => handleDescriptionChange(value)}
+                        onChange={(_event, value) => setDescription(value)}
+                        onBlur={handleDescriptionCommit}
                         aria-label="API description"
                         resizeOrientation="vertical"
                     />
@@ -211,7 +146,7 @@ export const MainForm: React.FC = () => {
             </Form>
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
-                Changes are automatically saved. Use Undo/Redo buttons to revert changes.
+                Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
             </p>
         </div>
     );

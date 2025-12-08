@@ -19,14 +19,12 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
-import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
 
 /**
  * Path form component for editing path metadata and operations
  */
-const DEBOUNCE_DELAY = 500; // milliseconds
 
 // HTTP methods in display order with their label colors
 const HTTP_METHODS = [
@@ -67,180 +65,96 @@ export const PathForm: React.FC = () => {
     const [opDescription, setOpDescription] = useState(operation?.getDescription() || '');
     const [opId, setOpId] = useState(operation?.getOperationId() || '');
 
-    // Refs for path fields
-    const summaryRef = useRef(summary);
-    const descriptionRef = useRef(description);
-    const prevSummaryRef = useRef(pathItem?.getSummary() || '');
-    const prevDescriptionRef = useRef(pathItem?.getDescription() || '');
-    const summaryTimerRef = useRef<number | null>(null);
-    const descriptionTimerRef = useRef<number | null>(null);
-
-    // Refs for operation fields
-    const opSummaryRef = useRef(opSummary);
-    const opDescriptionRef = useRef(opDescription);
-    const opIdRef = useRef(opId);
-    const prevOpSummaryRef = useRef(operation?.getSummary() || '');
-    const prevOpDescriptionRef = useRef(operation?.getDescription() || '');
-    const prevOpIdRef = useRef(operation?.getOperationId() || '');
-    const opSummaryTimerRef = useRef<number | null>(null);
-    const opDescriptionTimerRef = useRef<number | null>(null);
-    const opIdTimerRef = useRef<number | null>(null);
-
-    // Update refs
-    useEffect(() => {
-        summaryRef.current = summary;
-        descriptionRef.current = description;
-    }, [summary, description]);
-
-    useEffect(() => {
-        opSummaryRef.current = opSummary;
-        opDescriptionRef.current = opDescription;
-        opIdRef.current = opId;
-    }, [opSummary, opDescription, opId]);
-
-    // Sync with document changes (undo/redo)
-    useEffect(() => {
-        if (!pathItem) return;
-
-        const unsubscribe = useDocumentStore.subscribe(() => {
-            const currentSummary = pathItem?.getSummary() || '';
-            const currentDescription = pathItem?.getDescription() || '';
-
-            if (currentSummary !== summaryRef.current) {
-                setSummary(currentSummary);
-                prevSummaryRef.current = currentSummary;
-            }
-            if (currentDescription !== descriptionRef.current) {
-                setDescription(currentDescription);
-                prevDescriptionRef.current = currentDescription;
-            }
-
-            // Sync operation fields if operation exists
-            if (operation) {
-                const currentOpSummary = operation.getSummary() || '';
-                const currentOpDescription = operation.getDescription() || '';
-                const currentOpId = operation.getOperationId() || '';
-
-                if (currentOpSummary !== opSummaryRef.current) {
-                    setOpSummary(currentOpSummary);
-                    prevOpSummaryRef.current = currentOpSummary;
-                }
-                if (currentOpDescription !== opDescriptionRef.current) {
-                    setOpDescription(currentOpDescription);
-                    prevOpDescriptionRef.current = currentOpDescription;
-                }
-                if (currentOpId !== opIdRef.current) {
-                    setOpId(currentOpId);
-                    prevOpIdRef.current = currentOpId;
-                }
-            }
-        });
-
-        return unsubscribe;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pathItem, operation]);
+    // Refs to track initial values
+    const initialSummaryRef = useRef(pathItem?.getSummary() || '');
+    const initialDescriptionRef = useRef(pathItem?.getDescription() || '');
+    const initialOpSummaryRef = useRef(operation?.getSummary() || '');
+    const initialOpDescriptionRef = useRef(operation?.getDescription() || '');
+    const initialOpIdRef = useRef(operation?.getOperationId() || '');
 
     // Update local state when path selection changes
     useEffect(() => {
         if (!pathItem) return;
 
-        setSummary(pathItem.getSummary() || '');
-        setDescription(pathItem.getDescription() || '');
-        prevSummaryRef.current = pathItem.getSummary() || '';
-        prevDescriptionRef.current = pathItem.getDescription() || '';
+        const newSummary = pathItem.getSummary() || '';
+        const newDescription = pathItem.getDescription() || '';
+        setSummary(newSummary);
+        setDescription(newDescription);
+        initialSummaryRef.current = newSummary;
+        initialDescriptionRef.current = newDescription;
     }, [pathName, pathItem]);
 
     // Update operation state when selected operation changes
     useEffect(() => {
         if (operation) {
-            setOpSummary(operation.getSummary() || '');
-            setOpDescription(operation.getDescription() || '');
-            setOpId(operation.getOperationId() || '');
-            prevOpSummaryRef.current = operation.getSummary() || '';
-            prevOpDescriptionRef.current = operation.getDescription() || '';
-            prevOpIdRef.current = operation.getOperationId() || '';
+            const newOpSummary = operation.getSummary() || '';
+            const newOpDescription = operation.getDescription() || '';
+            const newOpId = operation.getOperationId() || '';
+            setOpSummary(newOpSummary);
+            setOpDescription(newOpDescription);
+            setOpId(newOpId);
+            initialOpSummaryRef.current = newOpSummary;
+            initialOpDescriptionRef.current = newOpDescription;
+            initialOpIdRef.current = newOpId;
         } else {
             setOpSummary('');
             setOpDescription('');
             setOpId('');
-            prevOpSummaryRef.current = '';
-            prevOpDescriptionRef.current = '';
-            prevOpIdRef.current = '';
+            initialOpSummaryRef.current = '';
+            initialOpDescriptionRef.current = '';
+            initialOpIdRef.current = '';
         }
     }, [selectedOperation, operation]);
 
-    // Path field handlers
-    const handleSummaryChange = (value: string) => {
-        setSummary(value);
-        if (summaryTimerRef.current) clearTimeout(summaryTimerRef.current);
-        summaryTimerRef.current = setTimeout(() => {
-            if (pathItem && value !== prevSummaryRef.current) {
-                const command = new ChangePropertyCommand(pathItem, 'summary', value);
-                executeCommand(command, `Change path summary to "${value}"`);
-                prevSummaryRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
+    // Path field handlers - update on blur or Enter
+    const handleSummaryCommit = () => {
+        if (pathItem && summary !== initialSummaryRef.current) {
+            const command = new ChangePropertyCommand(pathItem, 'summary', summary);
+            executeCommand(command, `Change path summary to "${summary}"`);
+            initialSummaryRef.current = summary;
+        }
     };
 
-    const handleDescriptionChange = (value: string) => {
-        setDescription(value);
-        if (descriptionTimerRef.current) clearTimeout(descriptionTimerRef.current);
-        descriptionTimerRef.current = setTimeout(() => {
-            if (pathItem && value !== prevDescriptionRef.current) {
-                const command = new ChangePropertyCommand(pathItem, 'description', value);
-                executeCommand(command, 'Update path description');
-                prevDescriptionRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
+    const handleDescriptionCommit = () => {
+        if (pathItem && description !== initialDescriptionRef.current) {
+            const command = new ChangePropertyCommand(pathItem, 'description', description);
+            executeCommand(command, 'Update path description');
+            initialDescriptionRef.current = description;
+        }
     };
 
-    // Operation field handlers
-    const handleOpSummaryChange = (value: string) => {
-        setOpSummary(value);
-        if (opSummaryTimerRef.current) clearTimeout(opSummaryTimerRef.current);
-        opSummaryTimerRef.current = setTimeout(() => {
-            if (operation && value !== prevOpSummaryRef.current) {
-                const command = new ChangePropertyCommand(operation, 'summary', value);
-                executeCommand(command, `Change ${selectedOperation.toUpperCase()} operation summary`);
-                prevOpSummaryRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
+    // Operation field handlers - update on blur or Enter
+    const handleOpSummaryCommit = () => {
+        if (operation && opSummary !== initialOpSummaryRef.current) {
+            const command = new ChangePropertyCommand(operation, 'summary', opSummary);
+            executeCommand(command, `Change ${selectedOperation.toUpperCase()} operation summary`);
+            initialOpSummaryRef.current = opSummary;
+        }
     };
 
-    const handleOpDescriptionChange = (value: string) => {
-        setOpDescription(value);
-        if (opDescriptionTimerRef.current) clearTimeout(opDescriptionTimerRef.current);
-        opDescriptionTimerRef.current = setTimeout(() => {
-            if (operation && value !== prevOpDescriptionRef.current) {
-                const command = new ChangePropertyCommand(operation, 'description', value);
-                executeCommand(command, `Update ${selectedOperation.toUpperCase()} operation description`);
-                prevOpDescriptionRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
+    const handleOpDescriptionCommit = () => {
+        if (operation && opDescription !== initialOpDescriptionRef.current) {
+            const command = new ChangePropertyCommand(operation, 'description', opDescription);
+            executeCommand(command, `Update ${selectedOperation.toUpperCase()} operation description`);
+            initialOpDescriptionRef.current = opDescription;
+        }
     };
 
-    const handleOpIdChange = (value: string) => {
-        setOpId(value);
-        if (opIdTimerRef.current) clearTimeout(opIdTimerRef.current);
-        opIdTimerRef.current = setTimeout(() => {
-            if (operation && value !== prevOpIdRef.current) {
-                const command = new ChangePropertyCommand(operation, 'operationId', value);
-                executeCommand(command, `Change operationId to "${value}"`);
-                prevOpIdRef.current = value;
-            }
-        }, DEBOUNCE_DELAY);
+    const handleOpIdCommit = () => {
+        if (operation && opId !== initialOpIdRef.current) {
+            const command = new ChangePropertyCommand(operation, 'operationId', opId);
+            executeCommand(command, `Change operationId to "${opId}"`);
+            initialOpIdRef.current = opId;
+        }
     };
 
-    // Cleanup timers
-    useEffect(() => {
-        return () => {
-            if (summaryTimerRef.current) clearTimeout(summaryTimerRef.current);
-            if (descriptionTimerRef.current) clearTimeout(descriptionTimerRef.current);
-            if (opSummaryTimerRef.current) clearTimeout(opSummaryTimerRef.current);
-            if (opDescriptionTimerRef.current) clearTimeout(opDescriptionTimerRef.current);
-            if (opIdTimerRef.current) clearTimeout(opIdTimerRef.current);
-        };
-    }, []);
+    // Handle Enter key press
+    const handleKeyDown = (e: React.KeyboardEvent, commitFn: () => void) => {
+        if (e.key === 'Enter' && !(e.target as HTMLElement).matches('textarea')) {
+            e.preventDefault(); // Prevent form submission
+            commitFn();
+        }
+    };
 
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
@@ -272,7 +186,9 @@ export const PathForm: React.FC = () => {
                     <TextInput
                         id="path-summary"
                         value={summary}
-                        onChange={(_event, value) => handleSummaryChange(value)}
+                        onChange={(_event, value) => setSummary(value)}
+                        onBlur={handleSummaryCommit}
+                        onKeyDown={(e) => handleKeyDown(e, handleSummaryCommit)}
                         aria-label="Path summary"
                         placeholder="Short summary of the path"
                     />
@@ -282,7 +198,8 @@ export const PathForm: React.FC = () => {
                     <TextArea
                         id="path-description"
                         value={description}
-                        onChange={(_event, value) => handleDescriptionChange(value)}
+                        onChange={(_event, value) => setDescription(value)}
+                        onBlur={handleDescriptionCommit}
                         aria-label="Path description"
                         placeholder="Detailed description of the path"
                         resizeOrientation="vertical"
@@ -329,7 +246,9 @@ export const PathForm: React.FC = () => {
                         <TextInput
                             id="operation-summary"
                             value={opSummary}
-                            onChange={(_event, value) => handleOpSummaryChange(value)}
+                            onChange={(_event, value) => setOpSummary(value)}
+                            onBlur={handleOpSummaryCommit}
+                            onKeyDown={(e) => handleKeyDown(e, handleOpSummaryCommit)}
                             aria-label="Operation summary"
                             placeholder="Short summary of the operation"
                         />
@@ -339,7 +258,9 @@ export const PathForm: React.FC = () => {
                         <TextInput
                             id="operation-id"
                             value={opId}
-                            onChange={(_event, value) => handleOpIdChange(value)}
+                            onChange={(_event, value) => setOpId(value)}
+                            onBlur={handleOpIdCommit}
+                            onKeyDown={(e) => handleKeyDown(e, handleOpIdCommit)}
                             aria-label="Operation ID"
                             placeholder="Unique operation identifier"
                         />
@@ -349,7 +270,8 @@ export const PathForm: React.FC = () => {
                         <TextArea
                             id="operation-description"
                             value={opDescription}
-                            onChange={(_event, value) => handleOpDescriptionChange(value)}
+                            onChange={(_event, value) => setOpDescription(value)}
+                            onBlur={handleOpDescriptionCommit}
                             aria-label="Operation description"
                             placeholder="Detailed description of the operation"
                             resizeOrientation="vertical"
@@ -372,7 +294,7 @@ export const PathForm: React.FC = () => {
             )}
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
-                Changes are automatically saved. Use Undo/Redo buttons to revert changes.
+                Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
             </p>
         </div>
     );
