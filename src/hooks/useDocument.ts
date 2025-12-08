@@ -27,7 +27,8 @@ export const useDocument = () => {
         version,
 
         // Actions
-        loadDocument: (content: object | string) => documentService.loadDocument(content),
+        loadDocument: (content: object | string, resetCommands?: boolean) =>
+            documentService.loadDocument(content, resetCommands),
         getDocument: () => documentService.getDocument(),
         toObject: () => documentService.toObject(),
         toJSON: () => documentService.toJSON(),

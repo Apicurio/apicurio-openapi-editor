@@ -20,14 +20,22 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { document, isDirty, loadDocument, toObject } = useDocument();
     const { selectRoot } = useSelection();
     const prevInitialContentRef = useRef<object | string | undefined>(undefined);
+    const lastEmittedContentRef = useRef<object | undefined>(undefined);
 
     /**
      * Load content when initialContent changes (but only select root on first load)
+     * Also reset command stack only if the change is from an external source
      */
     useEffect(() => {
         if (initialContent && initialContent !== prevInitialContentRef.current) {
             const isFirstLoad = prevInitialContentRef.current === undefined;
-            loadDocument(initialContent);
+
+            // Check if this change is from our own onChange callback
+            // If initialContent equals what we last emitted, don't reset commands
+            const isFromOwnChange = initialContent === lastEmittedContentRef.current;
+            const shouldResetCommands = !isFromOwnChange;
+
+            loadDocument(initialContent, shouldResetCommands);
             if (isFirstLoad) {
                 selectRoot();
             }
@@ -46,6 +54,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
         if (document && isDirty && onChange) {
             const obj = toObject();
             if (obj) {
+                lastEmittedContentRef.current = obj;
                 onChange(obj);
             }
         }

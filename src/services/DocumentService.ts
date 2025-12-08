@@ -4,6 +4,7 @@
 
 import { Document, Library } from '@apicurio/data-models';
 import { useDocumentStore } from '@stores/documentStore';
+import { useCommandStore } from '@stores/commandStore';
 import { ValidationProblem } from '@models/DocumentTypes';
 
 /**
@@ -12,8 +13,10 @@ import { ValidationProblem } from '@models/DocumentTypes';
 export class DocumentService {
     /**
      * Load and parse an OpenAPI document from content
+     * @param content The document content to load
+     * @param resetCommands Whether to reset the undo/redo stack (default: true)
      */
-    loadDocument(content: object | string): Document | null {
+    loadDocument(content: object | string, resetCommands: boolean = true): Document | null {
         try {
             const store = useDocumentStore.getState();
             store.setError(null);
@@ -28,6 +31,11 @@ export class DocumentService {
 
             store.updateDocument(doc);
             store.loadDocument(content);
+
+            // Reset the command stack when loading a new document (if requested)
+            if (resetCommands) {
+                useCommandStore.getState().reset();
+            }
 
             return doc;
         } catch (error) {
