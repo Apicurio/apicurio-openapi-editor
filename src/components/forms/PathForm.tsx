@@ -19,6 +19,7 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
+import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand, OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
 
@@ -156,6 +157,30 @@ export const PathForm: React.FC = () => {
         }
     };
 
+    // Handle creating a new operation
+    const handleCreateOperation = () => {
+        if (!pathItem || !document) return;
+
+        // Create the operation using the pathItem's create method
+        const createMethod = `create${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
+        const newOperation = (pathItem as any)[createMethod]?.();
+
+        if (newOperation) {
+            // The operation is already added to the path item
+            // Trigger a document update to reflect the change
+            const docStore = useDocumentStore.getState();
+            docStore.updateDocument(document);
+
+            // Initialize the operation state
+            setOpSummary('');
+            setOpDescription('');
+            setOpId('');
+            initialOpSummaryRef.current = '';
+            initialOpDescriptionRef.current = '';
+            initialOpIdRef.current = '';
+        }
+    };
+
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
@@ -285,7 +310,7 @@ export const PathForm: React.FC = () => {
                     </EmptyStateBody>
                     <EmptyStateFooter>
                         <EmptyStateActions>
-                            <Button variant="primary">
+                            <Button variant="primary" onClick={handleCreateOperation}>
                                 Create {selectedOperation.toUpperCase()} operation
                             </Button>
                         </EmptyStateActions>
