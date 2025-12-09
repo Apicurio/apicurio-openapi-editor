@@ -2,13 +2,14 @@
  * Navigation panel for the master section
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Nav,
     NavList,
     NavItem,
     Divider,
     Button,
+    SearchInput,
 } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
@@ -31,6 +32,7 @@ export const NavigationPanel: React.FC = () => {
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
     const [isPathsExpanded, setIsPathsExpanded] = useState(true);
     const [isSchemasExpanded, setIsSchemasExpanded] = useState(true);
+    const [filterText, setFilterText] = useState('');
 
     /**
      * Get list of paths from the document
@@ -68,6 +70,23 @@ export const NavigationPanel: React.FC = () => {
 
     const paths = getPaths().sort();
     const schemas = getSchemas().sort();
+
+    /**
+     * Filter items based on filter text
+     */
+    const filterItems = (items: string[]): string[] => {
+        if (!filterText.trim()) {
+            return items;
+        }
+        const searchTerm = filterText.toLowerCase();
+        return items.filter(item => item.toLowerCase().includes(searchTerm));
+    };
+
+    /**
+     * Filtered paths and schemas
+     */
+    const filteredPaths = useMemo(() => filterItems(paths), [paths, filterText]);
+    const filteredSchemas = useMemo(() => filterItems(schemas), [schemas, filterText]);
 
     /**
      * Handle path selection
@@ -116,6 +135,18 @@ export const NavigationPanel: React.FC = () => {
 
                     <Divider />
 
+                    {/* Search/Filter Section */}
+                    <div style={{ padding: '5px' }}>
+                        <SearchInput
+                            placeholder="Filter..."
+                            value={filterText}
+                            onChange={(_event, value) => setFilterText(value)}
+                            onClear={() => setFilterText('')}
+                        />
+                    </div>
+
+                    <Divider />
+
                     {/* Paths Section */}
                     <ExpandablePanel
                         title="Paths"
@@ -131,12 +162,12 @@ export const NavigationPanel: React.FC = () => {
                             />
                         }
                     >
-                        {paths.length === 0 ? (
+                        {filteredPaths.length === 0 ? (
                             <NavItem itemId="no-paths" disabled>
-                                No paths defined
+                                {filterText ? 'No matching paths' : 'No paths defined'}
                             </NavItem>
                         ) : (
-                            paths.map((path) => {
+                            filteredPaths.map((path) => {
                                 const isActive = selectedPath === `/paths/${path}`;
                                 return (
                                     <NavItem
@@ -160,12 +191,12 @@ export const NavigationPanel: React.FC = () => {
                         isExpanded={isSchemasExpanded}
                         onToggle={setIsSchemasExpanded}
                     >
-                        {schemas.length === 0 ? (
+                        {filteredSchemas.length === 0 ? (
                             <NavItem itemId="no-schemas" disabled>
-                                No schemas defined
+                                {filterText ? 'No matching schemas' : 'No schemas defined'}
                             </NavItem>
                         ) : (
-                            schemas.map((schemaName) => {
+                            filteredSchemas.map((schemaName) => {
                                 const isActive = selectedPath === `/components/schemas/${schemaName}`;
                                 return (
                                     <NavItem
