@@ -8,7 +8,6 @@ import {
     NavList,
     NavItem,
     Divider,
-    Title,
     Button,
 } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons';
@@ -18,6 +17,7 @@ import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document } from '@apicurio/data-models';
 import { CreatePathModal } from '@components/modals/CreatePathModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
+import { ExpandablePanel } from '@components/common/ExpandablePanel';
 import './NavigationPanel.css';
 
 /**
@@ -29,6 +29,8 @@ export const NavigationPanel: React.FC = () => {
     const { selectedPath, selectByPath, selectRoot } = useSelection();
     const { executeCommand } = useCommand();
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
+    const [isPathsExpanded, setIsPathsExpanded] = useState(true);
+    const [isSchemasExpanded, setIsSchemasExpanded] = useState(true);
 
     /**
      * Get list of paths from the document
@@ -115,63 +117,69 @@ export const NavigationPanel: React.FC = () => {
                     <Divider />
 
                     {/* Paths Section */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem' }}>
-                        <Title headingLevel="h3" size="md">
-                            Paths
-                        </Title>
-                        <Button
-                            variant="plain"
-                            aria-label="Add path"
-                            onClick={() => setIsCreatePathModalOpen(true)}
-                            icon={<PlusCircleIcon />}
-                            style={{ minWidth: 'auto', padding: '0.25rem' }}
-                        />
-                    </div>
-                {paths.length === 0 ? (
-                    <NavItem itemId="no-paths" disabled>
-                        No paths defined
-                    </NavItem>
-                ) : (
-                    paths.map((path) => {
-                        const isActive = selectedPath === `/paths/${path}`;
-                        return (
-                            <NavItem
-                                key={path}
-                                itemId={`path-${path}`}
-                                isActive={isActive}
-                                onClick={() => handlePathClick(path)}
-                            >
-                                {path}
+                    <ExpandablePanel
+                        title="Paths"
+                        isExpanded={isPathsExpanded}
+                        onToggle={setIsPathsExpanded}
+                        actions={
+                            <Button
+                                variant="plain"
+                                aria-label="Add path"
+                                onClick={() => setIsCreatePathModalOpen(true)}
+                                icon={<PlusCircleIcon />}
+                                style={{ minWidth: 'auto', padding: '0.25rem' }}
+                            />
+                        }
+                    >
+                        {paths.length === 0 ? (
+                            <NavItem itemId="no-paths" disabled>
+                                No paths defined
                             </NavItem>
-                        );
-                    })
-                )}
+                        ) : (
+                            paths.map((path) => {
+                                const isActive = selectedPath === `/paths/${path}`;
+                                return (
+                                    <NavItem
+                                        key={path}
+                                        itemId={`path-${path}`}
+                                        isActive={isActive}
+                                        onClick={() => handlePathClick(path)}
+                                    >
+                                        {path}
+                                    </NavItem>
+                                );
+                            })
+                        )}
+                    </ExpandablePanel>
 
-                <Divider />
+                    <Divider />
 
-                {/* Schemas Section */}
-                <Title headingLevel="h3" size="md" style={{ padding: '0.5rem 1rem' }}>
-                    Schemas
-                </Title>
-                {schemas.length === 0 ? (
-                    <NavItem itemId="no-schemas" disabled>
-                        No schemas defined
-                    </NavItem>
-                ) : (
-                    schemas.map((schemaName) => {
-                        const isActive = selectedPath === `/components/schemas/${schemaName}`;
-                        return (
-                            <NavItem
-                                key={schemaName}
-                                itemId={`schema-${schemaName}`}
-                                isActive={isActive}
-                                onClick={() => handleSchemaClick(schemaName)}
-                            >
-                                {schemaName}
+                    {/* Schemas Section */}
+                    <ExpandablePanel
+                        title="Schemas"
+                        isExpanded={isSchemasExpanded}
+                        onToggle={setIsSchemasExpanded}
+                    >
+                        {schemas.length === 0 ? (
+                            <NavItem itemId="no-schemas" disabled>
+                                No schemas defined
                             </NavItem>
-                        );
-                    })
-                )}
+                        ) : (
+                            schemas.map((schemaName) => {
+                                const isActive = selectedPath === `/components/schemas/${schemaName}`;
+                                return (
+                                    <NavItem
+                                        key={schemaName}
+                                        itemId={`schema-${schemaName}`}
+                                        isActive={isActive}
+                                        onClick={() => handleSchemaClick(schemaName)}
+                                    >
+                                        {schemaName}
+                                    </NavItem>
+                                );
+                            })
+                        )}
+                    </ExpandablePanel>
             </NavList>
         </Nav>
 

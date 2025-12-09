@@ -1,0 +1,36 @@
+/**
+ * Styles for ExpandablePanel component
+ */
+
+.expandable-panel {
+    width: 100%;
+}
+
+.expandable-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: normal;
+    background-color: var(--pf-v6-global--BackgroundColor--200);
+    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100);
+}
+
+.expandable-panel__toggle {
+    gap: 0.5rem;
+    padding: 5px;
+    align-items: center;
+    font-weight: var(--pf-v6-global--FontWeight--semi-bold);
+    flex: 1;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.expandable-panel__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.expandable-panel__content {
+    width: 100%;
+}
