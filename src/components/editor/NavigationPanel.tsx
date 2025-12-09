@@ -17,7 +17,9 @@ import { useSelection } from '@hooks/useSelection';
 import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document } from '@apicurio/data-models';
 import { CreatePathModal } from '@components/modals/CreatePathModal';
+import { CreateSchemaModal } from '@components/modals/CreateSchemaModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
+import { CreateSchemaCommand } from '@commands/CreateSchemaCommand';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
 import './NavigationPanel.css';
 
@@ -30,6 +32,7 @@ export const NavigationPanel: React.FC = () => {
     const { selectedPath, selectByPath, selectRoot } = useSelection();
     const { executeCommand } = useCommand();
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
+    const [isCreateSchemaModalOpen, setIsCreateSchemaModalOpen] = useState(false);
     const [isPathsExpanded, setIsPathsExpanded] = useState(true);
     const [isSchemasExpanded, setIsSchemasExpanded] = useState(true);
     const [filterText, setFilterText] = useState('');
@@ -120,6 +123,17 @@ export const NavigationPanel: React.FC = () => {
         selectByPath(`/paths/${pathName}`);
     };
 
+    /**
+     * Handle creating a new schema
+     */
+    const handleCreateSchema = (schemaName: string) => {
+        const command = new CreateSchemaCommand(schemaName);
+        executeCommand(command, `Create schema ${schemaName}`);
+
+        // Select the newly created schema
+        selectByPath(`/components/schemas/${schemaName}`);
+    };
+
     return (
         <>
             <Nav aria-label="Navigation" onSelect={() => {}}>
@@ -190,6 +204,15 @@ export const NavigationPanel: React.FC = () => {
                         title="Schemas"
                         isExpanded={isSchemasExpanded}
                         onToggle={setIsSchemasExpanded}
+                        actions={
+                            <Button
+                                variant="plain"
+                                aria-label="Add schema"
+                                onClick={() => setIsCreateSchemaModalOpen(true)}
+                                icon={<PlusCircleIcon />}
+                                style={{ minWidth: 'auto', padding: '0.25rem' }}
+                            />
+                        }
                     >
                         {filteredSchemas.length === 0 ? (
                             <NavItem itemId="no-schemas" disabled>
@@ -219,6 +242,13 @@ export const NavigationPanel: React.FC = () => {
             isOpen={isCreatePathModalOpen}
             onClose={() => setIsCreatePathModalOpen(false)}
             onConfirm={handleCreatePath}
+        />
+
+        {/* Create Schema Modal */}
+        <CreateSchemaModal
+            isOpen={isCreateSchemaModalOpen}
+            onClose={() => setIsCreateSchemaModalOpen(false)}
+            onConfirm={handleCreateSchema}
         />
         </>
     );
