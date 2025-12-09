@@ -19,6 +19,11 @@ export interface ExpandablePanelProps {
     isExpanded: boolean;
 
     /**
+     * Extra class name
+     */
+    className?: string;
+
+    /**
      * Callback when the panel is toggled
      */
     onToggle: (expanded: boolean) => void;
@@ -39,13 +44,14 @@ export interface ExpandablePanelProps {
  */
 export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
     title,
+    className,
     isExpanded,
     onToggle,
     actions,
     children,
 }) => {
     return (
-        <div className="expandable-panel">
+        <div className={`expandable-panel ${className || ''}`}>
             <div className="expandable-panel__header">
                 <Button
                     variant="plain"

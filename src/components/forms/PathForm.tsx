@@ -20,8 +20,10 @@ import {
     DropdownList,
     DropdownItem,
     MenuToggle,
+    List,
+    ListItem,
 } from '@patternfly/react-core';
-import { EllipsisVIcon } from '@patternfly/react-icons';
+import { EllipsisVIcon, PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
@@ -31,6 +33,8 @@ import { CreateOperationCommand } from '@commands/CreateOperationCommand';
 import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
 import { DeletePathCommand } from '@commands/DeletePathCommand';
 import { CompositeCommand } from '@commands/CompositeCommand';
+import { ExpandablePanel } from '@components/common/ExpandablePanel';
+import "./PathForm.css";
 
 /**
  * Path form component for editing path metadata and operations
@@ -65,6 +69,26 @@ export const PathForm: React.FC = () => {
     // Track dropdown open state
     const [isOperationMenuOpen, setIsOperationMenuOpen] = useState(false);
     const [isPathMenuOpen, setIsPathMenuOpen] = useState(false);
+
+    /**
+     * Get parameters filtered by location
+     */
+    const getParametersByLocation = (location: string): any[] => {
+        const parameters = pathItem?.getParameters();
+        if (!parameters || parameters.length === 0) {
+            return [];
+        }
+        return parameters.filter((param: any) => {
+            const paramIn = param.getIn?.() || param.in;
+            return paramIn === location;
+        });
+    };
+
+    // Track expandable panel state - start expanded if parameters exist
+    const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(() => getParametersByLocation('path').length > 0);
+    const [isQueryParametersExpanded, setIsQueryParametersExpanded] = useState(() => getParametersByLocation('query').length > 0);
+    const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(() => getParametersByLocation('header').length > 0);
+    const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(() => getParametersByLocation('cookie').length > 0);
 
     // Get the current operation
     const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
@@ -241,6 +265,77 @@ export const PathForm: React.FC = () => {
         setIsPathMenuOpen(false);
     };
 
+    /**
+     * Render a parameter list section
+     */
+    const renderParameterSection = (title: string, location: string, isExpanded: boolean, onToggle: (expanded: boolean) => void) => {
+        const parameters = getParametersByLocation(location);
+
+        return (
+            <ExpandablePanel
+                title={title}
+                isExpanded={isExpanded}
+                onToggle={onToggle}
+                className="parameter-section"
+                actions={
+                    <Button
+                        variant="plain"
+                        aria-label={`Add ${location} parameter`}
+                        icon={<PlusCircleIcon />}
+                        style={{ minWidth: 'auto', padding: '0.25rem' }}
+                    />
+                }
+            >
+                {parameters.length === 0 ? (
+                    <EmptyState>
+                        <EmptyStateBody>
+                            No {location} parameters defined
+                        </EmptyStateBody>
+                        <EmptyStateFooter>
+                            <EmptyStateActions>
+                                <Button variant="primary">
+                                    Add parameter
+                                </Button>
+                            </EmptyStateActions>
+                        </EmptyStateFooter>
+                    </EmptyState>
+                ) : (
+                    <div style={{paddingLeft: "20px", paddingTop: "10px"}}>
+                        <List isPlain isBordered>
+                            {parameters.map((param: any, index: number) => {
+                                const paramName = param.getName?.() || param.name || 'Unnamed';
+                                const paramRequired = param.getRequired?.() || param.required || false;
+                                const paramType = param.getSchema?.()?.getType?.() || param.schema?.type || 'string';
+
+                                return (
+                                    <ListItem key={index}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                            <div>
+                                                <strong>{paramName}</strong>
+                                                {' '}
+                                                <Label isCompact color="grey">{paramType}</Label>
+                                                {paramRequired && (
+                                                    <>
+                                                        {' '}
+                                                        <Label isCompact color="orange">required</Label>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <Button variant="link" size="sm">Edit</Button>
+                                                <Button variant="link" size="sm" isDanger>Delete</Button>
+                                            </div>
+                                        </div>
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    </div>
+                )}
+            </ExpandablePanel>
+        );
+    };
+
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
@@ -317,6 +412,17 @@ export const PathForm: React.FC = () => {
                     />
                 </FormGroup>
             </Form>
+
+            <Divider style={{ margin: '1.5rem 0' }} />
+
+            {/* Path Parameters */}
+            {renderParameterSection('Path Parameters', 'path', isPathParametersExpanded, setIsPathParametersExpanded)}
+            {/* Query Parameters */}
+            {renderParameterSection('Query Parameters', 'query', isQueryParametersExpanded, setIsQueryParametersExpanded)}
+            {/* Header Parameters */}
+            {renderParameterSection('Header Parameters', 'header', isHeaderParametersExpanded, setIsHeaderParametersExpanded)}
+            {/* Cookie Parameters */}
+            {renderParameterSection('Cookie Parameters', 'cookie', isCookieParametersExpanded, setIsCookieParametersExpanded)}
 
             <Divider style={{ margin: '1.5rem 0' }} />
 
