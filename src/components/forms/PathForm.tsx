@@ -2,12 +2,9 @@
  * Path form for editing path metadata and operations
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
     Form,
-    FormGroup,
-    TextInput,
-    TextArea,
     Title,
     Divider,
     Label,
@@ -28,12 +25,12 @@ import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
 import { useSelection } from '@hooks/useSelection';
-import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 import { CreateOperationCommand } from '@commands/CreateOperationCommand';
 import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
 import { DeletePathCommand } from '@commands/DeletePathCommand';
 import { CompositeCommand } from '@commands/CompositeCommand';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
+import { PropertyInput } from '@components/common/PropertyInput';
 import "./PathForm.css";
 
 /**
@@ -93,106 +90,6 @@ export const PathForm: React.FC = () => {
     // Get the current operation
     const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
     const operation = pathItem ? (pathItem as any)[selectedOpGetter]?.() as OpenApi30Operation | undefined : undefined;
-
-    // Local state for path fields
-    const [summary, setSummary] = useState(pathItem?.getSummary() || '');
-    const [description, setDescription] = useState(pathItem?.getDescription() || '');
-
-    // Local state for operation fields
-    const [opSummary, setOpSummary] = useState(operation?.getSummary() || '');
-    const [opDescription, setOpDescription] = useState(operation?.getDescription() || '');
-    const [opId, setOpId] = useState(operation?.getOperationId() || '');
-
-    // Refs to track initial values
-    const initialSummaryRef = useRef(pathItem?.getSummary() || '');
-    const initialDescriptionRef = useRef(pathItem?.getDescription() || '');
-    const initialOpSummaryRef = useRef(operation?.getSummary() || '');
-    const initialOpDescriptionRef = useRef(operation?.getDescription() || '');
-    const initialOpIdRef = useRef(operation?.getOperationId() || '');
-
-    // Update local state when path selection changes
-    useEffect(() => {
-        if (!pathItem) return;
-
-        const newSummary = pathItem.getSummary() || '';
-        const newDescription = pathItem.getDescription() || '';
-        setSummary(newSummary);
-        setDescription(newDescription);
-        initialSummaryRef.current = newSummary;
-        initialDescriptionRef.current = newDescription;
-    }, [pathName, pathItem]);
-
-    // Update operation state when selected operation changes
-    useEffect(() => {
-        if (operation) {
-            const newOpSummary = operation.getSummary() || '';
-            const newOpDescription = operation.getDescription() || '';
-            const newOpId = operation.getOperationId() || '';
-            setOpSummary(newOpSummary);
-            setOpDescription(newOpDescription);
-            setOpId(newOpId);
-            initialOpSummaryRef.current = newOpSummary;
-            initialOpDescriptionRef.current = newOpDescription;
-            initialOpIdRef.current = newOpId;
-        } else {
-            setOpSummary('');
-            setOpDescription('');
-            setOpId('');
-            initialOpSummaryRef.current = '';
-            initialOpDescriptionRef.current = '';
-            initialOpIdRef.current = '';
-        }
-    }, [selectedOperation, operation]);
-
-    // Path field handlers - update on blur or Enter
-    const handleSummaryCommit = () => {
-        if (pathItem && summary !== initialSummaryRef.current) {
-            const command = new ChangePropertyCommand(pathItem, 'summary', summary);
-            executeCommand(command, `Change path summary to "${summary}"`);
-            initialSummaryRef.current = summary;
-        }
-    };
-
-    const handleDescriptionCommit = () => {
-        if (pathItem && description !== initialDescriptionRef.current) {
-            const command = new ChangePropertyCommand(pathItem, 'description', description);
-            executeCommand(command, 'Update path description');
-            initialDescriptionRef.current = description;
-        }
-    };
-
-    // Operation field handlers - update on blur or Enter
-    const handleOpSummaryCommit = () => {
-        if (operation && opSummary !== initialOpSummaryRef.current) {
-            const command = new ChangePropertyCommand(operation, 'summary', opSummary);
-            executeCommand(command, `Change ${selectedOperation.toUpperCase()} operation summary`);
-            initialOpSummaryRef.current = opSummary;
-        }
-    };
-
-    const handleOpDescriptionCommit = () => {
-        if (operation && opDescription !== initialOpDescriptionRef.current) {
-            const command = new ChangePropertyCommand(operation, 'description', opDescription);
-            executeCommand(command, `Update ${selectedOperation.toUpperCase()} operation description`);
-            initialOpDescriptionRef.current = opDescription;
-        }
-    };
-
-    const handleOpIdCommit = () => {
-        if (operation && opId !== initialOpIdRef.current) {
-            const command = new ChangePropertyCommand(operation, 'operationId', opId);
-            executeCommand(command, `Change operationId to "${opId}"`);
-            initialOpIdRef.current = opId;
-        }
-    };
-
-    // Handle Enter key press
-    const handleKeyDown = (e: React.KeyboardEvent, commitFn: () => void) => {
-        if (e.key === 'Enter' && !(e.target as HTMLElement).matches('textarea')) {
-            e.preventDefault(); // Prevent form submission
-            commitFn();
-        }
-    };
 
     /**
      * Handle creating a new operation using the command pattern
@@ -388,29 +285,20 @@ export const PathForm: React.FC = () => {
 
             {/* Path metadata form */}
             <Form>
-                <FormGroup label="Summary" fieldId="path-summary">
-                    <TextInput
-                        id="path-summary"
-                        value={summary}
-                        onChange={(_event, value) => setSummary(value)}
-                        onBlur={handleSummaryCommit}
-                        onKeyDown={(e) => handleKeyDown(e, handleSummaryCommit)}
-                        aria-label="Path summary"
-                        placeholder="Short summary of the path"
-                    />
-                </FormGroup>
+                <PropertyInput
+                    model={pathItem}
+                    propertyName="summary"
+                    label="Summary"
+                    placeholder="Short summary of the path"
+                />
 
-                <FormGroup label="Description" fieldId="path-description">
-                    <TextArea
-                        id="path-description"
-                        value={description}
-                        onChange={(_event, value) => setDescription(value)}
-                        onBlur={handleDescriptionCommit}
-                        aria-label="Path description"
-                        placeholder="Detailed description of the path"
-                        resizeOrientation="vertical"
-                    />
-                </FormGroup>
+                <PropertyInput
+                    model={pathItem}
+                    propertyName="description"
+                    label="Description"
+                    type="textarea"
+                    placeholder="Detailed description of the path"
+                />
             </Form>
 
             <Divider style={{ margin: '1.5rem 0' }} />
@@ -493,41 +381,27 @@ export const PathForm: React.FC = () => {
             {/* Operation details or empty state */}
             {operation ? (
                 <Form>
-                    <FormGroup label="Summary" fieldId="operation-summary">
-                        <TextInput
-                            id="operation-summary"
-                            value={opSummary}
-                            onChange={(_event, value) => setOpSummary(value)}
-                            onBlur={handleOpSummaryCommit}
-                            onKeyDown={(e) => handleKeyDown(e, handleOpSummaryCommit)}
-                            aria-label="Operation summary"
-                            placeholder="Short summary of the operation"
-                        />
-                    </FormGroup>
+                    <PropertyInput
+                        model={operation}
+                        propertyName="summary"
+                        label="Summary"
+                        placeholder="Short summary of the operation"
+                    />
 
-                    <FormGroup label="Operation ID" fieldId="operation-id">
-                        <TextInput
-                            id="operation-id"
-                            value={opId}
-                            onChange={(_event, value) => setOpId(value)}
-                            onBlur={handleOpIdCommit}
-                            onKeyDown={(e) => handleKeyDown(e, handleOpIdCommit)}
-                            aria-label="Operation ID"
-                            placeholder="Unique operation identifier"
-                        />
-                    </FormGroup>
+                    <PropertyInput
+                        model={operation}
+                        propertyName="operationId"
+                        label="Operation ID"
+                        placeholder="Unique operation identifier"
+                    />
 
-                    <FormGroup label="Description" fieldId="operation-description">
-                        <TextArea
-                            id="operation-description"
-                            value={opDescription}
-                            onChange={(_event, value) => setOpDescription(value)}
-                            onBlur={handleOpDescriptionCommit}
-                            aria-label="Operation description"
-                            placeholder="Detailed description of the operation"
-                            resizeOrientation="vertical"
-                        />
-                    </FormGroup>
+                    <PropertyInput
+                        model={operation}
+                        propertyName="description"
+                        label="Description"
+                        type="textarea"
+                        placeholder="Detailed description of the operation"
+                    />
                 </Form>
             ) : (
                 <EmptyState>
