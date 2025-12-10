@@ -13,7 +13,14 @@ import {
     ToggleGroupItem,
     Label
 } from '@patternfly/react-core';
-import {UndoIcon, RedoIcon, ListIcon, CheckIcon} from '@patternfly/react-icons';
+import {
+    UndoIcon,
+    RedoIcon,
+    ListIcon,
+    CheckIcon,
+    WarningTriangleIcon,
+    ExclamationTriangleIcon, ExclamationIcon, ExclamationCircleIcon
+} from '@patternfly/react-icons';
 import { useCommand } from '@hooks/useCommand';
 import { useValidation } from '@hooks/useValidation';
 
@@ -81,7 +88,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ currentView = 'nav
                                         handleViewChange(event as any, isSelected, 'navigation')}
                                 />
                                 <ToggleGroupItem
-                                    icon={<span><CheckIcon /> <Label variant="filled" isCompact color={(errorCount===0) ? "grey" : "red"}>{problemCount}</Label></span>}
+                                    icon={<span>{ (errorCount===0) ? <CheckIcon /> : <ExclamationTriangleIcon />} <Label variant="filled" isCompact color={(errorCount===0) ? "grey" : "red"}>{problemCount}</Label></span>}
                                     aria-label="Validation view"
                                     buttonId="validation-view"
                                     isSelected={currentView === 'validation'}

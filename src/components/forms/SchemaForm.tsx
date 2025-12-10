@@ -2,23 +2,32 @@
  * Schema form for editing schema definitions
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Form,
     Title,
     Divider,
+    Dropdown,
+    DropdownList,
+    DropdownItem,
+    MenuToggle,
 } from '@patternfly/react-core';
+import { EllipsisVIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
+import { useCommand } from '@hooks/useCommand';
 import { OpenApi30Document } from '@apicurio/data-models';
 import { PropertyInput } from '@components/common/PropertyInput';
+import { DeleteSchemaCommand } from '@commands/DeleteSchemaCommand';
 
 /**
  * Schema form component for editing schema definitions
  */
 export const SchemaForm: React.FC = () => {
     const { document } = useDocument();
-    const { selectedPath } = useSelection();
+    const { selectedPath, selectRoot } = useSelection();
+    const { executeCommand } = useCommand();
+    const [isSchemaMenuOpen, setIsSchemaMenuOpen] = useState(false);
 
     // Extract schema information early (before hooks)
     const schemaName = selectedPath ? selectedPath.replace('/components/schemas/', '') : '';
@@ -26,6 +35,18 @@ export const SchemaForm: React.FC = () => {
     const components = oaiDoc?.getComponents();
     const schemas = components?.getSchemas();
     const schema = schemas?.[schemaName] as any;
+
+    /**
+     * Handle delete schema action
+     */
+    const handleDeleteSchema = () => {
+        if (!schemaName) return;
+
+        const command = new DeleteSchemaCommand(schemaName);
+        executeCommand(command, `Delete schema ${schemaName}`);
+        selectRoot();
+        setIsSchemaMenuOpen(false);
+    };
 
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
@@ -42,9 +63,35 @@ export const SchemaForm: React.FC = () => {
 
     return (
         <div>
-            <Title headingLevel="h2" size="xl">
-                Schema: {schemaName}
-            </Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Title headingLevel="h2" size="xl">
+                    Schema: {schemaName}
+                </Title>
+                <Dropdown
+                    isOpen={isSchemaMenuOpen}
+                    onOpenChange={setIsSchemaMenuOpen}
+                    popperProps={{ position: 'right' }}
+                    toggle={(toggleRef) => (
+                        <MenuToggle
+                            ref={toggleRef}
+                            variant="plain"
+                            onClick={() => setIsSchemaMenuOpen(!isSchemaMenuOpen)}
+                            aria-label="Schema actions menu"
+                        >
+                            <EllipsisVIcon />
+                        </MenuToggle>
+                    )}
+                >
+                    <DropdownList>
+                        <DropdownItem
+                            key="delete-schema"
+                            onClick={handleDeleteSchema}
+                        >
+                            Delete schema
+                        </DropdownItem>
+                    </DropdownList>
+                </Dropdown>
+            </div>
             <p style={{ marginBottom: '1rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Edit schema definition and properties
             </p>
