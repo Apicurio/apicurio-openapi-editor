@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
     Page,
     PageSection,
@@ -6,10 +6,11 @@ import {
     MastheadMain,
     MastheadContent,
     Title,
-    Button,
+    Button, Flex, FlexItem,
 } from '@patternfly/react-core';
 import { OpenAPIEditor } from '../../src/components/editor/OpenAPIEditor';
 import './App.css';
+import {DocumentChangeEvent} from "@models/EditorProps.ts";
 
 /**
  * Empty OpenAPI document
@@ -244,26 +245,39 @@ const petStoreAPI = {
 function App() {
     const [content, setContent] = useState<object>(petStoreAPI);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const getContentRef = useRef<(() => object | null) | null>(null);
 
-    const handleChange = (newContent: object) => {
-        console.log('Editor content changed:', newContent);
-        setContent(newContent);
+    const handleChange = (event: DocumentChangeEvent) => {
+        console.log('Editor changed - isDirty:', event.isDirty, 'version:', event.version);
+        setIsDirty(event.isDirty);
+        getContentRef.current = event.getContent;
+    };
+
+    const handleSave = () => {
+        if (getContentRef.current) {
+            const currentContent = getContentRef.current();
+            console.log('Saving content:', currentContent);
+            // In a real app, you would save to a server here
+            // For now, just update local state to demonstrate
+            if (currentContent) {
+                //setContent(currentContent);
+                setIsDirty(false);
+                alert('Content saved successfully!');
+            }
+        }
     };
 
     const handleLoadEmpty = () => {
-        setError(null);
         setContent(emptyAPI);
     };
 
     const handleLoadPetStore = () => {
-        setError(null);
         setContent(petStoreAPI);
     };
 
     const handleLoadApicurioRegistry = async () => {
         setLoading(true);
-        setError(null);
         try {
             const response = await fetch(
                 'https://raw.githubusercontent.com/Apicurio/apicurio-registry/refs/heads/main/common/src/main/resources/META-INF/openapi.json'
@@ -275,8 +289,7 @@ function App() {
             setContent(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-            setError(`Failed to load Apicurio Registry API: ${errorMessage}`);
-            console.error('Error loading Apicurio Registry API:', err);
+            console.error('Error loading Apicurio Registry API:', err, errorMessage);
         } finally {
             setLoading(false);
         }
@@ -293,24 +306,49 @@ function App() {
                         </Title>
                     </MastheadMain>
                     <MastheadContent>
-                        <div className="sample-selector">
-                            <span className="sample-label">Load Sample:</span>
-                            <Button variant="secondary" onClick={handleLoadEmpty} size="sm">
-                                Empty API
-                            </Button>
-                            <Button variant="secondary" onClick={handleLoadPetStore} size="sm">
-                                Pet Store API
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                onClick={handleLoadApicurioRegistry}
-                                isDisabled={loading}
-                                size="sm"
-                            >
-                                {loading ? 'Loading...' : 'Apicurio Registry API'}
-                            </Button>
-                        </div>
-                        {error && <div className="error-message">{error}</div>}
+                        <Flex style={{ width: "100%" }}>
+                            <FlexItem grow={{ default: "grow" }}>
+                                <Flex>
+                                    <FlexItem>
+                                        <span className="sample-label">Load Sample:</span>
+                                    </FlexItem>
+                                    <FlexItem>
+                                        <Button variant="secondary" onClick={handleLoadEmpty} size="sm">
+                                            Empty API
+                                        </Button>
+                                    </FlexItem>
+                                    <FlexItem>
+                                        <Button variant="secondary" onClick={handleLoadPetStore} size="sm">
+                                            Pet Store API
+                                        </Button>
+                                    </FlexItem>
+                                    <FlexItem>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={handleLoadApicurioRegistry}
+                                            isDisabled={loading}
+                                            size="sm"
+                                        >
+                                            {loading ? 'Loading...' : 'Apicurio Registry API'}
+                                        </Button>
+                                    </FlexItem>
+                                </Flex>
+                            </FlexItem>
+                            <FlexItem>
+                                <Flex>
+                                    <FlexItem>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleSave}
+                                            isDisabled={!isDirty}
+                                            size="sm"
+                                        >
+                                            Save
+                                        </Button>
+                                    </FlexItem>
+                                </Flex>
+                            </FlexItem>
+                        </Flex>
                     </MastheadContent>
                 </Masthead>
             }

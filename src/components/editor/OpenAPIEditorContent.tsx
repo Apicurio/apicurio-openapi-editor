@@ -2,7 +2,7 @@
  * OpenAPI Editor content (wrapped by EditorProvider)
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OpenAPIEditorProps } from '@models/EditorProps';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
@@ -18,50 +18,35 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     initialContent,
     onChange,
 }) => {
-    const { document, isDirty, loadDocument, toObject } = useDocument();
+    const { document, isDirty, version, loadDocument, toObject } = useDocument();
     const { selectRoot } = useSelection();
-    const prevInitialContentRef = useRef<object | string | undefined>(undefined);
-    const lastEmittedContentRef = useRef<object | undefined>(undefined);
     const [isValidationPanelOpen, setIsValidationPanelOpen] = useState(false);
 
     /**
-     * Load content when initialContent changes (but only select root on first load)
-     * Also reset command stack only if the change is from an external source
+     * Load content when initialContent changes (only on first load)
      */
     useEffect(() => {
-        if (initialContent && initialContent !== prevInitialContentRef.current) {
-            const isFirstLoad = prevInitialContentRef.current === undefined;
-
-            // Check if this change is from our own onChange callback
-            // If initialContent equals what we last emitted, don't reset commands
-            const isFromOwnChange = initialContent === lastEmittedContentRef.current;
-            const shouldResetCommands = !isFromOwnChange;
-
-            loadDocument(initialContent, shouldResetCommands);
-            if (isFirstLoad) {
-                selectRoot();
-            }
-            prevInitialContentRef.current = initialContent;
+        if (initialContent) {
+            loadDocument(initialContent, true);
+            selectRoot();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialContent]); // Reload when initialContent changes
+    }, [initialContent]); // Only run on initial load
 
     /**
-     * Notify parent when document changes (but not on initial load)
-     * We use isDirty to track if the document has been modified by user actions
+     * Notify parent when document changes
+     * Use callback pattern to avoid serializing document until needed
      */
     useEffect(() => {
-        // Only call onChange if the document is dirty (has been modified)
-        // This prevents infinite loops from initial document load
-        if (document && isDirty && onChange) {
-            const obj = toObject();
-            if (obj) {
-                lastEmittedContentRef.current = obj;
-                onChange(obj);
-            }
+        // Fire onChange event when document becomes dirty
+        if (onChange) {
+            onChange({
+                isDirty,
+                version,
+                getContent: () => toObject(),
+            });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [document, isDirty]); // Don't include onChange to avoid re-firing on prop change
+    }, [version]);
 
     return (
         <div className="apicurio-openapi-editor">

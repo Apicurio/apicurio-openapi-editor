@@ -17,6 +17,7 @@ export class DocumentService {
      * @param resetCommands Whether to reset the undo/redo stack (default: true)
      */
     loadDocument(content: object | string, resetCommands: boolean = true): Document | null {
+        console.info("[DocumentService] Loading document...");
         try {
             const store = useDocumentStore.getState();
             store.setError(null);
@@ -24,8 +25,10 @@ export class DocumentService {
             let doc: Document;
 
             if (typeof content === 'string') {
+                console.debug("[DocumentService] Loading content from string");
                 doc = Library.readDocumentFromJSONString(content);
             } else {
+                console.debug("[DocumentService] Loading content from object");
                 doc = Library.readDocument(content);
             }
 

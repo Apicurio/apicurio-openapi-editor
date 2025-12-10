@@ -2,22 +2,9 @@
  * Test app styles
  */
 
-.sample-selector {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem 1rem;
-}
-
 .sample-label {
     font-weight: 600;
     margin-right: 0.5rem;
-}
-
-.error-message {
-    color: var(--pf-v6-global--danger-color--100);
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
 }
 
 .editor-page-section, .editor-page-section > div {
