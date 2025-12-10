@@ -2,82 +2,80 @@
  * Service for validating OpenAPI documents
  */
 
-import { ValidationProblem } from '@models/DocumentTypes';
-import { DocumentService } from './DocumentService';
+import { Document, Library, ValidationProblem, ValidationProblemSeverity } from '@apicurio/data-models';
 
 /**
- * ValidationService handles document validation
+ * Represents a validation problem in the document
+ */
+export interface ValidationResult {
+    /**
+     * The validation problems found
+     */
+    problems: ValidationProblem[];
+
+    /**
+     * Total number of errors
+     */
+    errorCount: number;
+
+    /**
+     * Total number of warnings
+     */
+    warningCount: number;
+
+    /**
+     * Whether the document is valid (no errors)
+     */
+    isValid: boolean;
+}
+
+/**
+ * Service for validating OpenAPI documents using apicurio-data-models
  */
 export class ValidationService {
-    private documentService: DocumentService;
-    private cachedProblems: ValidationProblem[] = [];
+    /**
+     * Validate the OpenAPI document
+     */
+    validate(document: Document | null): ValidationResult {
+        if (!document) {
+            return {
+                problems: [],
+                errorCount: 0,
+                warningCount: 0,
+                isValid: true,
+            };
+        }
 
-    constructor(documentService: DocumentService) {
-        this.documentService = documentService;
+        // Use the Library to validate the document (pass null for default severity registry)
+        const problems = Library.validate(document, null as any);
+
+        // Count errors and warnings
+        let errorCount = 0;
+        let warningCount = 0;
+
+        problems.forEach((problem) => {
+            if (problem.severity === ValidationProblemSeverity.high || problem.severity === ValidationProblemSeverity.medium) {
+                errorCount++;
+            } else if (problem.severity === ValidationProblemSeverity.low) {
+                warningCount++;
+            }
+        });
+
+        return {
+            problems,
+            errorCount,
+            warningCount,
+            isValid: errorCount === 0,
+        };
     }
 
     /**
-     * Validate the current document
+     * Get validation problems for a specific path in the document
      */
-    async validate(): Promise<ValidationProblem[]> {
-        const problems = await this.documentService.validateDocument();
-        this.cachedProblems = problems;
-        return problems;
-    }
-
-    /**
-     * Get cached validation problems (without re-validating)
-     */
-    getCachedProblems(): ValidationProblem[] {
-        return this.cachedProblems;
-    }
-
-    /**
-     * Get problems for a specific node path
-     */
-    getProblemsForPath(path: string): ValidationProblem[] {
-        return this.cachedProblems.filter((p) => p.nodePath === path);
-    }
-
-    /**
-     * Get error count
-     */
-    getErrorCount(): number {
-        return this.cachedProblems.filter((p) => p.severity === 'error').length;
-    }
-
-    /**
-     * Get warning count
-     */
-    getWarningCount(): number {
-        return this.cachedProblems.filter((p) => p.severity === 'warning').length;
-    }
-
-    /**
-     * Get info count
-     */
-    getInfoCount(): number {
-        return this.cachedProblems.filter((p) => p.severity === 'info').length;
-    }
-
-    /**
-     * Check if there are any errors
-     */
-    hasErrors(): boolean {
-        return this.getErrorCount() > 0;
-    }
-
-    /**
-     * Check if there are any warnings
-     */
-    hasWarnings(): boolean {
-        return this.getWarningCount() > 0;
-    }
-
-    /**
-     * Clear cached problems
-     */
-    clearCache(): void {
-        this.cachedProblems = [];
+    getProblemsForPath(problems: ValidationProblem[], path: string): ValidationProblem[] {
+        return problems.filter((problem) => {
+            const problemPath = problem.nodePath?.toString() || '';
+            return problemPath.startsWith(path);
+        });
     }
 }

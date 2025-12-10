@@ -38,7 +38,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
         const documentService = new DocumentService();
         const commandService = new CommandService();
         const selectionService = new SelectionService();
-        const validationService = new ValidationService(documentService);
+        const validationService = new ValidationService();
 
         return {
             documentService,

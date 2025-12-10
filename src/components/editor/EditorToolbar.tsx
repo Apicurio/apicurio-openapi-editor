@@ -6,11 +6,19 @@ import React from 'react';
 import { Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, Button } from '@patternfly/react-core';
 import { UndoIcon, RedoIcon } from '@patternfly/react-icons';
 import { useCommand } from '@hooks/useCommand';
+import { ValidationIndicator } from './ValidationIndicator';
+
+export interface EditorToolbarProps {
+    /**
+     * Callback when validation indicator is clicked
+     */
+    onValidationClick: () => void;
+}
 
 /**
- * Editor toolbar component with undo/redo buttons
+ * Editor toolbar component with undo/redo buttons and validation indicator
  */
-export const EditorToolbar: React.FC = () => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({ onValidationClick }) => {
     const { canUndo, canRedo, undo, redo } = useCommand();
 
     /**
@@ -51,6 +59,11 @@ export const EditorToolbar: React.FC = () => {
                             >
                                 <RedoIcon />
                             </Button>
+                        </ToolbarItem>
+                    </ToolbarGroup>
+                    <ToolbarGroup align={{ default: 'alignEnd' }}>
+                        <ToolbarItem>
+                            <ValidationIndicator onClick={onValidationClick} />
                         </ToolbarItem>
                     </ToolbarGroup>
                 </ToolbarContent>

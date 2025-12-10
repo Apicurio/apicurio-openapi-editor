@@ -2,12 +2,13 @@
  * OpenAPI Editor content (wrapped by EditorProvider)
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { OpenAPIEditorProps } from '@models/EditorProps';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { EditorLayout } from './EditorLayout';
 import { EditorToolbar } from './EditorToolbar';
+import { ValidationPanel } from './ValidationPanel';
 import './OpenAPIEditorContent.css';
 
 /**
@@ -21,6 +22,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { selectRoot } = useSelection();
     const prevInitialContentRef = useRef<object | string | undefined>(undefined);
     const lastEmittedContentRef = useRef<object | undefined>(undefined);
+    const [isValidationPanelOpen, setIsValidationPanelOpen] = useState(false);
 
     /**
      * Load content when initialContent changes (but only select root on first load)
@@ -64,9 +66,9 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     return (
         <div className="apicurio-openapi-editor">
             {/* Toolbar */}
-            <EditorToolbar />
+            <EditorToolbar onValidationClick={() => setIsValidationPanelOpen(!isValidationPanelOpen)} />
 
-            {/* Editor content */}
+            {/* Editor content with validation panel */}
             <div className="editor-content">
                 {!document ? (
                     <div style={{ padding: '1rem' }}>
@@ -80,7 +82,12 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         )}
                     </div>
                 ) : (
-                    <EditorLayout />
+                    <ValidationPanel
+                        isExpanded={isValidationPanelOpen}
+                        onClose={() => setIsValidationPanelOpen(false)}
+                    >
+                        <EditorLayout />
+                    </ValidationPanel>
                 )}
             </div>
         </div>
