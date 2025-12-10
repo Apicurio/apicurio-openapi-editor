@@ -12,11 +12,11 @@ const validationService = new ValidationService();
  * Hook to get validation results for the current document
  */
 export function useValidation(): ValidationResult {
-    const { document } = useDocument();
+    const { document, version } = useDocument();
 
     const validationResult = useMemo(() => {
         return validationService.validate(document);
-    }, [document]);
+    }, [document, version]);
 
     return validationResult;
 }

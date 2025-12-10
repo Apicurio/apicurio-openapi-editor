@@ -7,8 +7,7 @@ import { OpenAPIEditorProps } from '@models/EditorProps';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { EditorLayout } from './EditorLayout';
-import { EditorToolbar } from './EditorToolbar';
-import { ValidationPanel } from './ValidationPanel';
+import { EditorToolbar, EditorView } from './EditorToolbar';
 import './OpenAPIEditorContent.css';
 
 /**
@@ -20,7 +19,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
 }) => {
     const { document, isDirty, version, loadDocument, toObject } = useDocument();
     const { selectRoot } = useSelection();
-    const [isValidationPanelOpen, setIsValidationPanelOpen] = useState(false);
+    const [currentView, setCurrentView] = useState<EditorView>('navigation');
 
     /**
      * Load content when initialContent changes (only on first load)
@@ -51,9 +50,12 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     return (
         <div className="apicurio-openapi-editor">
             {/* Toolbar */}
-            <EditorToolbar onValidationClick={() => setIsValidationPanelOpen(!isValidationPanelOpen)} />
+            <EditorToolbar
+                currentView={currentView}
+                onViewChange={setCurrentView}
+            />
 
-            {/* Editor content with validation panel */}
+            {/* Editor content */}
             <div className="editor-content">
                 {!document ? (
                     <div style={{ padding: '1rem' }}>
@@ -67,12 +69,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         )}
                     </div>
                 ) : (
-                    <ValidationPanel
-                        isExpanded={isValidationPanelOpen}
-                        onClose={() => setIsValidationPanelOpen(false)}
-                    >
-                        <EditorLayout />
-                    </ValidationPanel>
+                    <EditorLayout showValidationPanel={currentView === 'validation'} />
                 )}
             </div>
         </div>

@@ -4,13 +4,6 @@
 
 import React from 'react';
 import {
-    Drawer,
-    DrawerContent,
-    DrawerContentBody,
-    DrawerPanelContent,
-    DrawerHead,
-    DrawerActions,
-    DrawerCloseButton,
     Title,
     List,
     ListItem,
@@ -23,20 +16,6 @@ import { useValidation } from '@hooks/useValidation';
 import { ValidationProblem, ValidationProblemSeverity } from '@apicurio/data-models';
 
 export interface ValidationPanelProps {
-    /**
-     * Whether the panel is expanded
-     */
-    isExpanded: boolean;
-
-    /**
-     * Callback when the panel is closed
-     */
-    onClose: () => void;
-
-    /**
-     * The main content to display
-     */
-    children: React.ReactNode;
 }
 
 /**
@@ -74,64 +53,50 @@ const ValidationProblemItem: React.FC<{ problem: ValidationProblem }> = ({ probl
 };
 
 /**
- * Panel that displays validation problems in a drawer
+ * Panel that displays validation problems
  */
-export const ValidationPanel: React.FC<ValidationPanelProps> = ({ isExpanded, onClose, children }) => {
+export const ValidationPanel: React.FC<ValidationPanelProps> = () => {
     const { problems, errorCount, warningCount, isValid } = useValidation();
 
-    const panelContent = (
-        <DrawerPanelContent widths={{ default: 'width_50' }}>
-            <DrawerHead>
-                <Title headingLevel="h2" size="xl">
-                    Validation Problems
-                </Title>
-                <DrawerActions>
-                    <DrawerCloseButton onClick={onClose} />
-                </DrawerActions>
-            </DrawerHead>
-            <DrawerContentBody>
-                {isValid && warningCount === 0 ? (
-                    <EmptyState>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <CheckCircleIcon color="var(--pf-v6-global--success-color--100)" style={{ fontSize: '3rem' }} />
-                        </div>
-                        <Title headingLevel="h3" size="lg">
-                            No Problems Found
-                        </Title>
-                        <EmptyStateBody>
-                            The OpenAPI document is valid with no errors or warnings.
-                        </EmptyStateBody>
-                    </EmptyState>
-                ) : (
-                    <div>
-                        <div style={{ marginBottom: '1rem' }}>
-                            {errorCount > 0 && (
-                                <Label color="red" isCompact style={{ marginRight: '0.5rem' }}>
-                                    {errorCount} {errorCount === 1 ? 'Error' : 'Errors'}
-                                </Label>
-                            )}
-                            {warningCount > 0 && (
-                                <Label color="orange" isCompact>
-                                    {warningCount} {warningCount === 1 ? 'Warning' : 'Warnings'}
-                                </Label>
-                            )}
-                        </div>
-                        <List isBordered isPlain>
-                            {problems.map((problem, index) => (
-                                <ValidationProblemItem key={index} problem={problem} />
-                            ))}
-                        </List>
-                    </div>
-                )}
-            </DrawerContentBody>
-        </DrawerPanelContent>
-    );
-
     return (
-        <Drawer isExpanded={isExpanded}>
-            <DrawerContent panelContent={panelContent}>
-                <DrawerContentBody>{children}</DrawerContentBody>
-            </DrawerContent>
-        </Drawer>
+        <div style={{ padding: '1rem' }}>
+            <Title headingLevel="h2" size="xl" style={{ marginBottom: '1rem' }}>
+                Validation Problems
+            </Title>
+
+            {isValid && warningCount === 0 ? (
+                <EmptyState>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <CheckCircleIcon color="var(--pf-v6-global--success-color--100)" style={{ fontSize: '3rem' }} />
+                    </div>
+                    <Title headingLevel="h3" size="lg">
+                        No Problems Found
+                    </Title>
+                    <EmptyStateBody>
+                        The OpenAPI document is valid with no errors or warnings.
+                    </EmptyStateBody>
+                </EmptyState>
+            ) : (
+                <div>
+                    <div style={{ marginBottom: '1rem' }}>
+                        {errorCount > 0 && (
+                            <Label color="red" isCompact style={{ marginRight: '0.5rem' }}>
+                                {errorCount} {errorCount === 1 ? 'Error' : 'Errors'}
+                            </Label>
+                        )}
+                        {warningCount > 0 && (
+                            <Label color="orange" isCompact>
+                                {warningCount} {warningCount === 1 ? 'Warning' : 'Warnings'}
+                            </Label>
+                        )}
+                    </div>
+                    <List isBordered isPlain>
+                        {problems.map((problem, index) => (
+                            <ValidationProblemItem key={index} problem={problem} />
+                        ))}
+                    </List>
+                </div>
+            )}
+        </div>
     );
 };
