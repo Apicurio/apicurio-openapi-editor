@@ -58,6 +58,60 @@ export const MainForm: React.FC = () => {
                     label="Description"
                     type="textarea"
                 />
+
+                <PropertyInput
+                    model={info!}
+                    propertyName="termsOfService"
+                    label="Terms of Service"
+                    placeholder="URL to terms of service"
+                />
+
+                <Divider style={{ margin: '1.5rem 0' }} />
+
+                <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                    Contact Information
+                </Title>
+
+                <PropertyInput
+                    model={info!.getContact()}
+                    propertyName="name"
+                    label="Contact Name"
+                    placeholder="API contact person or team"
+                />
+
+                <PropertyInput
+                    model={info!.getContact()}
+                    propertyName="url"
+                    label="Contact URL"
+                    placeholder="URL for contact information"
+                />
+
+                <PropertyInput
+                    model={info!.getContact()}
+                    propertyName="email"
+                    label="Contact Email"
+                    placeholder="email@example.com"
+                />
+
+                <Divider style={{ margin: '1.5rem 0' }} />
+
+                <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                    License
+                </Title>
+
+                <PropertyInput
+                    model={info!.getLicense()}
+                    propertyName="name"
+                    label="License Name"
+                    placeholder="e.g., Apache 2.0, MIT"
+                />
+
+                <PropertyInput
+                    model={info!.getLicense()}
+                    propertyName="url"
+                    label="License URL"
+                    placeholder="URL to license text"
+                />
             </Form>
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>

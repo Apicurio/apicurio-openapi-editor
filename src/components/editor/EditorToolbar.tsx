@@ -4,25 +4,18 @@
 
 import React from 'react';
 import {
+    Button,
+    Label,
+    ToggleGroup,
+    ToggleGroupItem,
     Toolbar,
     ToolbarContent,
     ToolbarGroup,
-    ToolbarItem,
-    Button,
-    ToggleGroup,
-    ToggleGroupItem,
-    Label
+    ToolbarItem
 } from '@patternfly/react-core';
-import {
-    UndoIcon,
-    RedoIcon,
-    ListIcon,
-    CheckIcon,
-    WarningTriangleIcon,
-    ExclamationTriangleIcon, ExclamationIcon, ExclamationCircleIcon
-} from '@patternfly/react-icons';
-import { useCommand } from '@hooks/useCommand';
-import { useValidation } from '@hooks/useValidation';
+import {CheckIcon, ExclamationTriangleIcon, ListIcon, RedoIcon, UndoIcon} from '@patternfly/react-icons';
+import {useCommand} from '@hooks/useCommand';
+import {useValidation} from '@hooks/useValidation';
 
 export type EditorView = 'navigation' | 'validation';
 
