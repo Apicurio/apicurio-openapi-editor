@@ -1,0 +1,14 @@
+.main-form__section {
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 25px;
+}
+
+.main-form__sectionbody {
+    padding: 15px;
+}
+
+.main-form__section .pf-v6-c-form__group {
+    gap: 0;
+}
