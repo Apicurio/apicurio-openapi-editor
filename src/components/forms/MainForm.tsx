@@ -27,6 +27,7 @@ import { PropertyInput } from '@components/common/PropertyInput';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
 import { NewTagModal } from '@components/modals/NewTagModal';
 import { RenameTagModal } from '@components/modals/RenameTagModal';
+import { EditTagDescriptionModal } from '@components/modals/EditTagDescriptionModal';
 import { CompositeCommand } from "@commands/CompositeCommand.ts";
 import { EnsureInfoCommand } from "@commands/EnsureInfoCommand.ts";
 import { ChangePropertyCommand } from "@commands/ChangePropertyCommand.ts";
@@ -52,6 +53,8 @@ export const MainForm: React.FC = () => {
     const [isNewTagModalOpen, setIsNewTagModalOpen] = useState(false);
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [renameTagName, setRenameTagName] = useState<string | null>(null);
+    const [editTagName, setEditTagName] = useState<string | null>(null);
+    const [editTagDescription, setEditTagDescription] = useState<string>('');
 
     if (!document) {
         return <div>No document loaded</div>;
@@ -127,6 +130,31 @@ export const MainForm: React.FC = () => {
             const command = new RenameTagCommand(renameTagName, newName);
             executeCommand(command, `Rename tag "${renameTagName}" to "${newName}"`);
         }
+    };
+
+    /**
+     * Handle opening edit description modal for a tag
+     */
+    const handleOpenEditDescriptionModal = (tagIndex: string) => {
+        const tag = oaiDoc.getTags()[parseInt(tagIndex)];
+        setEditTagName(tag.getName());
+        setEditTagDescription(tag.getDescription() || '');
+    };
+
+    /**
+     * Handle changing tag description
+     */
+    const handleChangeTagDescription = (newDescription: string) => {
+        if (editTagName) {
+            // Find the tag node
+            const tag = tags.find((t: Tag) => t.getName() === editTagName);
+            if (tag) {
+                const command = new ChangePropertyCommand(tag, 'description', newDescription);
+                executeCommand(command, `Change description for tag "${editTagName}"`);
+            }
+        }
+        setEditTagName(null);
+        setEditTagDescription('');
     };
 
     return (
@@ -265,9 +293,15 @@ export const MainForm: React.FC = () => {
                             No tags defined. Use the + icon to create one.
                         </p>
                     ) : (
-                        <DataList aria-label="Tag definitions list" isCompact>
+                        <DataList
+                            aria-label="Tag definitions list"
+                            isCompact
+                            selectedDataListItemId=""
+                            onSelectableRowChange={(_evt, idx) => handleOpenEditDescriptionModal(idx)}
+                            onSelectDataListItem={(_evt, idx) => handleOpenEditDescriptionModal(idx)}
+                        >
                             {tags.map((tag: Tag, index: number) => (
-                                <DataListItem key={index}>
+                                <DataListItem key={index} id={`${index}`}>
                                     <DataListItemRow>
                                         <DataListItemCells
                                             dataListCells={[
@@ -290,6 +324,7 @@ export const MainForm: React.FC = () => {
                                             aria-labelledby={`tag-actions-${index}`}
                                             id={`tag-actions-${index}`}
                                             aria-label="Tag actions"
+                                            onClick={(e) => e.stopPropagation()}
                                         >
                                             <Dropdown
                                                 isOpen={openDropdownIndex === index}
@@ -299,7 +334,10 @@ export const MainForm: React.FC = () => {
                                                 toggle={(toggleRef) => (
                                                     <MenuToggle
                                                         ref={toggleRef}
-                                                        onClick={() => setOpenDropdownIndex(openDropdownIndex === index ? null : index)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+                                                        }}
                                                         variant="plain"
                                                         aria-label={`Actions for tag ${tag.getName()}`}
                                                     >
@@ -342,6 +380,17 @@ export const MainForm: React.FC = () => {
                 currentName={renameTagName || ''}
                 onClose={() => setRenameTagName(null)}
                 onConfirm={handleRenameTag}
+            />
+
+            <EditTagDescriptionModal
+                isOpen={editTagName !== null}
+                tagName={editTagName || ''}
+                currentDescription={editTagDescription}
+                onClose={() => {
+                    setEditTagName(null);
+                    setEditTagDescription('');
+                }}
+                onConfirm={handleChangeTagDescription}
             />
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
