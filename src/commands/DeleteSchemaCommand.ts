@@ -12,6 +12,7 @@ export class DeleteSchemaCommand extends BaseCommand {
     private _schemaName: string;
     private _oldSchema: any = null;
     private _schemaExisted: boolean = false;
+    private _schemaIndex: number = -1;
 
     /**
      * Constructor
@@ -59,12 +60,16 @@ export class DeleteSchemaCommand extends BaseCommand {
             return;
         }
 
+        // Find and save the index of the schema for undo
+        const schemaKeys = Object.keys(schemas);
+        this._schemaIndex = schemaKeys.indexOf(this._schemaName);
+
         // Save the schema for undo
         this._oldSchema = Library.writeNode(schema);
         this._schemaExisted = true;
 
         // Remove the schema
-        delete schemas[this._schemaName];
+        components.removeSchema(this._schemaName);
     }
 
     /**
@@ -84,26 +89,11 @@ export class DeleteSchemaCommand extends BaseCommand {
             oaiDoc.setComponents(components);
         }
 
-        let schemas = components.getSchemas();
-
-        // Create schemas object if it doesn't exist
-        if (!schemas) {
-            schemas = {};
-            components.setSchemas(schemas);
-        }
-
         // Recreate the schema
-        const newSchema = components.createSchema(this._schemaName) as OpenApi30Schema;
+        const newSchema = components.createSchema() as OpenApi30Schema;
         Library.readNode(this._oldSchema, newSchema);
 
         // Add it back
-        schemas[this._schemaName] = newSchema;
-    }
-
-    /**
-     * Get the schema name that was deleted
-     */
-    getSchemaName(): string {
-        return this._schemaName;
+        components.insertSchema(this._schemaName, newSchema, this._schemaIndex);
     }
 }
