@@ -17,11 +17,6 @@ import {DocumentChangeEvent} from "@models/EditorProps.ts";
  */
 const emptyAPI = {
     openapi: '3.0.3',
-    info: {
-        title: 'New API',
-        version: '1.0.0',
-        description: 'A new API specification',
-    },
     paths: {},
 };
 
@@ -249,7 +244,6 @@ function App() {
     const getContentRef = useRef<(() => object | null) | null>(null);
 
     const handleChange = (event: DocumentChangeEvent) => {
-        console.log('Editor changed - isDirty:', event.isDirty, 'version:', event.version);
         setIsDirty(event.isDirty);
         getContentRef.current = event.getContent;
     };

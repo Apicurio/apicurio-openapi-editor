@@ -8,12 +8,13 @@ import { Node } from '@apicurio/data-models';
 import { useCommand } from '@hooks/useCommand';
 import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
+import { ICommand } from "@commands/ICommand.ts";
 
 export interface PropertyInputProps {
     /**
      * The model/node to edit
      */
-    model: Node;
+    model: Node | null;
 
     /**
      * The property name to edit
@@ -44,6 +45,11 @@ export interface PropertyInputProps {
      * Whether the field is required
      */
     isRequired?: boolean;
+
+    /**
+     * Optional command factory.  Use this to customize the behavior when the input value changes.
+     */
+    commandFactory?: (model: Node, propertyName: string, value: string, description: string) => ICommand;
 }
 
 /**
@@ -57,6 +63,7 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
     placeholder,
     fieldId,
     isRequired = false,
+    commandFactory,
 }) => {
     const { executeCommand } = useCommand();
     const version = useDocumentStore((state) => state.version);
@@ -84,19 +91,7 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
      * Update local state when model changes (e.g., from undo/redo or external changes)
      */
     useEffect(() => {
-        if (!model) return;
-
-        // Try getter method first (e.g., getSummary())
-        const getterName = `get${propertyName.charAt(0).toUpperCase()}${propertyName.slice(1)}`;
-        let newValue = '';
-
-        if (typeof (model as any)[getterName] === 'function') {
-            newValue = (model as any)[getterName]() || '';
-        } else {
-            // Fall back to direct property access
-            newValue = (model as any)[propertyName] || '';
-        }
-
+        const newValue = getCurrentValue();
         setValue(newValue);
     }, [version, model, propertyName]); // Re-run when document version changes (undo/redo), model, or propertyName changes
 
@@ -104,9 +99,11 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
      * Handle committing the change
      */
     const handleCommit = () => {
-        if (model && value !== getCurrentValue()) {
-            const command = new ChangePropertyCommand(model, propertyName, value);
+        if (value !== getCurrentValue()) {
             const description = `Change ${label.toLowerCase()} to "${value}"`;
+            const command = commandFactory ?
+                commandFactory(model as Node, propertyName, value, description) :
+                new ChangePropertyCommand(model as Node, propertyName, value);
             executeCommand(command, description);
         }
     };
