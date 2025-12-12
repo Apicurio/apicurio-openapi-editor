@@ -8,10 +8,6 @@ import {
     Title,
     Divider,
     Label,
-    EmptyState,
-    EmptyStateBody,
-    EmptyStateFooter,
-    EmptyStateActions,
     Button,
     Dropdown,
     DropdownList,
@@ -19,6 +15,12 @@ import {
     MenuToggle,
     List,
     ListItem,
+    Tabs,
+    Tab,
+    EmptyState,
+    EmptyStateBody,
+    EmptyStateFooter,
+    EmptyStateActions
 } from '@patternfly/react-core';
 import { EllipsisVIcon, PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
@@ -87,10 +89,6 @@ export const PathForm: React.FC = () => {
     const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(() => getParametersByLocation('header').length > 0);
     const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(() => getParametersByLocation('cookie').length > 0);
 
-    // Get the current operation
-    const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
-    const operation = pathItem ? (pathItem as any)[selectedOpGetter]?.() as OpenApi30Operation | undefined : undefined;
-
     /**
      * Handle creating a new operation using the command pattern
      */
@@ -105,7 +103,13 @@ export const PathForm: React.FC = () => {
      * Handle deleting the selected operation
      */
     const handleDeleteSelectedOperation = () => {
-        if (!selectedPath || !operation) return;
+        if (!selectedPath) return;
+
+        // Get the current operation
+        const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
+        const operation = pathItem ? (pathItem as any)[selectedOpGetter]?.() as OpenApi30Operation | undefined : undefined;
+
+        if (!operation) return;
 
         const command = new DeleteOperationCommand(selectedPath, selectedOperation);
         executeCommand(command, `Delete ${selectedOperation.toUpperCase()} operation`);
@@ -183,21 +187,12 @@ export const PathForm: React.FC = () => {
                     />
                 }
             >
-                {parameters.length === 0 ? (
-                    <EmptyState>
-                        <EmptyStateBody>
-                            No {location} parameters defined
-                        </EmptyStateBody>
-                        <EmptyStateFooter>
-                            <EmptyStateActions>
-                                <Button variant="primary">
-                                    Add parameter
-                                </Button>
-                            </EmptyStateActions>
-                        </EmptyStateFooter>
-                    </EmptyState>
-                ) : (
-                    <div style={{paddingLeft: "20px", paddingTop: "10px"}}>
+                <div style={{paddingLeft: "20px", paddingTop: "10px"}}>
+                    {parameters.length === 0 ? (
+                        <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
+                            No {location} parameters defined. Use the + icon to create one.
+                        </p>
+                    ) : (
                         <List isPlain isBordered>
                             {parameters.map((param: any, index: number) => {
                                 const paramName = param.getName?.() || param.name || 'Unnamed';
@@ -227,8 +222,8 @@ export const PathForm: React.FC = () => {
                                 );
                             })}
                         </List>
-                    </div>
-                )}
+                    )}
+                </div>
             </ExpandablePanel>
         );
     };
@@ -315,33 +310,10 @@ export const PathForm: React.FC = () => {
             <Divider style={{ margin: '1.5rem 0' }} />
 
             {/* Operation tabs */}
-            <Title headingLevel="h3" size="lg" style={{ marginBottom: '1rem' }}>
-                Operations
-            </Title>
-
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                {HTTP_METHODS.map(({ method, label, color }) => {
-                    const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
-                    const exists = !!(pathItem as any)[getter]?.();
-                    const isSelected = selectedOperation === method;
-
-                    return (
-                        <Label
-                            key={method}
-                            color={exists ? color : 'grey'}
-                            isCompact
-                            onClick={() => setSelectedOperation(method)}
-                            style={{
-                                cursor: 'pointer',
-                                fontWeight: isSelected ? 600 : 400,
-                                border: isSelected ? '2px solid var(--pf-v6-global--primary-color--100)' : '2px solid transparent',
-                                opacity: exists ? 1 : 0.5,
-                            }}
-                        >
-                            {label}
-                        </Label>
-                    );
-                })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <Title headingLevel="h3" size="lg">
+                    Operations
+                </Title>
                 <Dropdown
                     isOpen={isOperationMenuOpen}
                     onOpenChange={setIsOperationMenuOpen}
@@ -360,7 +332,11 @@ export const PathForm: React.FC = () => {
                         <DropdownItem
                             key="delete-selected"
                             onClick={handleDeleteSelectedOperation}
-                            isDisabled={!operation}
+                            isDisabled={(() => {
+                                const selectedOpGetter = `get${selectedOperation.charAt(0).toUpperCase()}${selectedOperation.slice(1)}`;
+                                const operation = pathItem ? (pathItem as any)[selectedOpGetter]?.() : undefined;
+                                return !operation;
+                            })()}
                         >
                             Delete selected operation
                         </DropdownItem>
@@ -378,45 +354,71 @@ export const PathForm: React.FC = () => {
                 </Dropdown>
             </div>
 
-            {/* Operation details or empty state */}
-            {operation ? (
-                <Form>
-                    <PropertyInput
-                        model={operation}
-                        propertyName="summary"
-                        label="Summary"
-                        placeholder="Short summary of the operation"
-                    />
+            <Tabs
+                activeKey={selectedOperation}
+                onSelect={(_event, tabKey) => setSelectedOperation(tabKey as string)}
+                aria-label="Operations tabs"
+                role="region"
+            >
+                {HTTP_METHODS.map(({ method, label, color }) => {
+                    const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
+                    const currentOperation = (pathItem as any)[getter]?.() as OpenApi30Operation | undefined;
+                    const exists = !!currentOperation;
 
-                    <PropertyInput
-                        model={operation}
-                        propertyName="operationId"
-                        label="Operation ID"
-                        placeholder="Unique operation identifier"
-                    />
+                    return (
+                        <Tab
+                            key={method}
+                            eventKey={method}
+                            title={
+                                    <Label color={exists ? color : 'grey'}>
+                                        {label}
+                                    </Label>
+                            }
+                        >
+                            {currentOperation ? (
+                                <Form style={{ paddingTop: '1rem' }}>
+                                    <PropertyInput
+                                        model={currentOperation}
+                                        propertyName="summary"
+                                        label="Summary"
+                                        placeholder="Short summary of the operation"
+                                    />
 
-                    <PropertyInput
-                        model={operation}
-                        propertyName="description"
-                        label="Description"
-                        type="textarea"
-                        placeholder="Detailed description of the operation"
-                    />
-                </Form>
-            ) : (
-                <EmptyState>
-                    <EmptyStateBody>
-                        No {selectedOperation.toUpperCase()} operation defined
-                    </EmptyStateBody>
-                    <EmptyStateFooter>
-                        <EmptyStateActions>
-                            <Button variant="primary" onClick={handleCreateOperation}>
-                                Create {selectedOperation.toUpperCase()} operation
-                            </Button>
-                        </EmptyStateActions>
-                    </EmptyStateFooter>
-                </EmptyState>
-            )}
+                                    <PropertyInput
+                                        model={currentOperation}
+                                        propertyName="operationId"
+                                        label="Operation ID"
+                                        placeholder="Unique operation identifier"
+                                    />
+
+                                    <PropertyInput
+                                        model={currentOperation}
+                                        propertyName="description"
+                                        label="Description"
+                                        type="textarea"
+                                        placeholder="Detailed description of the operation"
+                                    />
+                                </Form>
+                            ) : (
+                                <div style={{ paddingTop: '1rem' }}>
+                                    <EmptyState>
+                                        <EmptyStateBody>
+                                            No {label} operation defined
+                                        </EmptyStateBody>
+                                        <EmptyStateFooter>
+                                            <EmptyStateActions>
+                                                <Button variant="primary" onClick={handleCreateOperation}>
+                                                    Create {label} operation
+                                                </Button>
+                                            </EmptyStateActions>
+                                        </EmptyStateFooter>
+                                    </EmptyState>
+                                </div>
+                            )}
+                        </Tab>
+                    );
+                })}
+            </Tabs>
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
