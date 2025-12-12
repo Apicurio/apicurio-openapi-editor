@@ -15,7 +15,9 @@ import {
 import { CodeEditor, Language } from '@patternfly/react-code-editor';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
+import { useCommand } from '@hooks/useCommand';
 import { Library } from '@apicurio/data-models';
+import { UpdateNodeCommand } from '@commands/UpdateNodeCommand';
 import * as YAML from 'yaml';
 import './SourceForm.css';
 
@@ -27,6 +29,7 @@ type SourceFormat = 'json' | 'yaml';
 export const SourceForm: React.FC = () => {
     const { document } = useDocument();
     const { navigationObject } = useSelection();
+    const { executeCommand } = useCommand();
 
     // Track the current format (JSON or YAML)
     const [format, setFormat] = useState<SourceFormat>('json');
@@ -257,11 +260,38 @@ export const SourceForm: React.FC = () => {
      * Handle Save button click
      */
     const handleSave = () => {
-        // TODO: Implement save logic
-        console.log('Save clicked');
-        // After saving, update original source and clear dirty flag
-        // setOriginalSource(currentSource);
-        // setIsDirty(false);
+        // Validate that we can save
+        if (!isValid || !navigationObject) {
+            console.error('Cannot save: content is invalid or no navigation object selected');
+            return;
+        }
+
+        // Clear any pending validation
+        if (validationTimerRef.current !== null) {
+            clearTimeout(validationTimerRef.current);
+            validationTimerRef.current = null;
+        }
+
+        try {
+            // Parse the current source based on format
+            let parsedContent: any;
+            if (format === 'json') {
+                parsedContent = JSON.parse(currentSource);
+            } else {
+                parsedContent = YAML.parse(currentSource);
+            }
+
+            // Create and execute the update command
+            const command = new UpdateNodeCommand(navigationObject, parsedContent);
+            executeCommand(command, 'Update from source editor');
+
+            // Update the original source to the current source (now saved)
+            setOriginalSource(currentSource);
+            setIsDirty(false);
+        } catch (error) {
+            console.error('Failed to save source changes:', error);
+            // TODO: Show error message to user
+        }
     };
 
     return (
