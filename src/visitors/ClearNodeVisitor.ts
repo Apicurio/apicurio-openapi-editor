@@ -6,9 +6,9 @@
 import {
     CombinedOpenApiVisitorAdapter,
     OpenApi30Document,
+    OpenApi30PathItem,
     OpenApi30Response,
     OpenApi30Schema,
-    OpenApiPathItem,
 } from '@apicurio/data-models';
 
 /**
@@ -20,22 +20,23 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      * Clear all properties from the document
      */
     visitDocument(node: OpenApi30Document): void {
-        node.setOpenapi(null as any);
         node.setInfo(null as any);
-        (node as any).servers = null;
+        node.clearServers();
         node.setPaths(null as any);
         node.setComponents(null as any);
-        (node as any).security = null;
-        (node as any).tags = null;
+        node.clearSecurity();
+        node.clearTags();
         node.setExternalDocs(null as any);
+        node.clearExtensions();
+        node.clearNodeAttributes();
     }
 
     /**
      * Clear all properties from path item
      */
-    visitPathItem(node: OpenApiPathItem): void {
-        (node as any).summary = null;
-        (node as any).description = null;
+    visitPathItem(node: OpenApi30PathItem): void {
+        node.setSummary(null as any);
+        node.setDescription(null as any);
         node.setGet(null as any);
         node.setPut(null as any);
         node.setPost(null as any);
@@ -43,9 +44,11 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
         node.setOptions(null as any);
         node.setHead(null as any);
         node.setPatch(null as any);
-        (node as any).trace = null;
-        (node as any).servers = null;
-        (node as any).parameters = null;
+        node.setTrace(null as any);
+        node.clearServers();
+        node.clearParameters();
+        node.clearExtensions();
+        node.clearNodeAttributes();
     }
 
     /**
@@ -69,12 +72,12 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
         node.setRequired(null as any);
         node.setEnum(null as any);
         node.setType(null as any);
-        (node as any).allOf = null;
-        (node as any).oneOf = null;
-        (node as any).anyOf = null;
+        node.clearAllOf();
+        node.clearOneOf();
+        node.clearAnyOf();
         node.setNot(null as any);
         node.setItems(null as any);
-        (node as any).properties = null;
+        node.clearProperties();
         node.setAdditionalProperties(null as any);
         node.setDescription(null as any);
         node.setFormat(null as any);
@@ -87,6 +90,8 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
         node.setExternalDocs(null as any);
         node.setExample(null as any);
         node.setDeprecated(null as any);
+        node.clearExtensions();
+        node.clearNodeAttributes();
     }
 
     /**
@@ -94,8 +99,10 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      */
     visitResponse(node: OpenApi30Response): void {
         node.setDescription(null as any);
-        (node as any).headers = null;
-        (node as any).content = null;
-        (node as any).links = null;
+        node.clearHeaders();
+        node.clearContent();
+        node.clearLinks();
+        node.clearExtensions();
+        node.clearNodeAttributes();
     }
 }
