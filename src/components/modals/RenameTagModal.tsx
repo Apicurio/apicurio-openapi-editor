@@ -6,6 +6,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -119,11 +122,13 @@ export const RenameTagModal: React.FC<RenameTagModalProps> = ({ isOpen, currentN
     return (
         <Modal
             variant={ModalVariant.small}
-            title="Rename Tag"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="rename-tag-modal-title"
+            aria-describedby="rename-tag-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
+            <ModalHeader title="Rename Tag" labelId="rename-tag-modal-title" />
+            <ModalBody id="rename-tag-modal-body">
                 <Form>
                     <FormGroup label="Tag Name" isRequired fieldId="tag-name">
                         <TextInput
@@ -149,15 +154,15 @@ export const RenameTagModal: React.FC<RenameTagModalProps> = ({ isOpen, currentN
                         </FormHelperText>
                     </FormGroup>
                 </Form>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <Button key="cancel" variant="link" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
-                        Rename
-                    </Button>
-                </div>
-            </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button key="cancel" variant="link" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
+                    Rename
+                </Button>
+            </ModalFooter>
         </Modal>
     );
 };

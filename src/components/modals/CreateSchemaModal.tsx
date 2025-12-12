@@ -6,6 +6,9 @@ import React, { useState } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -107,45 +110,47 @@ export const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({ isOpen, on
     return (
         <Modal
             variant={ModalVariant.small}
-            title="Create New Schema"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="create-schema-modal-title"
+            aria-describedby="create-schema-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
-            <Form>
-                <FormGroup label="Schema Name" isRequired fieldId="schema-name">
-                    <TextInput
-                        isRequired
-                        type="text"
-                        id="schema-name"
-                        name="schema-name"
-                        value={schemaName}
-                        onChange={handleSchemaNameChange}
-                        onKeyDown={handleKeyDown}
-                        validated={validated}
-                        placeholder="Pet"
-                        autoFocus
-                    />
-                    <FormHelperText>
-                        <HelperText>
-                            <HelperTextItem variant={validated}>
-                                {validated === 'error'
-                                    ? 'Schema name must start with a letter and contain only letters, numbers, hyphens, or underscores'
-                                    : 'Enter the schema name (e.g., Pet, User, Order)'}
-                            </HelperTextItem>
-                        </HelperText>
-                    </FormHelperText>
-                </FormGroup>
-            </Form>
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <ModalHeader title="Create New Schema" labelId="create-schema-modal-title" />
+            <ModalBody id="create-schema-modal-body">
+                <Form>
+                    <FormGroup label="Schema Name" isRequired fieldId="schema-name">
+                        <TextInput
+                            isRequired
+                            type="text"
+                            id="schema-name"
+                            name="schema-name"
+                            value={schemaName}
+                            onChange={handleSchemaNameChange}
+                            onKeyDown={handleKeyDown}
+                            validated={validated}
+                            placeholder="Pet"
+                            autoFocus
+                        />
+                        <FormHelperText>
+                            <HelperText>
+                                <HelperTextItem variant={validated}>
+                                    {validated === 'error'
+                                        ? 'Schema name must start with a letter and contain only letters, numbers, hyphens, or underscores'
+                                        : 'Enter the schema name (e.g., Pet, User, Order)'}
+                                </HelperTextItem>
+                            </HelperText>
+                        </FormHelperText>
+                    </FormGroup>
+                </Form>
+            </ModalBody>
+            <ModalFooter>
                 <Button key="cancel" variant="link" onClick={handleClose}>
                     Cancel
                 </Button>
                 <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
                     Create
                 </Button>
-            </div>
-            </div>
+            </ModalFooter>
         </Modal>
     );
 };

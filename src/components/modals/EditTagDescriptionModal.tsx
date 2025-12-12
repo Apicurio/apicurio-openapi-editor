@@ -6,6 +6,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -89,11 +92,13 @@ export const EditTagDescriptionModal: React.FC<EditTagDescriptionModalProps> = (
     return (
         <Modal
             variant={ModalVariant.medium}
-            title={`Edit Tag: ${tagName}`}
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="edit-tag-description-modal-title"
+            aria-describedby="edit-tag-description-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
+            <ModalHeader title={`Edit Tag: ${tagName}`} labelId="edit-tag-description-modal-title" />
+            <ModalBody id="edit-tag-description-modal-body">
                 <Form>
                     <FormGroup label="Description" fieldId="tag-description">
                         <TextArea
@@ -116,15 +121,15 @@ export const EditTagDescriptionModal: React.FC<EditTagDescriptionModalProps> = (
                         </FormHelperText>
                     </FormGroup>
                 </Form>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <Button key="cancel" variant="link" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button key="confirm" variant="primary" onClick={handleConfirm}>
-                        Save
-                    </Button>
-                </div>
-            </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button key="cancel" variant="link" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button key="confirm" variant="primary" onClick={handleConfirm}>
+                    Save
+                </Button>
+            </ModalFooter>
         </Modal>
     );
 };

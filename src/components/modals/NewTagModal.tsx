@@ -6,6 +6,9 @@ import React, { useState } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -111,11 +114,13 @@ export const NewTagModal: React.FC<NewTagModalProps> = ({ isOpen, onClose, onCon
     return (
         <Modal
             variant={ModalVariant.small}
-            title="Create New Tag"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="new-tag-modal-title"
+            aria-describedby="new-tag-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
+            <ModalHeader title="Create New Tag" labelId="new-tag-modal-title" />
+            <ModalBody id="new-tag-modal-body">
                 <Form>
                     <FormGroup label="Tag Name" isRequired fieldId="tag-name">
                         <TextInput
@@ -160,15 +165,15 @@ export const NewTagModal: React.FC<NewTagModalProps> = ({ isOpen, onClose, onCon
                         </FormHelperText>
                     </FormGroup>
                 </Form>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <Button key="cancel" variant="link" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
-                        Create
-                    </Button>
-                </div>
-            </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button key="cancel" variant="link" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
+                    Create
+                </Button>
+            </ModalFooter>
         </Modal>
     );
 };

@@ -6,8 +6,16 @@ import {
     MastheadMain,
     MastheadContent,
     Title,
-    Button, Flex, FlexItem,
+    Button,
+    Flex,
+    FlexItem,
+    Modal,
+    ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
 } from '@patternfly/react-core';
+import { CodeEditor, Language } from '@patternfly/react-code-editor';
 import { OpenAPIEditor } from '../../src/components/editor/OpenAPIEditor';
 import './App.css';
 import {DocumentChangeEvent} from "@models/EditorProps.ts";
@@ -241,6 +249,8 @@ function App() {
     const [content, setContent] = useState<object>(petStoreAPI);
     const [loading, setLoading] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
+    const [jsonContent, setJsonContent] = useState('');
     const getContentRef = useRef<(() => object | null) | null>(null);
 
     const handleChange = (event: DocumentChangeEvent) => {
@@ -253,11 +263,11 @@ function App() {
             const currentContent = getContentRef.current();
             console.log('Saving content:', currentContent);
             // In a real app, you would save to a server here
-            // For now, just update local state to demonstrate
+            // For now, display the JSON in a modal
             if (currentContent) {
-                //setContent(currentContent);
+                setJsonContent(JSON.stringify(currentContent, null, 2));
+                setIsJsonModalOpen(true);
                 setIsDirty(false);
-                alert('Content saved successfully!');
             }
         }
     };
@@ -289,10 +299,39 @@ function App() {
         }
     };
 
+    const handleCloseJsonModal = () => {
+        setIsJsonModalOpen(false);
+        setJsonContent('');
+    };
+
     return (
-        <Page
-            isContentFilled={true}
-            masthead={
+        <>
+            <Modal
+                variant={ModalVariant.large}
+                isOpen={isJsonModalOpen}
+                onClose={handleCloseJsonModal}
+                aria-labelledby="json-modal-title"
+                aria-describedby="json-modal-body"
+            >
+                <ModalHeader title="Document JSON" labelId="json-modal-title" />
+                <ModalBody id="json-modal-body">
+                    <CodeEditor
+                        isReadOnly
+                        code={jsonContent}
+                        language={Language.json}
+                        height="600px"
+                    />
+                </ModalBody>
+                <ModalFooter>
+                    <Button variant="primary" onClick={handleCloseJsonModal}>
+                        Close
+                    </Button>
+                </ModalFooter>
+            </Modal>
+
+            <Page
+                isContentFilled={true}
+                masthead={
                 <Masthead>
                     <MastheadMain>
                         <Title headingLevel="h1" size="lg">
@@ -357,7 +396,8 @@ function App() {
                     }}
                 />
             </PageSection>
-        </Page>
+            </Page>
+        </>
     );
 }
 

@@ -6,6 +6,9 @@ import React, { useState } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -100,45 +103,47 @@ export const CreatePathModal: React.FC<CreatePathModalProps> = ({ isOpen, onClos
     return (
         <Modal
             variant={ModalVariant.small}
-            title="Create New Path"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="create-path-modal-title"
+            aria-describedby="create-path-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
-            <Form>
-                <FormGroup label="Path" isRequired fieldId="path-name">
-                    <TextInput
-                        isRequired
-                        type="text"
-                        id="path-name"
-                        name="path-name"
-                        value={pathName}
-                        onChange={handlePathNameChange}
-                        onKeyDown={handleKeyDown}
-                        validated={validated}
-                        placeholder="/pets"
-                        autoFocus
-                    />
-                    <FormHelperText>
-                        <HelperText>
-                            <HelperTextItem variant={validated}>
-                                {validated === 'error'
-                                    ? 'Path must start with / and cannot contain spaces'
-                                    : 'Enter the path (e.g., /pets, /users/{id})'}
-                            </HelperTextItem>
-                        </HelperText>
-                    </FormHelperText>
-                </FormGroup>
-            </Form>
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <ModalHeader title="Create New Path" labelId="create-path-modal-title" />
+            <ModalBody id="create-path-modal-body">
+                <Form>
+                    <FormGroup label="Path" isRequired fieldId="path-name">
+                        <TextInput
+                            isRequired
+                            type="text"
+                            id="path-name"
+                            name="path-name"
+                            value={pathName}
+                            onChange={handlePathNameChange}
+                            onKeyDown={handleKeyDown}
+                            validated={validated}
+                            placeholder="/pets"
+                            autoFocus
+                        />
+                        <FormHelperText>
+                            <HelperText>
+                                <HelperTextItem variant={validated}>
+                                    {validated === 'error'
+                                        ? 'Path must start with / and cannot contain spaces'
+                                        : 'Enter the path (e.g., /pets, /users/{id})'}
+                                </HelperTextItem>
+                            </HelperText>
+                        </FormHelperText>
+                    </FormGroup>
+                </Form>
+            </ModalBody>
+            <ModalFooter>
                 <Button key="cancel" variant="link" onClick={handleClose}>
                     Cancel
                 </Button>
                 <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
                     Create
                 </Button>
-            </div>
-            </div>
+            </ModalFooter>
         </Modal>
     );
 };

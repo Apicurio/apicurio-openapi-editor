@@ -6,6 +6,9 @@ import React, { useState } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -111,11 +114,13 @@ export const NewServerModal: React.FC<NewServerModalProps> = ({ isOpen, onClose,
     return (
         <Modal
             variant={ModalVariant.small}
-            title="Create New Server"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="new-server-modal-title"
+            aria-describedby="new-server-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
+            <ModalHeader title="Create New Server" labelId="new-server-modal-title" />
+            <ModalBody id="new-server-modal-body">
                 <Form>
                     <FormGroup label="Server URL" isRequired fieldId="server-url">
                         <TextInput
@@ -160,15 +165,15 @@ export const NewServerModal: React.FC<NewServerModalProps> = ({ isOpen, onClose,
                         </FormHelperText>
                     </FormGroup>
                 </Form>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <Button key="cancel" variant="link" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
-                        Create
-                    </Button>
-                </div>
-            </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button key="cancel" variant="link" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
+                    Create
+                </Button>
+            </ModalFooter>
         </Modal>
     );
 };

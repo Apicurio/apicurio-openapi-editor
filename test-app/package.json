@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@apicurio/data-models": "^2.2.6",
+        "@patternfly/react-code-editor": "^6.4.0",
         "@patternfly/react-core": "^6.4.0",
         "@patternfly/react-icons": "^6.4.0",
         "@patternfly/react-table": "^6.4.0",

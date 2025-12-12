@@ -6,6 +6,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Modal,
     ModalVariant,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
     Button,
     Form,
     FormGroup,
@@ -131,11 +134,13 @@ export const EditServerModal: React.FC<EditServerModalProps> = ({
     return (
         <Modal
             variant={ModalVariant.medium}
-            title="Edit Server"
             isOpen={isOpen}
             onClose={handleClose}
+            aria-labelledby="edit-server-modal-title"
+            aria-describedby="edit-server-modal-body"
         >
-            <div style={{ padding: '1.5rem' }}>
+            <ModalHeader title="Edit Server" labelId="edit-server-modal-title" />
+            <ModalBody id="edit-server-modal-body">
                 <Form>
                     <FormGroup label="Server URL" fieldId="server-url">
                         <div style={{ padding: '0.5rem 0', fontWeight: 'bold' }}>
@@ -240,15 +245,15 @@ export const EditServerModal: React.FC<EditServerModalProps> = ({
                         </FormGroup>
                     )}
                 </Form>
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <Button key="cancel" variant="link" onClick={handleClose}>
-                        Cancel
-                    </Button>
-                    <Button key="confirm" variant="primary" onClick={handleConfirm}>
-                        Save
-                    </Button>
-                </div>
-            </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button key="cancel" variant="link" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button key="confirm" variant="primary" onClick={handleConfirm}>
+                    Save
+                </Button>
+            </ModalFooter>
         </Modal>
     );
 };
