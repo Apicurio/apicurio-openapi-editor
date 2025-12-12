@@ -13,11 +13,12 @@ import {
     ToolbarGroup,
     ToolbarItem
 } from '@patternfly/react-core';
-import {CheckIcon, ExclamationTriangleIcon, ListIcon, RedoIcon, UndoIcon} from '@patternfly/react-icons';
+import {CheckIcon, CodeIcon, ExclamationTriangleIcon, ListIcon, PencilAltIcon, RedoIcon, UndoIcon} from '@patternfly/react-icons';
 import {useCommand} from '@hooks/useCommand';
 import {useValidation} from '@hooks/useValidation';
 
 export type EditorView = 'navigation' | 'validation';
+export type EditorMode = 'design' | 'source';
 
 export interface EditorToolbarProps {
     /**
@@ -29,12 +30,27 @@ export interface EditorToolbarProps {
      * Callback when view selection changes
      */
     onViewChange?: (view: EditorView) => void;
+
+    /**
+     * Current mode (design or source)
+     */
+    currentMode?: EditorMode;
+
+    /**
+     * Callback when mode selection changes
+     */
+    onModeChange?: (mode: EditorMode) => void;
 }
 
 /**
  * Editor toolbar component with view toggle and undo/redo buttons
  */
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ currentView = 'navigation', onViewChange }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({
+    currentView = 'navigation',
+    onViewChange,
+    currentMode = 'design',
+    onModeChange
+}) => {
     const { canUndo, canRedo, undo, redo } = useCommand();
     const { errorCount, warningCount } = useValidation();
 
@@ -64,6 +80,15 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ currentView = 'nav
         }
     };
 
+    /**
+     * Handle mode toggle
+     */
+    const handleModeChange = (_event: React.MouseEvent, isSelected: boolean, mode: EditorMode) => {
+        if (isSelected && onModeChange) {
+            onModeChange(mode);
+        }
+    };
+
     return (
         <div className="editor-toolbar">
             <Toolbar>
@@ -87,6 +112,32 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ currentView = 'nav
                                     isSelected={currentView === 'validation'}
                                     onChange={(event, isSelected) =>
                                         handleViewChange(event as any, isSelected, 'validation')}
+                                />
+                            </ToggleGroup>
+                        </ToolbarItem>
+                    </ToolbarGroup>
+
+                    {/* Mode toggle (Design/Source) */}
+                    <ToolbarGroup>
+                        <ToolbarItem>
+                            <ToggleGroup aria-label="Editor mode">
+                                <ToggleGroupItem
+                                    icon={<PencilAltIcon />}
+                                    text="Design"
+                                    aria-label="Design mode"
+                                    buttonId="design-mode"
+                                    isSelected={currentMode === 'design'}
+                                    onChange={(event, isSelected) =>
+                                        handleModeChange(event as any, isSelected, 'design')}
+                                />
+                                <ToggleGroupItem
+                                    icon={<CodeIcon />}
+                                    text="Source"
+                                    aria-label="Source mode"
+                                    buttonId="source-mode"
+                                    isSelected={currentMode === 'source'}
+                                    onChange={(event, isSelected) =>
+                                        handleModeChange(event as any, isSelected, 'source')}
                                 />
                             </ToggleGroup>
                         </ToolbarItem>

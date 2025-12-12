@@ -2,7 +2,7 @@
  * Types related to node selection in the editor
  */
 
-import { Node } from '@apicurio/data-models';
+import {Node, NodePath} from '@apicurio/data-models';
 
 /**
  * Represents the current selection state in the editor
@@ -11,7 +11,7 @@ export interface SelectionState {
     /**
      * The path to the currently selected node (e.g., "/paths/~1pets/get")
      */
-    selectedPath: string | null;
+    selectedPath: NodePath | null;
 
     /**
      * The actual selected node from the document
@@ -19,9 +19,15 @@ export interface SelectionState {
     selectedNode: Node | null;
 
     /**
-     * The type of the selected node (e.g., "path", "operation", "schema")
+     * The top-level navigation object (PathItem, Schema, etc.) that contains the selected node
+     * This is maintained separately to support granular selection without breaking navigation
      */
-    selectedType: string | null;
+    navigationObject: Node | null;
+
+    /**
+     * The type of the selected navigation node (e.g., "path", "operation", "schema")
+     */
+    navigationObjectType: string | null;
 
     /**
      * Whether to highlight the selected node in the UI
@@ -33,7 +39,6 @@ export interface SelectionState {
  * Selection event payload
  */
 export interface SelectionEvent {
-    path: string;
+    path: NodePath;
     node: Node | null;
-    type: string | null;
 }

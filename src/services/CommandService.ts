@@ -2,11 +2,11 @@
  * Service for executing commands and managing undo/redo
  */
 
-import { ICommand } from '@commands/ICommand';
-import { useCommandStore } from '@stores/commandStore';
-import { useDocumentStore } from '@stores/documentStore';
-import { useSelectionStore } from '@stores/selectionStore';
-import { SelectionService } from './SelectionService';
+import {ICommand} from '@commands/ICommand';
+import {useCommandStore} from '@stores/commandStore';
+import {useDocumentStore} from '@stores/documentStore';
+import {useSelectionStore} from '@stores/selectionStore';
+import {SelectionService} from './SelectionService';
 
 /**
  * CommandService handles command execution with undo/redo support
@@ -79,7 +79,7 @@ export class CommandService {
             // Restore the selection that was active when the command was created
             const selection = entry.command.getSelection();
             if (selection) {
-                this.selectionService.selectByPath(selection);
+                this.selectionService.select(selection);
             }
 
             // Push to redo stack
@@ -125,7 +125,7 @@ export class CommandService {
             // Restore the selection that was active when the command was created
             const selection = entry.command.getSelection();
             if (selection) {
-                this.selectionService.selectByPath(selection);
+                this.selectionService.select(selection);
             }
 
             // Push back to undo stack (without clearing redo stack)

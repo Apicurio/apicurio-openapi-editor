@@ -4,7 +4,7 @@
 
 import { useSelectionStore } from '@stores/selectionStore';
 import { useEditorServices } from '@services/EditorContext';
-import { Node } from '@apicurio/data-models';
+import { Node, NodePath } from '@apicurio/data-models';
 
 /**
  * Hook for working with node selection
@@ -15,21 +15,21 @@ export const useSelection = () => {
     // Subscribe to selection store state
     const selectedPath = useSelectionStore((state) => state.selectedPath);
     const selectedNode = useSelectionStore((state) => state.selectedNode);
-    const selectedType = useSelectionStore((state) => state.selectedType);
+    const navigationObject = useSelectionStore((state) => state.navigationObject);
+    const navigationObjectType = useSelectionStore((state) => state.navigationObjectType);
     const highlightSelection = useSelectionStore((state) => state.highlightSelection);
 
     return {
         // State
         selectedPath,
         selectedNode,
-        selectedType,
+        navigationObject,
+        navigationObjectType,
         highlightSelection,
 
         // Actions
-        selectByPath: (path: string, highlight?: boolean) =>
-            selectionService.selectByPath(path, highlight),
-        selectNode: (node: Node, path: string, type?: string) =>
-            selectionService.selectNode(node, path, type),
+        select: (target: Node | NodePath, highlight?: boolean) =>
+            selectionService.select(target, highlight),
         clearSelection: () => selectionService.clearSelection(),
         selectRoot: () => selectionService.selectRoot(),
         highlightCurrent: () => selectionService.highlightSelection(),

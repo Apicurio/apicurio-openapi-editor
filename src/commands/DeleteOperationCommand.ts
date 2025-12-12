@@ -2,26 +2,26 @@
  * Command to delete an operation from a path item
  */
 
-import { Document, OpenApi30PathItem, OpenApi30Operation, Library } from '@apicurio/data-models';
+import { Document, OpenApi30PathItem, OpenApi30Operation, Library, NodePath, NodePathUtil } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
  * Command to delete an operation (GET, POST, PUT, DELETE, etc.) from a path item
  */
 export class DeleteOperationCommand extends BaseCommand {
-    private _pathItemPath: string;
+    private _pathItemPath: NodePath;
     private _method: string;
     private _oldOperation: any = null;
     private _operationExisted: boolean = false;
 
     /**
      * Constructor
-     * @param pathItemPath The path to the path item (e.g., "/paths//pets")
+     * @param pathItem The path item to delete the operation from
      * @param method The HTTP method (get, post, put, delete, options, head, patch, trace)
      */
-    constructor(pathItemPath: string, method: string) {
+    constructor(pathItem: OpenApi30PathItem, method: string) {
         super();
-        this._pathItemPath = pathItemPath;
+        this._pathItemPath = NodePathUtil.createNodePath(pathItem);
         this._method = method.toLowerCase();
     }
 
@@ -38,7 +38,7 @@ export class DeleteOperationCommand extends BaseCommand {
     execute(document: Document): void {
         const pathItem = this.getPathItem(document);
         if (!pathItem) {
-            throw new Error(`Path item not found: ${this._pathItemPath}`);
+            throw new Error(`Path item not found: ${this._pathItemPath.toString()}`);
         }
 
         // Get the operation to delete
@@ -83,16 +83,11 @@ export class DeleteOperationCommand extends BaseCommand {
     }
 
     /**
-     * Get the path item from the document
+     * Get the path item from the document using the stored NodePath
      */
     private getPathItem(document: Document): OpenApi30PathItem | null {
-        const pathName = this._pathItemPath.replace('/paths/', '');
-        const oaiDoc = document as any;
-        const paths = oaiDoc.getPaths?.();
-        if (!paths) {
-            return null;
-        }
-        return paths.getItem(pathName) as OpenApi30PathItem;
+        const resolved = NodePathUtil.resolveNodePath(this._pathItemPath, document);
+        return resolved as OpenApi30PathItem;
     }
 
     /**

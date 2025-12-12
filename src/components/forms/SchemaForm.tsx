@@ -2,39 +2,28 @@
  * Schema form for editing schema definitions
  */
 
-import React, { useState } from 'react';
-import {
-    Form,
-    Title,
-    Divider,
-    Dropdown,
-    DropdownList,
-    DropdownItem,
-    MenuToggle,
-} from '@patternfly/react-core';
-import { EllipsisVIcon } from '@patternfly/react-icons';
-import { useDocument } from '@hooks/useDocument';
-import { useSelection } from '@hooks/useSelection';
-import { useCommand } from '@hooks/useCommand';
-import { OpenApi30Document } from '@apicurio/data-models';
-import { PropertyInput } from '@components/common/PropertyInput';
-import { DeleteSchemaCommand } from '@commands/DeleteSchemaCommand';
+import React, {useState} from 'react';
+import {Divider, Dropdown, DropdownItem, DropdownList, Form, MenuToggle, Title,} from '@patternfly/react-core';
+import {EllipsisVIcon} from '@patternfly/react-icons';
+import {useDocument} from '@hooks/useDocument';
+import {useSelection} from '@hooks/useSelection';
+import {useCommand} from '@hooks/useCommand';
+import {OpenApiSchema} from '@apicurio/data-models';
+import {PropertyInput} from '@components/common/PropertyInput';
+import {DeleteSchemaCommand} from '@commands/DeleteSchemaCommand';
 
 /**
  * Schema form component for editing schema definitions
  */
 export const SchemaForm: React.FC = () => {
     const { document } = useDocument();
-    const { selectedPath, selectRoot } = useSelection();
+    const { selectedPath, selectRoot, navigationObject } = useSelection();
     const { executeCommand } = useCommand();
     const [isSchemaMenuOpen, setIsSchemaMenuOpen] = useState(false);
 
     // Extract schema information early (before hooks)
-    const schemaName = selectedPath ? selectedPath.replace('/components/schemas/', '') : '';
-    const oaiDoc = document as OpenApi30Document;
-    const components = oaiDoc?.getComponents();
-    const schemas = components?.getSchemas();
-    const schema = schemas?.[schemaName] as any;
+    const schema: OpenApiSchema = navigationObject as OpenApiSchema;
+    const schemaName = schema.mapPropertyName();
 
     /**
      * Handle delete schema action
@@ -51,10 +40,6 @@ export const SchemaForm: React.FC = () => {
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No schema selected</div>;
-    }
-
-    if (!components || !schemas) {
-        return <div>No schemas defined</div>;
     }
 
     if (!schema) {

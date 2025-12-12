@@ -2,37 +2,37 @@
  * Path form for editing path metadata and operations
  */
 
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    Form,
-    Title,
-    Divider,
-    Label,
     Button,
+    Divider,
     Dropdown,
-    DropdownList,
     DropdownItem,
-    MenuToggle,
-    List,
-    ListItem,
-    Tabs,
-    Tab,
+    DropdownList,
     EmptyState,
+    EmptyStateActions,
     EmptyStateBody,
     EmptyStateFooter,
-    EmptyStateActions
+    Form,
+    Label,
+    List,
+    ListItem,
+    MenuToggle,
+    Tab,
+    Tabs,
+    Title
 } from '@patternfly/react-core';
-import { EllipsisVIcon, PlusCircleIcon } from '@patternfly/react-icons';
-import { useDocument } from '@hooks/useDocument';
-import { useCommand } from '@hooks/useCommand';
-import { OpenApi30Document, OpenApi30PathItem, OpenApi30Operation } from '@apicurio/data-models';
-import { useSelection } from '@hooks/useSelection';
-import { CreateOperationCommand } from '@commands/CreateOperationCommand';
-import { DeleteOperationCommand } from '@commands/DeleteOperationCommand';
-import { DeletePathCommand } from '@commands/DeletePathCommand';
-import { CompositeCommand } from '@commands/CompositeCommand';
-import { ExpandablePanel } from '@components/common/ExpandablePanel';
-import { PropertyInput } from '@components/common/PropertyInput';
+import {EllipsisVIcon, PlusCircleIcon} from '@patternfly/react-icons';
+import {useDocument} from '@hooks/useDocument';
+import {useCommand} from '@hooks/useCommand';
+import {OpenApi30Operation, OpenApi30PathItem} from '@apicurio/data-models';
+import {useSelection} from '@hooks/useSelection';
+import {CreateOperationCommand} from '@commands/CreateOperationCommand';
+import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
+import {DeletePathCommand} from '@commands/DeletePathCommand';
+import {CompositeCommand} from '@commands/CompositeCommand';
+import {ExpandablePanel} from '@components/common/ExpandablePanel';
+import {PropertyInput} from '@components/common/PropertyInput';
 import "./PathForm.css";
 
 /**
@@ -54,13 +54,11 @@ const HTTP_METHODS = [
 export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-    const { selectedPath, selectRoot } = useSelection();
+    const { selectedPath, selectRoot, navigationObject } = useSelection();
 
     // Extract path information early (before hooks)
-    const pathName = selectedPath ? selectedPath.replace('/paths/', '') : '';
-    const oaiDoc = document as OpenApi30Document;
-    const paths = oaiDoc?.getPaths();
-    const pathItem = paths?.getItem(pathName) as OpenApi30PathItem;
+    const pathItem: OpenApi30PathItem = navigationObject as OpenApi30PathItem;
+    const pathName = pathItem.mapPropertyName();
 
     // Track selected operation tab
     const [selectedOperation, setSelectedOperation] = useState<string>('get');
@@ -95,7 +93,7 @@ export const PathForm: React.FC = () => {
     const handleCreateOperation = () => {
         if (!selectedPath) return;
 
-        const command = new CreateOperationCommand(selectedPath, selectedOperation);
+        const command = new CreateOperationCommand(pathItem, selectedOperation);
         executeCommand(command, `Create ${selectedOperation.toUpperCase()} operation`);
     };
 
@@ -111,7 +109,7 @@ export const PathForm: React.FC = () => {
 
         if (!operation) return;
 
-        const command = new DeleteOperationCommand(selectedPath, selectedOperation);
+        const command = new DeleteOperationCommand(pathItem, selectedOperation);
         executeCommand(command, `Delete ${selectedOperation.toUpperCase()} operation`);
 
         // Switch to 'get' after deletion
@@ -135,7 +133,7 @@ export const PathForm: React.FC = () => {
 
         // Create a command for each operation to delete
         const deleteCommands = existingMethods.map(method =>
-            new DeleteOperationCommand(selectedPath, method)
+            new DeleteOperationCommand(pathItem, method)
         );
 
         // Wrap all delete commands in a composite command
@@ -231,10 +229,6 @@ export const PathForm: React.FC = () => {
     // Conditional checks after all hooks
     if (!document || !selectedPath) {
         return <div>No path selected</div>;
-    }
-
-    if (!paths) {
-        return <div>No paths defined</div>;
     }
 
     if (!pathItem) {

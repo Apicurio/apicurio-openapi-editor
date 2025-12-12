@@ -2,14 +2,14 @@
  * Base command class with selection tracking
  */
 
-import { Document } from '@apicurio/data-models';
+import {Document, NodePath} from '@apicurio/data-models';
 import { ICommand } from './ICommand';
 
 /**
  * Abstract base class for commands that includes selection tracking
  */
 export abstract class BaseCommand implements ICommand {
-    private _selection: string | null = null;
+    private _selection: NodePath | null = null;
 
     /**
      * Returns the type/name of the command
@@ -31,7 +31,7 @@ export abstract class BaseCommand implements ICommand {
     /**
      * Get the selection path that was active when this command was created
      */
-    getSelection(): string | null {
+    getSelection(): NodePath | null {
         return this._selection;
     }
 
@@ -39,7 +39,7 @@ export abstract class BaseCommand implements ICommand {
      * Set the selection path for this command
      * @param selection The selection path (e.g., "/paths//pets", "/components/schemas/Pet")
      */
-    setSelection(selection: string | null): void {
+    setSelection(selection: NodePath | null): void {
         this._selection = selection;
     }
 }

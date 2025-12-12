@@ -15,7 +15,7 @@ import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { useCommand } from '@hooks/useCommand';
-import { OpenApi30Document } from '@apicurio/data-models';
+import { OpenApi30Document, NodePath } from '@apicurio/data-models';
 import { CreatePathModal } from '@components/modals/CreatePathModal';
 import { CreateSchemaModal } from '@components/modals/CreateSchemaModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
@@ -29,7 +29,7 @@ import './NavigationPanel.css';
  */
 export const NavigationPanel: React.FC = () => {
     const { document } = useDocument();
-    const { selectedPath, selectByPath, selectRoot } = useSelection();
+    const { select, selectRoot, navigationObject, navigationObjectType } = useSelection();
     const { executeCommand } = useCommand();
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
     const [isCreateSchemaModalOpen, setIsCreateSchemaModalOpen] = useState(false);
@@ -95,14 +95,18 @@ export const NavigationPanel: React.FC = () => {
      * Handle path selection
      */
     const handlePathClick = (path: string) => {
-        selectByPath(`/paths/${path}`);
+        const oaiDoc = document as OpenApi30Document;
+        const pathItem = oaiDoc.getPaths().getItem(path);
+        select(pathItem);
     };
 
     /**
      * Handle schema selection
      */
     const handleSchemaClick = (schemaName: string) => {
-        selectByPath(`/components/schemas/${schemaName}`);
+        const oaiDoc = document as OpenApi30Document;
+        const schema = oaiDoc.getComponents().getSchemas()[schemaName];
+        select(schema);
     };
 
     /**
@@ -120,7 +124,8 @@ export const NavigationPanel: React.FC = () => {
         executeCommand(command, `Create path ${pathName}`);
 
         // Select the newly created path
-        selectByPath(`/paths/${pathName}`);
+        const nodePath = NodePath.parse(`/paths/${pathName}`);
+        select(nodePath);
     };
 
     /**
@@ -131,7 +136,8 @@ export const NavigationPanel: React.FC = () => {
         executeCommand(command, `Create schema ${schemaName}`);
 
         // Select the newly created schema
-        selectByPath(`/components/schemas/${schemaName}`);
+        const nodePath = NodePath.parse(`/components/schemas/${schemaName}`);
+        select(nodePath);
     };
 
     return (
@@ -141,7 +147,7 @@ export const NavigationPanel: React.FC = () => {
                     {/* Main/Info Section */}
                     <NavItem
                         itemId="main"
-                        isActive={selectedPath === '/' || selectedPath === null}
+                        isActive={navigationObjectType === "info"}
                         onClick={handleMainClick}
                     >
                         API Info
@@ -182,7 +188,7 @@ export const NavigationPanel: React.FC = () => {
                             </NavItem>
                         ) : (
                             filteredPaths.map((path) => {
-                                const isActive = selectedPath === `/paths/${path}`;
+                                const isActive = navigationObjectType === "pathItem" && navigationObject?.mapPropertyName() === path;
                                 return (
                                     <NavItem
                                         key={path}
@@ -220,7 +226,7 @@ export const NavigationPanel: React.FC = () => {
                             </NavItem>
                         ) : (
                             filteredSchemas.map((schemaName) => {
-                                const isActive = selectedPath === `/components/schemas/${schemaName}`;
+                                const isActive = navigationObjectType === "schema" && navigationObject?.mapPropertyName() === schemaName;
                                 return (
                                     <NavItem
                                         key={schemaName}

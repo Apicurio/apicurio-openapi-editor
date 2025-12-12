@@ -3,14 +3,14 @@
  */
 
 import { create } from 'zustand/react';
-import { Node } from '@apicurio/data-models';
+import {Node, NodePath} from '@apicurio/data-models';
 import { SelectionState } from '@models/SelectionTypes';
 
 interface SelectionStore extends SelectionState {
     /**
      * Select a node by path
      */
-    selectNode: (path: string, node: Node | null, type: string | null) => void;
+    selectNode: (path: NodePath, node: Node | null, navigationObject: Node | null, navigationObjectType: string | null) => void;
 
     /**
      * Clear the current selection
@@ -31,18 +31,20 @@ interface SelectionStore extends SelectionState {
 const initialState: SelectionState = {
     selectedPath: null,
     selectedNode: null,
-    selectedType: null,
+    navigationObject: null,
+    navigationObjectType: null,
     highlightSelection: false,
 };
 
 export const useSelectionStore = create<SelectionStore>((set) => ({
     ...initialState,
 
-    selectNode: (path: string, node: Node | null, type: string | null) => {
+    selectNode: (path: NodePath, node: Node | null, navigationObject: Node | null, navigationObjectType: string | null) => {
         set({
             selectedPath: path,
             selectedNode: node,
-            selectedType: type,
+            navigationObject: navigationObject,
+            navigationObjectType: navigationObjectType,
             highlightSelection: false,
         });
     },
@@ -51,7 +53,8 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
         set({
             selectedPath: null,
             selectedNode: null,
-            selectedType: null,
+            navigationObject: null,
+            navigationObjectType: null,
             highlightSelection: false,
         });
     },

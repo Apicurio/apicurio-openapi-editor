@@ -2,69 +2,106 @@
  * Service for managing node selection in the editor
  */
 
-import { Node, NodePath } from '@apicurio/data-models';
-import { useSelectionStore } from '@stores/selectionStore';
-import { useDocumentStore } from '@stores/documentStore';
+import {
+    CombinedOpenApiVisitorAdapter,
+    Node,
+    NodePath,
+    NodePathUtil,
+    OpenApi30Response,
+    OpenApi30Schema,
+    OpenApiPathItem,
+    TraverserDirection,
+    VisitorUtil
+} from '@apicurio/data-models';
+import {useSelectionStore} from '@stores/selectionStore';
+import {useDocumentStore} from '@stores/documentStore';
+
+/**
+ * A visitor used to figure out the top level navigation node for any given selection,
+ * no matter how granular in the data model, by traversing the data model in the
+ * upward direction and remembering the topmost level path item, schema, etc.
+ */
+class NavigationObjectResolverVisitor extends CombinedOpenApiVisitorAdapter {
+    node: Node | undefined;
+    nodeType: string | undefined;
+
+    visitPathItem(node: OpenApiPathItem) {
+        this.node = node;
+        this.nodeType = "pathItem";
+    }
+
+    visitSchema(node: OpenApi30Schema) {
+        this.node = node;
+        this.nodeType = "schema";
+    }
+
+    visitResponse(node: OpenApi30Response) {
+        this.node = node;
+        this.nodeType = "response";
+    }
+
+    isFound(): boolean {
+        return this.node !== undefined;
+    }
+}
 
 /**
  * SelectionService handles node selection and navigation
  */
 export class SelectionService {
     /**
-     * Select a node by path string
+     * Unified select method - accepts either a Node or a NodePath
      */
-    selectByPath(path: string, highlight: boolean = false): void {
+    select(target: Node | NodePath, highlight: boolean = false): void {
         const doc = useDocumentStore.getState().document;
         if (!doc) {
             console.warn('Cannot select: no document loaded');
             return;
         }
 
-        try {
-            // For now, we'll use a simplified approach
-            // TODO: Implement proper node path resolution when we need it
-            NodePath.parse(path);
+        if (target instanceof NodePath) {
+            const resolvedNode = NodePathUtil.resolveNodePath(target, doc);
+            this.selectIt(target, resolvedNode, highlight);
+        } else {
+            const nodePath: NodePath = NodePathUtil.createNodePath(target);
+            this.selectIt(nodePath, target, highlight);
+        }
+    }
 
+    /**
+     * Select a node by NodePath
+     */
+    private selectIt(nodePath: NodePath, resolvedNode: Node, highlight: boolean = false): void {
+        console.debug("[SelectionService] Selection changed: ", nodePath.toString());
+
+        const doc = useDocumentStore.getState().document;
+        try {
             // For root selection, use the document itself
-            if (path === '/' || path === '') {
-                useSelectionStore.getState().selectNode(path, doc as any, 'info');
+            if (resolvedNode === doc) {
+                useSelectionStore.getState().selectNode(nodePath, doc, doc, 'info');
                 if (highlight) {
                     useSelectionStore.getState().setHighlight(true);
                 }
                 return;
             }
 
-            // Determine type from path
-            let nodeType = 'unknown';
-            if (path.startsWith('/paths/')) {
-                nodeType = 'path';
-            } else if (path.startsWith('/components/schemas/')) {
-                nodeType = 'schema';
-            } else if (path.startsWith('/components/responses/')) {
-                nodeType = 'response';
-            } else if (path.startsWith('/components/parameters/')) {
-                nodeType = 'parameter';
-            } else if (path.startsWith('/components/securitySchemes/')) {
-                nodeType = 'security-scheme';
-            }
+            // Determine navigation object by visiting the data model in reverse to determine the
+            // top level model from the node path.
+            const resolver = new NavigationObjectResolverVisitor();
+            VisitorUtil.visitTree(resolvedNode, resolver, TraverserDirection.up);
 
-            // Store the path with determined type
-            useSelectionStore.getState().selectNode(path, null, nodeType);
+            // Get the navigation object (PathItem, Schema, etc.) and node type
+            const navigationObjectType: string = resolver.isFound() ? resolver.nodeType as string : 'info';
+            const navigationObject: Node = resolver.isFound() ? resolver.node as Node : doc as Node;
 
+            // Store the path with determined type and navigation object
+            useSelectionStore.getState().selectNode(nodePath, resolvedNode, navigationObject, navigationObjectType);
             if (highlight) {
                 useSelectionStore.getState().setHighlight(true);
             }
         } catch (error) {
             console.error('Error selecting node:', error);
         }
-    }
-
-    /**
-     * Select a node directly
-     */
-    selectNode(node: Node, path: string, type?: string): void {
-        const nodeType = type || this.determineNodeType(node);
-        useSelectionStore.getState().selectNode(path, node, nodeType);
     }
 
     /**
@@ -78,7 +115,10 @@ export class SelectionService {
      * Select the root (main info object)
      */
     selectRoot(): void {
-        this.selectByPath('/');
+        const doc = useDocumentStore.getState().document;
+        if (doc) {
+            this.select(doc as any);
+        }
     }
 
     /**
@@ -91,15 +131,22 @@ export class SelectionService {
     /**
      * Get the currently selected path
      */
-    getSelectedPath(): string | null {
+    getSelectedPath(): NodePath | null {
         return useSelectionStore.getState().selectedPath;
     }
 
     /**
-     * Get the type of the currently selected node
+     * Get the current navigation object
      */
-    getSelectedType(): string | null {
-        return useSelectionStore.getState().selectedType;
+    getNavigationObject(): Node | null {
+        return useSelectionStore.getState().navigationObject;
+    }
+
+    /**
+     * Get the type of the currently selected navigation object
+     */
+    getNavigationObjectType(): string | null {
+        return useSelectionStore.getState().navigationObjectType;
     }
 
     /**
@@ -107,45 +154,6 @@ export class SelectionService {
      */
     highlightSelection(): void {
         useSelectionStore.getState().setHighlight(true);
-    }
-
-    /**
-     * Determine the type of a node
-     */
-    private determineNodeType(node: Node): string {
-        const nodeType = (node as any)._type;
-
-        if (!nodeType) {
-            return 'unknown';
-        }
-
-        // Map internal types to our display types
-        if (nodeType.includes('PathItem')) {
-            return 'path';
-        }
-        if (nodeType.includes('Operation')) {
-            return 'operation';
-        }
-        if (nodeType.includes('Schema')) {
-            return 'schema';
-        }
-        if (nodeType.includes('Response')) {
-            return 'response';
-        }
-        if (nodeType.includes('Parameter')) {
-            return 'parameter';
-        }
-        if (nodeType.includes('SecurityScheme')) {
-            return 'security-scheme';
-        }
-        if (nodeType.includes('Server')) {
-            return 'server';
-        }
-        if (nodeType.includes('Info')) {
-            return 'info';
-        }
-
-        return 'unknown';
     }
 
     /**

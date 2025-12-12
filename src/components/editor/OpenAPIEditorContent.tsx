@@ -7,7 +7,7 @@ import { OpenAPIEditorProps } from '@models/EditorProps';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { EditorLayout } from './EditorLayout';
-import { EditorToolbar, EditorView } from './EditorToolbar';
+import { EditorToolbar, EditorView, EditorMode } from './EditorToolbar';
 import './OpenAPIEditorContent.css';
 
 /**
@@ -20,6 +20,7 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     const { document, isDirty, version, loadDocument, toObject } = useDocument();
     const { selectRoot } = useSelection();
     const [currentView, setCurrentView] = useState<EditorView>('navigation');
+    const [currentMode, setCurrentMode] = useState<EditorMode>('design');
 
     /**
      * Load content when initialContent changes (only on first load)
@@ -53,6 +54,8 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
             <EditorToolbar
                 currentView={currentView}
                 onViewChange={setCurrentView}
+                currentMode={currentMode}
+                onModeChange={setCurrentMode}
             />
 
             {/* Editor content */}
@@ -69,7 +72,10 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
                         )}
                     </div>
                 ) : (
-                    <EditorLayout showValidationPanel={currentView === 'validation'} />
+                    <EditorLayout
+                        showValidationPanel={currentView === 'validation'}
+                        editorMode={currentMode}
+                    />
                 )}
             </div>
         </div>
