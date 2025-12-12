@@ -2,7 +2,7 @@
  * Command to update a node with new content from source editor
  */
 
-import { Document, Node, NodePath, NodePathUtil, Library, VisitorUtil } from '@apicurio/data-models';
+import { Document, Node, NodePath, NodePathUtil, Library } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 import { ClearNodeVisitor } from '@visitors/ClearNodeVisitor';
 
@@ -44,14 +44,11 @@ export class UpdateNodeCommand extends BaseCommand {
             throw new Error(`Node not found: ${this._nodePath.toString()}`);
         }
 
-        // Store old content by serializing the current node (only on first execution)
-        if (!this._oldContent) {
-            this._oldContent = Library.writeNode(node);
-        }
+        this._oldContent = Library.writeNode(node);
 
         // Clear all properties from the node using the visitor
         const clearVisitor = new ClearNodeVisitor();
-        VisitorUtil.visitNode(node, clearVisitor);
+        node.accept(clearVisitor);
 
         // Apply the new content to the now-clean node
         Library.readNode(this._newContent, node);
@@ -68,7 +65,7 @@ export class UpdateNodeCommand extends BaseCommand {
 
         // Clear all properties from the node using the visitor
         const clearVisitor = new ClearNodeVisitor();
-        VisitorUtil.visitNode(node, clearVisitor);
+        node.accept(clearVisitor);
 
         // Restore the old content to the now-clean node
         Library.readNode(this._oldContent, node);

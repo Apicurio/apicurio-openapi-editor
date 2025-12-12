@@ -42,161 +42,161 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      * Clear all properties from the document
      */
     visitDocument(node: OpenApi30Document): void {
-        node.openapi = null as any;
-        node.info = null as any;
-        node.servers = null as any;
-        node.paths = null as any;
-        node.components = null as any;
-        node.security = null as any;
-        node.tags = null as any;
-        node.externalDocs = null as any;
+        node.setOpenapi(null as any);
+        node.setInfo(null as any);
+        (node as any).servers = null;
+        node.setPaths(null as any);
+        node.setComponents(null as any);
+        (node as any).security = null;
+        (node as any).tags = null;
+        node.setExternalDocs(null as any);
     }
 
     /**
      * Clear all properties from info
      */
     visitInfo(node: OpenApi30Info): void {
-        node.title = null as any;
-        node.description = null as any;
-        node.termsOfService = null as any;
-        node.contact = null as any;
-        node.license = null as any;
-        node.version = null as any;
+        node.setTitle(null as any);
+        node.setDescription(null as any);
+        node.setTermsOfService(null as any);
+        node.setContact(null as any);
+        node.setLicense(null as any);
+        node.setVersion(null as any);
     }
 
     /**
      * Clear all properties from contact
      */
     visitContact(node: OpenApi30Contact): void {
-        node.name = null as any;
-        node.url = null as any;
-        node.email = null as any;
+        node.setName(null as any);
+        node.setUrl(null as any);
+        node.setEmail(null as any);
     }
 
     /**
      * Clear all properties from license
      */
     visitLicense(node: OpenApi30License): void {
-        node.name = null as any;
-        node.url = null as any;
+        node.setName(null as any);
+        node.setUrl(null as any);
     }
 
     /**
      * Clear all properties from server
      */
     visitServer(node: OpenApi30Server): void {
-        node.url = null as any;
-        node.description = null as any;
-        node.variables = null as any;
+        node.setUrl(null as any);
+        node.setDescription(null as any);
+        (node as any).variables = null;
     }
 
     /**
      * Clear all properties from server variable
      */
     visitServerVariable(node: OpenApi30ServerVariable): void {
-        node.enum = null as any;
-        node.default = null as any;
-        node.description = null as any;
+        node.setEnum(null as any);
+        node.setDefault(null as any);
+        node.setDescription(null as any);
     }
 
     /**
      * Clear all properties from path item
      */
     visitPathItem(node: OpenApiPathItem): void {
-        node.summary = null as any;
-        node.description = null as any;
-        node.get = null as any;
-        node.put = null as any;
-        node.post = null as any;
-        node.delete = null as any;
-        node.options = null as any;
-        node.head = null as any;
-        node.patch = null as any;
-        node.trace = null as any;
-        node.servers = null as any;
-        node.parameters = null as any;
+        (node as any).summary = null;
+        (node as any).description = null;
+        node.setGet(null as any);
+        node.setPut(null as any);
+        node.setPost(null as any);
+        node.setDelete(null as any);
+        node.setOptions(null as any);
+        node.setHead(null as any);
+        node.setPatch(null as any);
+        (node as any).trace = null;
+        (node as any).servers = null;
+        (node as any).parameters = null;
     }
 
     /**
      * Clear all properties from operation
      */
     visitOperation(node: OpenApi30Operation): void {
-        node.tags = null as any;
-        node.summary = null as any;
-        node.description = null as any;
-        node.externalDocs = null as any;
-        node.operationId = null as any;
-        node.parameters = null as any;
-        node.requestBody = null as any;
-        node.responses = null as any;
-        node.callbacks = null as any;
-        node.deprecated = null as any;
-        node.security = null as any;
-        node.servers = null as any;
+        node.setTags(null as any);
+        node.setSummary(null as any);
+        node.setDescription(null as any);
+        node.setExternalDocs(null as any);
+        node.setOperationId(null as any);
+        (node as any).parameters = null;
+        node.setRequestBody(null as any);
+        node.setResponses(null as any);
+        (node as any).callbacks = null;
+        node.setDeprecated(null as any);
+        (node as any).security = null;
+        (node as any).servers = null;
     }
 
     /**
      * Clear all properties from external documentation
      */
     visitExternalDocumentation(node: OpenApi30ExternalDocumentation): void {
-        node.description = null as any;
-        node.url = null as any;
+        node.setDescription(null as any);
+        node.setUrl(null as any);
     }
 
     /**
      * Clear all properties from parameter
      */
     visitParameter(node: OpenApi30Parameter): void {
-        node.name = null as any;
-        node.in = null as any;
-        node.description = null as any;
-        node.required = null as any;
-        node.deprecated = null as any;
-        node.allowEmptyValue = null as any;
-        node.style = null as any;
-        node.explode = null as any;
-        node.allowReserved = null as any;
-        node.schema = null as any;
-        node.example = null as any;
-        node.examples = null as any;
-        node.content = null as any;
+        node.setName(null as any);
+        node.setIn(null as any);
+        node.setDescription(null as any);
+        node.setRequired(null as any);
+        node.setDeprecated(null as any);
+        node.setAllowEmptyValue(null as any);
+        node.setStyle(null as any);
+        node.setExplode(null as any);
+        node.setAllowReserved(null as any);
+        node.setSchema(null as any);
+        node.setExample(null as any);
+        (node as any).examples = null;
+        (node as any).content = null;
     }
 
     /**
      * Clear all properties from request body
      */
     visitRequestBody(node: OpenApi30RequestBody): void {
-        node.description = null as any;
-        node.content = null as any;
-        node.required = null as any;
+        node.setDescription(null as any);
+        (node as any).content = null;
+        node.setRequired(null as any);
     }
 
     /**
      * Clear all properties from media type
      */
     visitMediaType(node: OpenApi30MediaType): void {
-        node.schema = null as any;
-        node.example = null as any;
-        node.examples = null as any;
-        node.encoding = null as any;
+        node.setSchema(null as any);
+        node.setExample(null as any);
+        (node as any).examples = null;
+        (node as any).encoding = null;
     }
 
     /**
      * Clear all properties from encoding
      */
     visitEncoding(node: OpenApi30Encoding): void {
-        node.contentType = null as any;
-        node.headers = null as any;
-        node.style = null as any;
-        node.explode = null as any;
-        node.allowReserved = null as any;
+        node.setContentType(null as any);
+        (node as any).headers = null;
+        node.setStyle(null as any);
+        node.setExplode(null as any);
+        node.setAllowReserved(null as any);
     }
 
     /**
      * Clear all properties from responses
      */
     visitResponses(node: OpenApi30Responses): void {
-        node.default = null as any;
+        node.setDefault(null as any);
         // Clear all status code responses
         const keys = Object.keys(node);
         keys.forEach(key => {
@@ -210,101 +210,101 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      * Clear all properties from response
      */
     visitResponse(node: OpenApi30Response): void {
-        node.description = null as any;
-        node.headers = null as any;
-        node.content = null as any;
-        node.links = null as any;
+        node.setDescription(null as any);
+        (node as any).headers = null;
+        (node as any).content = null;
+        (node as any).links = null;
     }
 
     /**
      * Clear all properties from header
      */
     visitHeader(node: OpenApi30Header): void {
-        node.description = null as any;
-        node.required = null as any;
-        node.deprecated = null as any;
-        node.allowEmptyValue = null as any;
-        node.style = null as any;
-        node.explode = null as any;
-        node.allowReserved = null as any;
-        node.schema = null as any;
-        node.example = null as any;
-        node.examples = null as any;
-        node.content = null as any;
+        node.setDescription(null as any);
+        node.setRequired(null as any);
+        node.setDeprecated(null as any);
+        node.setAllowEmptyValue(null as any);
+        node.setStyle(null as any);
+        node.setExplode(null as any);
+        node.setAllowReserved(null as any);
+        node.setSchema(null as any);
+        node.setExample(null as any);
+        (node as any).examples = null;
+        (node as any).content = null;
     }
 
     /**
      * Clear all properties from schema
      */
     visitSchema(node: OpenApi30Schema): void {
-        node.title = null as any;
-        node.multipleOf = null as any;
-        node.maximum = null as any;
-        node.exclusiveMaximum = null as any;
-        node.minimum = null as any;
-        node.exclusiveMinimum = null as any;
-        node.maxLength = null as any;
-        node.minLength = null as any;
-        node.pattern = null as any;
-        node.maxItems = null as any;
-        node.minItems = null as any;
-        node.uniqueItems = null as any;
-        node.maxProperties = null as any;
-        node.minProperties = null as any;
-        node.required = null as any;
-        node.enum = null as any;
-        node.type = null as any;
-        node.allOf = null as any;
-        node.oneOf = null as any;
-        node.anyOf = null as any;
-        node.not = null as any;
-        node.items = null as any;
-        node.properties = null as any;
-        node.additionalProperties = null as any;
-        node.description = null as any;
-        node.format = null as any;
-        node.default = null as any;
-        node.nullable = null as any;
-        node.discriminator = null as any;
-        node.readOnly = null as any;
-        node.writeOnly = null as any;
-        node.xml = null as any;
-        node.externalDocs = null as any;
-        node.example = null as any;
-        node.deprecated = null as any;
+        node.setTitle(null as any);
+        node.setMultipleOf(null as any);
+        node.setMaximum(null as any);
+        node.setExclusiveMaximum(null as any);
+        node.setMinimum(null as any);
+        node.setExclusiveMinimum(null as any);
+        node.setMaxLength(null as any);
+        node.setMinLength(null as any);
+        node.setPattern(null as any);
+        node.setMaxItems(null as any);
+        node.setMinItems(null as any);
+        node.setUniqueItems(null as any);
+        node.setMaxProperties(null as any);
+        node.setMinProperties(null as any);
+        node.setRequired(null as any);
+        node.setEnum(null as any);
+        node.setType(null as any);
+        (node as any).allOf = null;
+        (node as any).oneOf = null;
+        (node as any).anyOf = null;
+        node.setNot(null as any);
+        node.setItems(null as any);
+        (node as any).properties = null;
+        node.setAdditionalProperties(null as any);
+        node.setDescription(null as any);
+        node.setFormat(null as any);
+        node.setDefault(null as any);
+        node.setNullable(null as any);
+        node.setDiscriminator(null as any);
+        node.setReadOnly(null as any);
+        node.setWriteOnly(null as any);
+        node.setXml(null as any);
+        node.setExternalDocs(null as any);
+        node.setExample(null as any);
+        node.setDeprecated(null as any);
     }
 
     /**
      * Clear all properties from discriminator
      */
     visitDiscriminator(node: OpenApi30Discriminator): void {
-        node.propertyName = null as any;
-        node.mapping = null as any;
+        node.setPropertyName(null as any);
+        node.setMapping(null as any);
     }
 
     /**
      * Clear all properties from XML
      */
     visitXML(node: OpenApi30XML): void {
-        node.name = null as any;
-        node.namespace = null as any;
-        node.prefix = null as any;
-        node.attribute = null as any;
-        node.wrapped = null as any;
+        node.setName(null as any);
+        node.setNamespace(null as any);
+        node.setPrefix(null as any);
+        node.setAttribute(null as any);
+        node.setWrapped(null as any);
     }
 
     /**
      * Clear all properties from security scheme
      */
     visitSecurityScheme(node: OpenApi30SecurityScheme): void {
-        node.type = null as any;
-        node.description = null as any;
-        node.name = null as any;
-        node.in = null as any;
-        node.scheme = null as any;
-        node.bearerFormat = null as any;
-        node.flows = null as any;
-        node.openIdConnectUrl = null as any;
+        node.setType(null as any);
+        node.setDescription(null as any);
+        node.setName(null as any);
+        node.setIn(null as any);
+        node.setScheme(null as any);
+        node.setBearerFormat(null as any);
+        node.setFlows(null as any);
+        node.setOpenIdConnectUrl(null as any);
     }
 
     /**
@@ -323,31 +323,31 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      * Clear all properties from tag
      */
     visitTag(node: OpenApi30Tag): void {
-        node.name = null as any;
-        node.description = null as any;
-        node.externalDocs = null as any;
+        node.setName(null as any);
+        node.setDescription(null as any);
+        node.setExternalDocs(null as any);
     }
 
     /**
      * Clear all properties from example
      */
     visitExample(node: OpenApi30Example): void {
-        node.summary = null as any;
-        node.description = null as any;
-        node.value = null as any;
-        node.externalValue = null as any;
+        node.setSummary(null as any);
+        node.setDescription(null as any);
+        node.setValue(null as any);
+        node.setExternalValue(null as any);
     }
 
     /**
      * Clear all properties from link
      */
     visitLink(node: OpenApi30Link): void {
-        node.operationRef = null as any;
-        node.operationId = null as any;
-        node.parameters = null as any;
-        node.requestBody = null as any;
-        node.description = null as any;
-        node.server = null as any;
+        node.setOperationRef(null as any);
+        node.setOperationId(null as any);
+        node.setParameters(null as any);
+        node.setRequestBody(null as any);
+        node.setDescription(null as any);
+        node.setServer(null as any);
     }
 
     /**
@@ -366,14 +366,14 @@ export class ClearNodeVisitor extends CombinedOpenApiVisitorAdapter {
      * Clear all properties from components
      */
     visitComponents(node: OpenApi30Components): void {
-        node.schemas = null as any;
-        node.responses = null as any;
-        node.parameters = null as any;
-        node.examples = null as any;
-        node.requestBodies = null as any;
-        node.headers = null as any;
-        node.securitySchemes = null as any;
-        node.links = null as any;
-        node.callbacks = null as any;
+        (node as any).schemas = null;
+        (node as any).responses = null;
+        (node as any).parameters = null;
+        (node as any).examples = null;
+        (node as any).requestBodies = null;
+        (node as any).headers = null;
+        (node as any).securitySchemes = null;
+        (node as any).links = null;
+        (node as any).callbacks = null;
     }
 }

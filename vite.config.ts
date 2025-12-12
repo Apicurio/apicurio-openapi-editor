@@ -51,6 +51,7 @@ export default defineConfig({
             '@hooks': resolve(__dirname, './src/hooks'),
             '@models': resolve(__dirname, './src/models'),
             '@commands': resolve(__dirname, './src/commands'),
+            '@visitors': resolve(__dirname, './src/visitors'),
             '@utils': resolve(__dirname, './src/utils'),
         },
     },

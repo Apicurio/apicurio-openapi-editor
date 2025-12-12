@@ -28,6 +28,7 @@
             "@hooks/*": ["src/hooks/*"],
             "@models/*": ["src/models/*"],
             "@commands/*": ["src/commands/*"],
+            "@visitors/*": ["src/visitors/*"],
             "@utils/*": ["src/utils/*"]
         }
     },
