@@ -8,9 +8,7 @@ import { useSelection } from '@hooks/useSelection';
 import { MainForm } from '@components/forms/MainForm';
 import { PathForm } from '@components/forms/PathForm';
 import { SchemaForm } from '@components/forms/SchemaForm';
-import { CodeEditor, Language } from '@patternfly/react-code-editor';
-import { useDocument } from '@hooks/useDocument';
-import { Library } from '@apicurio/data-models';
+import { SourceForm } from '@components/forms/SourceForm';
 
 export interface DetailPanelProps {
     /**
@@ -24,24 +22,7 @@ export interface DetailPanelProps {
  * Shows the appropriate form or source code based on current selection and mode
  */
 export const DetailPanel: React.FC<DetailPanelProps> = ({ editorMode = 'design' }) => {
-    const { selectedPath, navigationObject, navigationObjectType } = useSelection();
-    const { document } = useDocument();
-
-    /**
-     * Get the selected model as a JSON string
-     */
-    const getSelectedModelJSON = (): string => {
-        // Use the navigation object if available, otherwise use the document
-        const modelToSerialize = navigationObject || document;
-
-        if (!modelToSerialize) {
-            return '{}';
-        }
-
-        // Use Library.writeNodeToString() to convert the model to JSON
-        const nodeObj = Library.writeNode(modelToSerialize);
-        return JSON.stringify(nodeObj, null, 2);
-    };
+    const { selectedPath, navigationObjectType } = useSelection();
 
     /**
      * Render the appropriate form based on selection type
@@ -65,26 +46,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({ editorMode = 'design' 
         }
     };
 
-    /**
-     * Render source code editor
-     */
-    const renderSourceEditor = () => {
-        const jsonCode = getSelectedModelJSON();
-        return (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CodeEditor
-                    isReadOnly={false}
-                    code={jsonCode}
-                    language={Language.json}
-                    height="100%"
-                />
-            </div>
-        );
-    };
-
     return (
         <div style={{ padding: '1rem', height: '100%' }}>
-            {editorMode === 'design' ? renderForm() : renderSourceEditor()}
+            {editorMode === 'design' ? renderForm() : <SourceForm />}
         </div>
     );
 };

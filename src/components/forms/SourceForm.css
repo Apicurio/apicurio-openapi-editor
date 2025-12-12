@@ -1,0 +1,16 @@
+/**
+ * Styles for the SourceForm component
+ */
+
+.source-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.source-editor-container {
+    flex: 1;
+    overflow: hidden;
+    margin-top: 1rem;
+}
