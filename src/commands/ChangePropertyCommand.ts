@@ -48,6 +48,40 @@ export class ChangePropertyCommand extends BaseCommand {
     }
 
     /**
+     * Capitalize the first letter of a string
+     */
+    private capitalize(str: string): string {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    /**
+     * Get the value of a property using getter method if available, otherwise direct access
+     */
+    private getPropertyValue(node: any, property: string): any {
+        const getterName = 'get' + this.capitalize(property);
+
+        if (typeof node[getterName] === 'function') {
+            return node[getterName]();
+        }
+
+        return node[property];
+    }
+
+    /**
+     * Set the value of a property using setter method if available, otherwise direct access
+     */
+    private setPropertyValue(node: any, property: string, value: any): void {
+        const setterName = 'set' + this.capitalize(property);
+
+        if (typeof node[setterName] === 'function') {
+            node[setterName](value);
+        } else {
+            node[property] = value;
+        }
+    }
+
+    /**
      * Execute the command - change the property
      */
     execute(document: Document): void {
@@ -58,11 +92,11 @@ export class ChangePropertyCommand extends BaseCommand {
             throw new Error(`Cannot resolve node path: ${this._nodePath.toString()}`);
         }
 
-        // Save the old value
-        this._oldValue = (node as any)[this._property];
+        // Save the old value using getter if available
+        this._oldValue = this.getPropertyValue(node, this._property);
 
-        // Set the new value
-        (node as any)[this._property] = this._newValue;
+        // Set the new value using setter if available
+        this.setPropertyValue(node, this._property, this._newValue);
     }
 
     /**
@@ -76,7 +110,7 @@ export class ChangePropertyCommand extends BaseCommand {
             throw new Error(`Cannot resolve node path: ${this._nodePath.toString()}`);
         }
 
-        // Restore the old value
-        (node as any)[this._property] = this._oldValue;
+        // Restore the old value using setter if available
+        this.setPropertyValue(node, this._property, this._oldValue);
     }
 }
