@@ -82,17 +82,10 @@ export const PathForm: React.FC = () => {
         });
     };
 
-    /**
-     * Check if the path contains variables (segments in curly braces)
-     */
-    const pathHasVariables = (path: string): boolean => {
-        return path.includes('{') && path.includes('}');
-    };
-
     // Track expandable panel state
     // Path Parameters: expanded if the path has variables
     // Query, Header, Cookie: always collapsed
-    const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(() => pathHasVariables(pathName));
+    const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(() => true);
     const [isQueryParametersExpanded, setIsQueryParametersExpanded] = useState(false);
     const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(false);
     const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(false);

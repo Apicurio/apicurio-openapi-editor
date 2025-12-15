@@ -9,7 +9,7 @@ import {
     NavItem,
     Divider,
     Button,
-    SearchInput,
+    SearchInput, Tooltip,
 } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
@@ -197,7 +197,11 @@ export const NavigationPanel: React.FC = () => {
                                         isActive={isActive}
                                         onClick={() => handlePathClick(path)}
                                     >
-                                        <PathLabel path={path} />
+                                        <a style={{width: "100%", overflowX: "hidden", textWrap: "nowrap"}}>
+                                            <Tooltip content={<div>{path}</div>}>
+                                                <PathLabel path={path} />
+                                            </Tooltip>
+                                        </a>
                                     </NavItem>
                                 );
                             })

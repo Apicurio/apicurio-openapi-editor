@@ -69,7 +69,7 @@ export const PathLabel: React.FC<PathLabelProps> = ({ path, className }) => {
                     key={index}
                     style={
                         segment.isVariable
-                            ? { color: '#0066CC', fontWeight: 'inherit' }
+                            ? { color: '#CC5500', fontWeight: 'inherit' }
                             : undefined
                     }
                 >
