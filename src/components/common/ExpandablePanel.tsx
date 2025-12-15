@@ -3,7 +3,7 @@
  */
 
 import React, { ReactNode } from 'react';
-import { Button } from '@patternfly/react-core';
+import { Button, Badge } from '@patternfly/react-core';
 import { AngleRightIcon, AngleDownIcon } from '@patternfly/react-icons';
 import './ExpandablePanel.css';
 
@@ -34,6 +34,11 @@ export interface ExpandablePanelProps {
     actions?: ReactNode;
 
     /**
+     * Optional badge count to display after the title
+     */
+    badgeCount?: number;
+
+    /**
      * The content to display when expanded
      */
     children: ReactNode;
@@ -48,6 +53,7 @@ export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
     isExpanded,
     onToggle,
     actions,
+    badgeCount,
     children,
 }) => {
     return (
@@ -61,6 +67,11 @@ export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
                     aria-expanded={isExpanded}
                 >
                     {title}
+                    {badgeCount !== undefined && (
+                        <Badge isRead style={{ marginLeft: '0.5rem' }}>
+                            {badgeCount}
+                        </Badge>
+                    )}
                 </Button>
                 {actions && (
                     <div className="expandable-panel__actions" onClick={(e) => e.stopPropagation()}>
