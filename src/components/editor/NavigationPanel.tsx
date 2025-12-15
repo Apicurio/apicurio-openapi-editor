@@ -173,6 +173,7 @@ export const NavigationPanel: React.FC = () => {
                         title="Paths"
                         isExpanded={isPathsExpanded}
                         onToggle={setIsPathsExpanded}
+                        badgeCount={filteredPaths.length}
                         actions={
                             <Button
                                 variant="plain"
@@ -215,6 +216,7 @@ export const NavigationPanel: React.FC = () => {
                         title="Schemas"
                         isExpanded={isSchemasExpanded}
                         onToggle={setIsSchemasExpanded}
+                        badgeCount={filteredSchemas.length}
                         actions={
                             <Button
                                 variant="plain"
