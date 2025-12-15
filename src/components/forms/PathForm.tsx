@@ -179,7 +179,7 @@ export const PathForm: React.FC = () => {
                 isExpanded={isExpanded}
                 onToggle={onToggle}
                 className="parameter-section"
-                badgeCount={parameters.length}
+                badgeCount={parameters.length > 0 ? parameters.length : undefined}
                 actions={
                     <Button
                         variant="plain"
