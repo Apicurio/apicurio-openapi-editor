@@ -21,6 +21,7 @@ import { CreateSchemaModal } from '@components/modals/CreateSchemaModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
 import { CreateSchemaCommand } from '@commands/CreateSchemaCommand';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
+import { PathLabel } from '@components/common/PathLabel';
 import './NavigationPanel.css';
 
 /**
@@ -196,7 +197,7 @@ export const NavigationPanel: React.FC = () => {
                                         isActive={isActive}
                                         onClick={() => handlePathClick(path)}
                                     >
-                                        {path}
+                                        <PathLabel path={path} />
                                     </NavItem>
                                 );
                             })

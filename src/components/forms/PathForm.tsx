@@ -33,6 +33,7 @@ import {DeletePathCommand} from '@commands/DeletePathCommand';
 import {CompositeCommand} from '@commands/CompositeCommand';
 import {ExpandablePanel} from '@components/common/ExpandablePanel';
 import {PropertyInput} from '@components/common/PropertyInput';
+import {PathLabel} from '@components/common/PathLabel';
 import "./PathForm.css";
 
 /**
@@ -81,11 +82,20 @@ export const PathForm: React.FC = () => {
         });
     };
 
-    // Track expandable panel state - start expanded if parameters exist
-    const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(() => getParametersByLocation('path').length > 0);
-    const [isQueryParametersExpanded, setIsQueryParametersExpanded] = useState(() => getParametersByLocation('query').length > 0);
-    const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(() => getParametersByLocation('header').length > 0);
-    const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(() => getParametersByLocation('cookie').length > 0);
+    /**
+     * Check if the path contains variables (segments in curly braces)
+     */
+    const pathHasVariables = (path: string): boolean => {
+        return path.includes('{') && path.includes('}');
+    };
+
+    // Track expandable panel state
+    // Path Parameters: expanded if the path has variables
+    // Query, Header, Cookie: always collapsed
+    const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(() => pathHasVariables(pathName));
+    const [isQueryParametersExpanded, setIsQueryParametersExpanded] = useState(false);
+    const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(false);
+    const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(false);
 
     /**
      * Handle creating a new operation using the command pattern
@@ -239,7 +249,7 @@ export const PathForm: React.FC = () => {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <Title headingLevel="h2" size="xl">
-                    Path: {pathName}
+                    Path: <PathLabel path={pathName} />
                 </Title>
                 <Dropdown
                     isOpen={isPathMenuOpen}
