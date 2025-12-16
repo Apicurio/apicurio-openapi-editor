@@ -4,8 +4,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormGroup, TextInput, TextArea } from '@patternfly/react-core';
-import { Node } from '@apicurio/data-models';
+import { Node, NodePath } from '@apicurio/data-models';
 import { useCommand } from '@hooks/useCommand';
+import { useSelection } from '@hooks/useSelection';
 import { useDocumentStore } from '@stores/documentStore';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 import { ICommand } from "@commands/ICommand.ts";
@@ -20,6 +21,11 @@ export interface PropertyInputProps {
      * The property name to edit
      */
     propertyName: string;
+
+    /**
+     * Optional node path - used as fallback for selection when model is null
+     */
+    nodePath?: NodePath | null;
 
     /**
      * Label to display for the input
@@ -58,6 +64,7 @@ export interface PropertyInputProps {
 export const PropertyInput: React.FC<PropertyInputProps> = ({
     model,
     propertyName,
+    nodePath,
     label,
     type = 'text',
     placeholder,
@@ -66,6 +73,7 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
     commandFactory,
 }) => {
     const { executeCommand } = useCommand();
+    const { select } = useSelection();
     const version = useDocumentStore((state) => state.version);
 
     /**
@@ -118,6 +126,16 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
         }
     };
 
+    /**
+     * Handle focus - fire selection event
+     */
+    const handleFocus = () => {
+        const target = model || nodePath;
+        if (target) {
+            select(target, propertyName);
+        }
+    };
+
     const inputFieldId = fieldId || `property-${propertyName}`;
 
     return (
@@ -127,6 +145,7 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
                     id={inputFieldId}
                     value={value}
                     onChange={(_event, newValue) => setValue(newValue)}
+                    onFocus={handleFocus}
                     onBlur={handleCommit}
                     aria-label={label}
                     placeholder={placeholder}
@@ -138,6 +157,7 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
                     type="text"
                     value={value}
                     onChange={(_event, newValue) => setValue(newValue)}
+                    onFocus={handleFocus}
                     onBlur={handleCommit}
                     onKeyDown={handleKeyDown}
                     aria-label={label}

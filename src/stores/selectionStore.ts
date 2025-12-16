@@ -10,7 +10,7 @@ interface SelectionStore extends SelectionState {
     /**
      * Select a node by path
      */
-    selectNode: (path: NodePath, node: Node | null, navigationObject: Node | null, navigationObjectType: string | null) => void;
+    selectNode: (path: NodePath, node: Node | null, propertyName: string | null | undefined, navigationObject: Node | null, navigationObjectType: string | null) => void;
 
     /**
      * Clear the current selection
@@ -33,16 +33,18 @@ const initialState: SelectionState = {
     selectedNode: null,
     navigationObject: null,
     navigationObjectType: null,
+    selectedPropertyName: null,
     highlightSelection: false,
 };
 
 export const useSelectionStore = create<SelectionStore>((set) => ({
     ...initialState,
 
-    selectNode: (path: NodePath, node: Node | null, navigationObject: Node | null, navigationObjectType: string | null) => {
+    selectNode: (path: NodePath, node: Node | null, propertyName: string | null | undefined, navigationObject: Node | null, navigationObjectType: string | null) => {
         set({
             selectedPath: path,
             selectedNode: node,
+            selectedPropertyName: propertyName ?? null,
             navigationObject: navigationObject,
             navigationObjectType: navigationObjectType,
             highlightSelection: false,
@@ -55,6 +57,7 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
             selectedNode: null,
             navigationObject: null,
             navigationObjectType: null,
+            selectedPropertyName: null,
             highlightSelection: false,
         });
     },

@@ -15,6 +15,7 @@ export const useSelection = () => {
     // Subscribe to selection store state
     const selectedPath = useSelectionStore((state) => state.selectedPath);
     const selectedNode = useSelectionStore((state) => state.selectedNode);
+    const selectedPropertyName = useSelectionStore((state) => state.selectedPropertyName);
     const navigationObject = useSelectionStore((state) => state.navigationObject);
     const navigationObjectType = useSelectionStore((state) => state.navigationObjectType);
     const highlightSelection = useSelectionStore((state) => state.highlightSelection);
@@ -23,13 +24,14 @@ export const useSelection = () => {
         // State
         selectedPath,
         selectedNode,
+        selectedPropertyName,
         navigationObject,
         navigationObjectType,
         highlightSelection,
 
         // Actions
-        select: (target: Node | NodePath, highlight?: boolean) =>
-            selectionService.select(target, highlight),
+        select: (target: Node | NodePath, propertyName?: string | null, highlight?: boolean) =>
+            selectionService.select(target, propertyName, highlight),
         clearSelection: () => selectionService.clearSelection(),
         selectRoot: () => selectionService.selectRoot(),
         highlightCurrent: () => selectionService.highlightSelection(),

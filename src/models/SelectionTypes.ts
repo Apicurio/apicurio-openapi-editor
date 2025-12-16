@@ -19,6 +19,12 @@ export interface SelectionState {
     selectedNode: Node | null;
 
     /**
+     * Optional property name for fine-grained selection within a node
+     * (e.g., "summary", "description", "operationId")
+     */
+    selectedPropertyName: string | null;
+
+    /**
      * The top-level navigation object (PathItem, Schema, etc.) that contains the selected node
      * This is maintained separately to support granular selection without breaking navigation
      */

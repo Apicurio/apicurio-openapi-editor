@@ -25,7 +25,7 @@ import {
 import {EllipsisVIcon, PlusCircleIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
-import {OpenApi30Operation, OpenApi30PathItem} from '@apicurio/data-models';
+import {OpenApi30Operation, OpenApi30PathItem, NodePathUtil, NodePathSegment} from '@apicurio/data-models';
 import {useSelection} from '@hooks/useSelection';
 import {CreateOperationCommand} from '@commands/CreateOperationCommand';
 import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
@@ -55,7 +55,7 @@ const HTTP_METHODS = [
 export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-    const { selectedPath, selectRoot, navigationObject } = useSelection();
+    const { selectedPath, selectRoot, navigationObject, select } = useSelection();
 
     // Extract path information early (before hooks)
     const pathItem: OpenApi30PathItem = navigationObject as OpenApi30PathItem;
@@ -354,7 +354,24 @@ export const PathForm: React.FC = () => {
 
             <Tabs
                 activeKey={selectedOperation}
-                onSelect={(_event, tabKey) => setSelectedOperation(tabKey as string)}
+                onSelect={(_event, tabKey) => {
+                    const method = tabKey as string;
+                    setSelectedOperation(method);
+
+                    // Fire selection event for the operation
+                    const getter = `get${method.charAt(0).toUpperCase()}${method.slice(1)}`;
+                    const operation = (pathItem as any)[getter]?.() as OpenApi30Operation | undefined;
+
+                    if (operation) {
+                        // Operation exists - select it directly
+                        select(operation);
+                    } else {
+                        // Operation doesn't exist - construct NodePath for where it would be
+                        const operationPath = NodePathUtil.createNodePath(pathItem);
+                        operationPath.append(new NodePathSegment(method, false));
+                        select(operationPath);
+                    }
+                }}
                 aria-label="Operations tabs"
                 role="region"
             >
