@@ -32,8 +32,15 @@ export interface ICommand {
     getSelection(): NodePath | null;
 
     /**
-     * Set the selection path for this command
-     * @param selection The selection path (e.g., "/paths//pets", "/components/schemas/Pet")
+     * Get the property name that was active when this command was created
+     * This allows undo/redo to restore the specific property selection
      */
-    setSelection(selection: NodePath | null): void;
+    getPropertyName(): string | null;
+
+    /**
+     * Set the selection path and property name for this command
+     * @param selection The selection path (e.g., "/paths//pets", "/components/schemas/Pet")
+     * @param propertyName Optional property name for fine-grained selection
+     */
+    setSelection(selection: NodePath | null, propertyName?: string | null): void;
 }

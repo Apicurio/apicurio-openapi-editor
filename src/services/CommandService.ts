@@ -17,6 +17,7 @@ export class CommandService {
     constructor() {
         this.selectionService = new SelectionService();
     }
+
     /**
      * Execute a command on the current document
      */
@@ -32,7 +33,7 @@ export class CommandService {
         try {
             // Capture current selection before executing command
             const selStore = useSelectionStore.getState();
-            command.setSelection(selStore.selectedPath);
+            command.setSelection(selStore.selectedPath, selStore.selectedPropertyName);
 
             // Execute the command (mutates the document)
             command.execute(doc);
@@ -78,8 +79,9 @@ export class CommandService {
 
             // Restore the selection that was active when the command was created
             const selection = entry.command.getSelection();
+            const propertyName = entry.command.getPropertyName();
             if (selection) {
-                this.selectionService.select(selection);
+                this.selectionService.select(selection, propertyName, true);
             }
 
             // Push to redo stack
@@ -124,8 +126,9 @@ export class CommandService {
 
             // Restore the selection that was active when the command was created
             const selection = entry.command.getSelection();
+            const propertyName = entry.command.getPropertyName();
             if (selection) {
-                this.selectionService.select(selection);
+                this.selectionService.select(selection, propertyName, true);
             }
 
             // Push back to undo stack (without clearing redo stack)

@@ -10,9 +10,11 @@ import {
     Label,
     EmptyState,
     EmptyStateBody,
+    Button,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@patternfly/react-icons';
 import { useValidation } from '@hooks/useValidation';
+import { useSelection } from '@hooks/useSelection';
 import { ValidationProblem, ValidationProblemSeverity } from '@apicurio/data-models';
 
 export interface ValidationPanelProps {
@@ -22,12 +24,19 @@ export interface ValidationPanelProps {
  * Renders a single validation problem
  */
 const ValidationProblemItem: React.FC<{ problem: ValidationProblem }> = ({ problem }) => {
+    const { select } = useSelection();
     const isError = problem.severity === ValidationProblemSeverity.high || problem.severity === ValidationProblemSeverity.medium;
     const icon = isError ? (
         <ExclamationCircleIcon color="var(--pf-v6-global--danger-color--100)" />
     ) : (
         <ExclamationTriangleIcon color="var(--pf-v6-global--warning-color--100)" />
     );
+
+    const handlePathClick = () => {
+        if (problem.nodePath) {
+            select(problem.nodePath, problem.property, true);
+        }
+    };
 
     return (
         <ListItem>
@@ -42,8 +51,15 @@ const ValidationProblemItem: React.FC<{ problem: ValidationProblem }> = ({ probl
                         <strong>{problem.message}</strong>
                     </div>
                     {problem.nodePath && (
-                        <div style={{ fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)', marginTop: '0.25rem' }}>
-                            Path: {problem.nodePath.toString()}
+                        <div style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                            <Button
+                                variant="link"
+                                isInline
+                                onClick={handlePathClick}
+                                style={{ padding: 0, fontSize: '0.875rem' }}
+                            >
+                                {problem.nodePath.toString()}
+                            </Button>
                         </div>
                     )}
                 </div>

@@ -10,6 +10,7 @@ import { ICommand } from './ICommand';
  */
 export abstract class BaseCommand implements ICommand {
     private _selection: NodePath | null = null;
+    private _propertyName: string | null = null;
 
     /**
      * Returns the type/name of the command
@@ -36,10 +37,19 @@ export abstract class BaseCommand implements ICommand {
     }
 
     /**
-     * Set the selection path for this command
-     * @param selection The selection path (e.g., "/paths//pets", "/components/schemas/Pet")
+     * Get the property name that was active when this command was created
      */
-    setSelection(selection: NodePath | null): void {
+    getPropertyName(): string | null {
+        return this._propertyName;
+    }
+
+    /**
+     * Set the selection path and property name for this command
+     * @param selection The selection path (e.g., "/paths//pets", "/components/schemas/Pet")
+     * @param propertyName Optional property name for fine-grained selection
+     */
+    setSelection(selection: NodePath | null, propertyName?: string | null): void {
         this._selection = selection;
+        this._propertyName = propertyName ?? null;
     }
 }
