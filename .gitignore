@@ -37,3 +37,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Generated documentation
+PROJECT_INDEX.md
