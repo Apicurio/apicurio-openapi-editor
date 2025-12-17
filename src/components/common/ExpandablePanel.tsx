@@ -2,9 +2,12 @@
  * Custom expandable panel component with header actions
  */
 
-import React, { ReactNode } from 'react';
-import { Button, Badge } from '@patternfly/react-core';
-import { AngleRightIcon, AngleDownIcon } from '@patternfly/react-icons';
+import React, {ReactNode} from 'react';
+import {Badge, Button} from '@patternfly/react-core';
+import {AngleDownIcon, AngleRightIcon} from '@patternfly/react-icons';
+import {NodePath, NodePathUtil} from '@apicurio/data-models';
+import {useHighlightEffect} from '@hooks/useHighlightEffect';
+import {useSelection} from '@hooks/useSelection';
 import './ExpandablePanel.css';
 
 export interface ExpandablePanelProps {
@@ -39,6 +42,11 @@ export interface ExpandablePanelProps {
     badgeCount?: number;
 
     /**
+     * Optional data-path attribute for component identification
+     */
+    nodePath?: NodePath | string;
+
+    /**
      * The content to display when expanded
      */
     children: ReactNode;
@@ -54,16 +62,48 @@ export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
     onToggle,
     actions,
     badgeCount,
+    nodePath,
     children,
 }) => {
+    const { select } = useSelection();
+
+    // Enable highlight effect
+    useHighlightEffect();
+
+    // Convert NodePath to string if needed
+    const pathString = typeof nodePath === 'string' ? nodePath : nodePath?.toString();
+
+    /**
+     * Handle panel toggle - fire selection event if nodePath is defined
+     */
+    const handleToggle = () => {
+        const newExpandedState = !isExpanded;
+
+        // Fire selection event if nodePath is defined
+        if (nodePath) {
+            if (typeof nodePath === "string") {
+                select(NodePathUtil.parseNodePath(nodePath));
+            } else {
+                select(nodePath as NodePath);
+            }
+        }
+
+        // Call the original onToggle callback
+        onToggle(newExpandedState);
+    };
+
     return (
-        <div className={`expandable-panel ${className || ''}`}>
+        <div
+            className={`expandable-panel ${className || ''}`}
+            data-path={pathString}
+            data-selectable={pathString ? 'true' : undefined}
+        >
             <div className="expandable-panel__header">
                 <Button
                     variant="plain"
                     icon={isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
                     className="expandable-panel__toggle"
-                    onClick={() => onToggle(!isExpanded)}
+                    onClick={handleToggle}
                     aria-expanded={isExpanded}
                 >
                     {title}

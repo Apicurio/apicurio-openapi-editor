@@ -283,6 +283,7 @@ export const MainForm: React.FC = () => {
 
             <ExpandablePanel
                 title="API Info"
+                nodePath="/info"
                 isExpanded={isInfoExpanded}
                 onToggle={setIsInfoExpanded}
                 className="main-form__section"
@@ -322,6 +323,7 @@ export const MainForm: React.FC = () => {
 
             <ExpandablePanel
                 title="Contact Information"
+                nodePath="/info/contact"
                 isExpanded={isContactExpanded}
                 onToggle={setIsContactExpanded}
                 className="main-form__section"
@@ -355,6 +357,7 @@ export const MainForm: React.FC = () => {
 
             <ExpandablePanel
                 title="License"
+                nodePath="/info/license"
                 isExpanded={isLicenseExpanded}
                 onToggle={setIsLicenseExpanded}
                 className="main-form__section"
@@ -380,6 +383,7 @@ export const MainForm: React.FC = () => {
 
             <ExpandablePanel
                 title="Servers"
+                nodePath="/servers"
                 isExpanded={isServersExpanded}
                 onToggle={setIsServersExpanded}
                 className="main-form__section"
@@ -491,6 +495,7 @@ export const MainForm: React.FC = () => {
 
             <ExpandablePanel
                 title="Tag Definitions"
+                nodePath="/tags"
                 isExpanded={isTagsExpanded}
                 onToggle={setIsTagsExpanded}
                 className="main-form__section"
