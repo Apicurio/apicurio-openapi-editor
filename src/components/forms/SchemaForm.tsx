@@ -8,6 +8,7 @@ import {EllipsisVIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useSelection} from '@hooks/useSelection';
 import {useCommand} from '@hooks/useCommand';
+import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {OpenApiSchema} from '@apicurio/data-models';
 import {PropertyInput} from '@components/common/PropertyInput';
 import {DeleteSchemaCommand} from '@commands/DeleteSchemaCommand';
@@ -19,6 +20,10 @@ export const SchemaForm: React.FC = () => {
     const { document } = useDocument();
     const { selectedPath, selectRoot, navigationObject } = useSelection();
     const { executeCommand } = useCommand();
+
+    // Enable highlight effect
+    useHighlightEffect();
+
     const [isSchemaMenuOpen, setIsSchemaMenuOpen] = useState(false);
 
     // Extract schema information early (before hooks)

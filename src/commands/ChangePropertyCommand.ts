@@ -4,6 +4,7 @@
 
 import {Document, Node, NodePath, NodePathUtil} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
+import { getGetter, getSetter } from '@utils/nodeUtils';
 
 /**
  * Command to change a property value on a node
@@ -48,21 +49,13 @@ export class ChangePropertyCommand extends BaseCommand {
     }
 
     /**
-     * Capitalize the first letter of a string
-     */
-    private capitalize(str: string): string {
-        if (!str) return str;
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    /**
      * Get the value of a property using getter method if available, otherwise direct access
      */
     private getPropertyValue(node: any, property: string): any {
-        const getterName = 'get' + this.capitalize(property);
+        const getter = getGetter(node, property);
 
-        if (typeof node[getterName] === 'function') {
-            return node[getterName]();
+        if (getter) {
+            return getter();
         }
 
         return node[property];
@@ -72,10 +65,10 @@ export class ChangePropertyCommand extends BaseCommand {
      * Set the value of a property using setter method if available, otherwise direct access
      */
     private setPropertyValue(node: any, property: string, value: any): void {
-        const setterName = 'set' + this.capitalize(property);
+        const setter = getSetter(node, property);
 
-        if (typeof node[setterName] === 'function') {
-            node[setterName](value);
+        if (setter) {
+            setter(value);
         } else {
             node[property] = value;
         }

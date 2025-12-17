@@ -22,6 +22,7 @@ import {
 import {EllipsisVIcon, PlusIcon, ServerIcon, TagIcon, TrashIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
+import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {
     Node,
     OpenApi30Document,
@@ -41,11 +42,10 @@ import {EditTagDescriptionModal} from '@components/modals/EditTagDescriptionModa
 import {NewServerModal} from '@components/modals/NewServerModal';
 import {EditServerModal, ServerVariableData} from '@components/modals/EditServerModal';
 import {CompositeCommand} from "@commands/CompositeCommand.ts";
-import {EnsureInfoCommand} from "@commands/EnsureInfoCommand.ts";
+import {EnsureChildNodeCommand} from "@commands/EnsureChildNodeCommand.ts";
 import {ChangePropertyCommand} from "@commands/ChangePropertyCommand.ts";
-import {EnsureContactCommand} from "@commands/EnsureContactCommand.ts";
 import {ICommand} from "@commands/ICommand.ts";
-import {EnsureLicenseCommand} from "@commands/EnsureLicenseCommand.ts";
+import {NodePathUtil} from "@apicurio/data-models";
 import {AddTagCommand} from "@commands/AddTagCommand.ts";
 import {DeleteAllTagsCommand} from "@commands/DeleteAllTagsCommand.ts";
 import {DeleteTagCommand} from "@commands/DeleteTagCommand.ts";
@@ -61,6 +61,10 @@ import {DeleteAllServersCommand} from "@commands/DeleteAllServersCommand.ts";
 export const MainForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
+
+    // Enable highlight effect
+    useHighlightEffect();
+
     const [isInfoExpanded, setIsInfoExpanded] = useState(true);
     const [isContactExpanded, setIsContactExpanded] = useState(true);
     const [isLicenseExpanded, setIsLicenseExpanded] = useState(true);
@@ -90,23 +94,23 @@ export const MainForm: React.FC = () => {
 
     const ChangeInfoPropertyCommandFactory = (_model: Node, propertyName: string, value: string, description: string): ICommand => {
         return new CompositeCommand([
-            new EnsureInfoCommand(),
+            new EnsureChildNodeCommand(NodePathUtil.createNodePath(oaiDoc), "info"),
             new ChangePropertyCommand("/info", propertyName, value)
         ], description)
     };
 
     const ChangeContactPropertyCommandFactory = (_model: Node, propertyName: string, value: string, description: string): ICommand => {
         return new CompositeCommand([
-            new EnsureInfoCommand(),
-            new EnsureContactCommand(),
+            new EnsureChildNodeCommand(NodePathUtil.createNodePath(oaiDoc), "info"),
+            new EnsureChildNodeCommand(NodePathUtil.parseNodePath("/info"), "contact"),
             new ChangePropertyCommand("/info/contact", propertyName, value)
         ], description)
     };
 
     const ChangeLicensePropertyCommandFactory = (_model: Node, propertyName: string, value: string, description: string): ICommand => {
         return new CompositeCommand([
-            new EnsureInfoCommand(),
-            new EnsureLicenseCommand(),
+            new EnsureChildNodeCommand(NodePathUtil.createNodePath(oaiDoc), "info"),
+            new EnsureChildNodeCommand(NodePathUtil.parseNodePath("/info"), "license"),
             new ChangePropertyCommand("/info/license", propertyName, value)
         ], description)
     };

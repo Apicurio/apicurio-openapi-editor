@@ -3,63 +3,16 @@
  */
 
 import {
-    AllNodeVisitor,
-    CombinedOpenApiVisitorAdapter,
-    Document,
     Node,
     NodePath,
     NodePathUtil,
-    OpenApi30Response,
-    OpenApi30Schema,
-    OpenApiPathItem,
     TraverserDirection,
     VisitorUtil
 } from '@apicurio/data-models';
 import {useSelectionStore} from '@stores/selectionStore';
 import {useDocumentStore} from '@stores/documentStore';
-
-/**
- * A visitor used to figure out the top level navigation node for any given selection,
- * no matter how granular in the data model, by traversing the data model in the
- * upward direction and remembering the topmost level path item, schema, etc.
- */
-class NavigationObjectResolverVisitor extends CombinedOpenApiVisitorAdapter {
-    node: Node | undefined;
-    nodeType: string | undefined;
-
-    visitPathItem(node: OpenApiPathItem) {
-        this.node = node;
-        this.nodeType = "pathItem";
-    }
-
-    visitSchema(node: OpenApi30Schema) {
-        this.node = node;
-        this.nodeType = "schema";
-    }
-
-    visitResponse(node: OpenApi30Response) {
-        this.node = node;
-        this.nodeType = "response";
-    }
-
-    isFound(): boolean {
-        return this.node !== undefined;
-    }
-}
-
-class NearestNodeVisitor extends AllNodeVisitor {
-    found: Node | null = null;
-
-    visitNode(node: Node): any {
-        this.found = node;
-    }
-}
-
-function resolveNearestNode(target: NodePath, doc: Document): Node | null {
-    const visitor = new NearestNodeVisitor();
-    VisitorUtil.visitPath(doc, target, visitor);
-    return visitor.found;
-}
+import {NavigationObjectResolverVisitor} from '@visitors/NavigationObjectResolverVisitor';
+import {resolveNearestNode} from '@utils/nodeUtils';
 
 /**
  * SelectionService handles node selection and navigation

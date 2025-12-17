@@ -2,7 +2,7 @@
  * Path form for editing path metadata and operations
  */
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Button,
     Divider,
@@ -27,6 +27,7 @@ import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
 import {OpenApi30Operation, OpenApi30PathItem, NodePathUtil, NodePathSegment} from '@apicurio/data-models';
 import {useSelection} from '@hooks/useSelection';
+import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {CreateOperationCommand} from '@commands/CreateOperationCommand';
 import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
 import {DeletePathCommand} from '@commands/DeletePathCommand';
@@ -55,7 +56,10 @@ const HTTP_METHODS = [
 export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-    const { selectedPath, selectRoot, navigationObject, select } = useSelection();
+    const { selectedPath, selectedNode, selectRoot, navigationObject, select } = useSelection();
+
+    // Enable highlight effect
+    useHighlightEffect();
 
     // Extract path information early (before hooks)
     const pathItem: OpenApi30PathItem = navigationObject as OpenApi30PathItem;
@@ -67,6 +71,19 @@ export const PathForm: React.FC = () => {
     // Track dropdown open state
     const [isOperationMenuOpen, setIsOperationMenuOpen] = useState(false);
     const [isPathMenuOpen, setIsPathMenuOpen] = useState(false);
+
+    // Sync operation tab when selection changes externally
+    useEffect(() => {
+        if (!selectedPath || !pathItem || !document) return;
+
+        // Get the method from the node path
+        const segments = selectedPath.toSegments();
+
+        if (segments[0] === "/paths" && segments.length >= 3) {
+            const method = segments[2].substring(1);
+            setSelectedOperation(method);
+        }
+    }, [selectedPath, selectedNode, pathItem, document]);
 
     /**
      * Get parameters filtered by location

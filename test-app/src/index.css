@@ -25,3 +25,22 @@ body {
     margin: 0;
     padding: 0;
 }
+
+/* Highlight flash animation for selection */
+@keyframes highlight-flash {
+    0% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(0, 123, 255, 0.2);
+        box-shadow: 0 0 12px rgba(0, 123, 255, 0.4);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.highlight-flash {
+    animation: highlight-flash 1s ease-in-out !important;
+    border-radius: 4px;
+}

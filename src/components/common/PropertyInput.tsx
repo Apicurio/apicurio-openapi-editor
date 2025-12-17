@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FormGroup, TextInput, TextArea } from '@patternfly/react-core';
-import { Node, NodePath } from '@apicurio/data-models';
+import { Node, NodePath, NodePathUtil } from '@apicurio/data-models';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
 import { useDocumentStore } from '@stores/documentStore';
@@ -138,8 +138,18 @@ export const PropertyInput: React.FC<PropertyInputProps> = ({
 
     const inputFieldId = fieldId || `property-${propertyName}`;
 
+    // Compute the path string for data-path attribute
+    const pathString = model ? NodePathUtil.createNodePath(model).toString() : nodePath?.toString() || '';
+
     return (
-        <FormGroup label={label} fieldId={inputFieldId} isRequired={isRequired}>
+        <FormGroup
+            label={label}
+            fieldId={inputFieldId}
+            isRequired={isRequired}
+            data-path={pathString}
+            data-property-name={propertyName}
+            data-selectable="true"
+        >
             {type === 'textarea' ? (
                 <TextArea
                     id={inputFieldId}

@@ -38,6 +38,15 @@ const ValidationProblemItem: React.FC<{ problem: ValidationProblem }> = ({ probl
         }
     };
 
+    // Build display text for path and property
+    const getLocationText = () => {
+        const pathText = problem.nodePath?.toString() || '';
+        if (problem.property) {
+            return `${pathText} (${problem.property})`;
+        }
+        return pathText;
+    };
+
     return (
         <ListItem>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
@@ -58,7 +67,7 @@ const ValidationProblemItem: React.FC<{ problem: ValidationProblem }> = ({ probl
                                 onClick={handlePathClick}
                                 style={{ padding: 0, fontSize: '0.875rem' }}
                             >
-                                {problem.nodePath.toString()}
+                                {getLocationText()}
                             </Button>
                         </div>
                     )}
