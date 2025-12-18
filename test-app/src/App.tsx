@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
     Page,
     PageSection,
@@ -14,8 +14,10 @@ import {
     ModalHeader,
     ModalBody,
     ModalFooter,
+    Switch,
 } from '@patternfly/react-core';
 import { CodeEditor, Language } from '@patternfly/react-code-editor';
+import { MoonIcon, SunIcon } from '@patternfly/react-icons';
 import { OpenAPIEditor } from '../../src/components/editor/OpenAPIEditor';
 import './App.css';
 import {DocumentChangeEvent} from "@models/EditorProps.ts";
@@ -251,7 +253,28 @@ function App() {
     const [isDirty, setIsDirty] = useState(false);
     const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
     const [jsonContent, setJsonContent] = useState('');
+    const [isDarkTheme, setIsDarkTheme] = useState(() => {
+        // Initialize from localStorage or default to light theme
+        const savedTheme = localStorage.getItem('pf-theme');
+        return savedTheme === 'dark';
+    });
     const getContentRef = useRef<(() => object | null) | null>(null);
+
+    // Apply theme class to html element
+    useEffect(() => {
+        const htmlElement = document.documentElement;
+        if (isDarkTheme) {
+            htmlElement.classList.add('pf-v6-theme-dark');
+            localStorage.setItem('pf-theme', 'dark');
+        } else {
+            htmlElement.classList.remove('pf-v6-theme-dark');
+            localStorage.setItem('pf-theme', 'light');
+        }
+    }, [isDarkTheme]);
+
+    const handleToggleTheme = () => {
+        setIsDarkTheme(!isDarkTheme);
+    };
 
     const handleChange = (event: DocumentChangeEvent) => {
         setIsDirty(event.isDirty);
@@ -369,6 +392,15 @@ function App() {
                             </FlexItem>
                             <FlexItem>
                                 <Flex>
+                                    <FlexItem>
+                                        <Switch
+                                            id="theme-switch"
+                                            label={isDarkTheme ? <MoonIcon /> : <SunIcon />}
+                                            isChecked={isDarkTheme}
+                                            onChange={handleToggleTheme}
+                                            aria-label="Toggle dark theme"
+                                        />
+                                    </FlexItem>
                                     <FlexItem>
                                         <Button
                                             variant="primary"
