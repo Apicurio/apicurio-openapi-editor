@@ -1,0 +1,66 @@
+name: Publish Demo Application
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'test-app/**'
+      - 'src/**'
+      - 'package.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+  workflow_dispatch:
+
+jobs:
+  publish-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout apicurio-openapi-editor
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build library
+      run: npm run build
+
+    - name: Install test-app dependencies
+      run: npm run test-app:install
+
+    - name: Build test application
+      run: npm run test-app:build
+      env:
+        VITE_BASE_PATH: /openapi-editor/demo/
+
+    - name: Checkout website repository
+      uses: actions/checkout@v4
+      with:
+        repository: Apicurio/apicurio.github.io
+        token: ${{ secrets.ACCESS_TOKEN }}
+        path: website
+
+    - name: Copy built demo to website
+      run: |
+        rm -rf website/openapi-editor/demo
+        mkdir -p website/openapi-editor
+        cp -r test-app/dist website/openapi-editor/demo
+
+    - name: Commit and push to website
+      run: |
+        cd website
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add openapi-editor/demo
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update OpenAPI Editor demo application (automated)"
+          git push
+        fi
