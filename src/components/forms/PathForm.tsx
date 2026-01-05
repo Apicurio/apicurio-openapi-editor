@@ -30,6 +30,7 @@ import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
 import {DeletePathCommand} from '@commands/DeletePathCommand';
 import {CompositeCommand} from '@commands/CompositeCommand';
 import {AddParameterCommand} from '@commands/AddParameterCommand';
+import {DeleteParameterCommand} from '@commands/DeleteParameterCommand';
 import {PropertyInput} from '@components/common/PropertyInput';
 import {PathLabel} from '@components/common/PathLabel';
 import {ParameterSection} from '@components/common/ParameterSection';
@@ -236,8 +237,28 @@ export const PathForm: React.FC = () => {
      * Handle deleting a parameter
      */
     const handleDeleteParameter = (parameter: any, index: number) => {
-        console.log('Delete parameter:', parameter, index);
-        // TODO: Implement parameter deletion
+        if (!pathItem) {
+            console.error('Cannot delete parameter: no path item selected');
+            return;
+        }
+
+        // Extract parameter details
+        const paramName = parameter.getName?.() || parameter.name;
+        const paramLocation = parameter.getIn?.() || parameter.in;
+
+        if (!paramName || !paramLocation) {
+            console.error('Cannot delete parameter: invalid parameter');
+            return;
+        }
+
+        const command = new DeleteParameterCommand(
+            pathItem,
+            paramName,
+            paramLocation
+        );
+
+        const locationDisplayName = paramLocation.charAt(0).toUpperCase() + paramLocation.slice(1);
+        executeCommand(command, `Delete ${locationDisplayName} parameter '${paramName}'`);
     };
 
     // Conditional checks after all hooks
