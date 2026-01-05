@@ -13,16 +13,13 @@ import {
     EmptyStateActions,
     EmptyStateBody,
     EmptyStateFooter,
-    Form,
-    Label,
-    List,
-    ListItem,
+    Form, Label,
     MenuToggle,
     Tab,
     Tabs,
     Title
 } from '@patternfly/react-core';
-import {EllipsisVIcon, PlusCircleIcon} from '@patternfly/react-icons';
+import {EllipsisVIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
 import {OpenApi30Operation, OpenApi30PathItem, NodePathUtil, NodePathSegment} from '@apicurio/data-models';
@@ -32,9 +29,11 @@ import {CreateOperationCommand} from '@commands/CreateOperationCommand';
 import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
 import {DeletePathCommand} from '@commands/DeletePathCommand';
 import {CompositeCommand} from '@commands/CompositeCommand';
-import {ExpandablePanel} from '@components/common/ExpandablePanel';
+import {AddParameterCommand} from '@commands/AddParameterCommand';
 import {PropertyInput} from '@components/common/PropertyInput';
 import {PathLabel} from '@components/common/PathLabel';
+import {ParameterSection} from '@components/common/ParameterSection';
+import {CreateParameterModal} from '@components/modals/CreateParameterModal';
 import "./PathForm.css";
 
 /**
@@ -106,6 +105,10 @@ export const PathForm: React.FC = () => {
     const [isQueryParametersExpanded, setIsQueryParametersExpanded] = useState(false);
     const [isHeaderParametersExpanded, setIsHeaderParametersExpanded] = useState(false);
     const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(false);
+
+    // Track modal state
+    const [isCreateParameterModalOpen, setIsCreateParameterModalOpen] = useState(false);
+    const [createParameterLocation, setCreateParameterLocation] = useState<string>('query');
 
     /**
      * Handle creating a new operation using the command pattern
@@ -185,66 +188,56 @@ export const PathForm: React.FC = () => {
     };
 
     /**
-     * Render a parameter list section
+     * Handle opening the create parameter modal
      */
-    const renderParameterSection = (title: string, location: string, isExpanded: boolean, onToggle: (expanded: boolean) => void) => {
-        const parameters = getParametersByLocation(location);
+    const handleOpenCreateParameterModal = (location: string) => {
+        setCreateParameterLocation(location);
+        setIsCreateParameterModalOpen(true);
+    };
 
-        return (
-            <ExpandablePanel
-                title={title}
-                isExpanded={isExpanded}
-                onToggle={onToggle}
-                className="parameter-section"
-                badgeCount={parameters.length > 0 ? parameters.length : undefined}
-                actions={
-                    <Button
-                        variant="plain"
-                        aria-label={`Add ${location} parameter`}
-                        icon={<PlusCircleIcon />}
-                        style={{ minWidth: 'auto', padding: '0.25rem' }}
-                    />
-                }
-            >
-                <div style={{paddingLeft: "20px", paddingTop: "10px"}}>
-                    {parameters.length === 0 ? (
-                        <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
-                            No {location} parameters defined. Use the + icon to create one.
-                        </p>
-                    ) : (
-                        <List isPlain isBordered>
-                            {parameters.map((param: any, index: number) => {
-                                const paramName = param.getName?.() || param.name || 'Unnamed';
-                                const paramRequired = param.getRequired?.() || param.required || false;
-                                const paramType = param.getSchema?.()?.getType?.() || param.schema?.type || 'string';
+    /**
+     * Handle closing the create parameter modal
+     */
+    const handleCloseCreateParameterModal = () => {
+        setIsCreateParameterModalOpen(false);
+    };
 
-                                return (
-                                    <ListItem key={index}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                                            <div>
-                                                <strong>{paramName}</strong>
-                                                {' '}
-                                                <Label isCompact color="grey">{paramType}</Label>
-                                                {paramRequired && (
-                                                    <>
-                                                        {' '}
-                                                        <Label isCompact color="orange">required</Label>
-                                                    </>
-                                                )}
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <Button variant="link" size="sm">Edit</Button>
-                                                <Button variant="link" size="sm" isDanger>Delete</Button>
-                                            </div>
-                                        </div>
-                                    </ListItem>
-                                );
-                            })}
-                        </List>
-                    )}
-                </div>
-            </ExpandablePanel>
+    /**
+     * Handle creating a new parameter
+     */
+    const handleCreateParameter = (name: string, description: string, required: boolean, type: string) => {
+        if (!pathItem) {
+            console.error('Cannot create parameter: no path item selected');
+            return;
+        }
+
+        const command = new AddParameterCommand(
+            pathItem,
+            name,
+            createParameterLocation,
+            description || null,
+            required,
+            type
         );
+
+        const locationDisplayName = createParameterLocation.charAt(0).toUpperCase() + createParameterLocation.slice(1);
+        executeCommand(command, `Add ${locationDisplayName} parameter '${name}'`);
+    };
+
+    /**
+     * Handle editing a parameter
+     */
+    const handleEditParameter = (parameter: any, index: number) => {
+        console.log('Edit parameter:', parameter, index);
+        // TODO: Implement parameter editing
+    };
+
+    /**
+     * Handle deleting a parameter
+     */
+    const handleDeleteParameter = (parameter: any, index: number) => {
+        console.log('Delete parameter:', parameter, index);
+        // TODO: Implement parameter deletion
     };
 
     // Conditional checks after all hooks
@@ -313,14 +306,46 @@ export const PathForm: React.FC = () => {
 
             <Divider style={{ margin: '1.5rem 0' }} />
 
-            {/* Path Parameters */}
-            {renderParameterSection('Path Parameters', 'path', isPathParametersExpanded, setIsPathParametersExpanded)}
-            {/* Query Parameters */}
-            {renderParameterSection('Query Parameters', 'query', isQueryParametersExpanded, setIsQueryParametersExpanded)}
-            {/* Header Parameters */}
-            {renderParameterSection('Header Parameters', 'header', isHeaderParametersExpanded, setIsHeaderParametersExpanded)}
-            {/* Cookie Parameters */}
-            {renderParameterSection('Cookie Parameters', 'cookie', isCookieParametersExpanded, setIsCookieParametersExpanded)}
+            <ParameterSection
+                title="Path Parameters"
+                location="path"
+                isExpanded={isPathParametersExpanded}
+                onToggle={setIsPathParametersExpanded}
+                parameters={getParametersByLocation('path')}
+            />
+
+            <ParameterSection
+                title="Query Parameters"
+                location="query"
+                isExpanded={isQueryParametersExpanded}
+                onToggle={setIsQueryParametersExpanded}
+                parameters={getParametersByLocation('query')}
+                onAddParameter={() => handleOpenCreateParameterModal('query')}
+                onEditParameter={handleEditParameter}
+                onDeleteParameter={handleDeleteParameter}
+            />
+
+            <ParameterSection
+                title="Header Parameters"
+                location="header"
+                isExpanded={isHeaderParametersExpanded}
+                onToggle={setIsHeaderParametersExpanded}
+                parameters={getParametersByLocation('header')}
+                onAddParameter={() => handleOpenCreateParameterModal('header')}
+                onEditParameter={handleEditParameter}
+                onDeleteParameter={handleDeleteParameter}
+            />
+
+            <ParameterSection
+                title="Cookie Parameters"
+                location="cookie"
+                isExpanded={isCookieParametersExpanded}
+                onToggle={setIsCookieParametersExpanded}
+                parameters={getParametersByLocation('cookie')}
+                onAddParameter={() => handleOpenCreateParameterModal('cookie')}
+                onEditParameter={handleEditParameter}
+                onDeleteParameter={handleDeleteParameter}
+            />
 
             <Divider style={{ margin: '1.5rem 0' }} />
 
@@ -455,6 +480,14 @@ export const PathForm: React.FC = () => {
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
             </p>
+
+            {/* Create Parameter Modal */}
+            <CreateParameterModal
+                isOpen={isCreateParameterModalOpen}
+                parameterLocation={createParameterLocation}
+                onClose={handleCloseCreateParameterModal}
+                onConfirm={handleCreateParameter}
+            />
         </div>
     );
 };
