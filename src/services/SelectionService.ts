@@ -13,6 +13,7 @@ import {useSelectionStore} from '@stores/selectionStore';
 import {useDocumentStore} from '@stores/documentStore';
 import {NavigationObjectResolverVisitor} from '@visitors/NavigationObjectResolverVisitor';
 import {resolveNearestNode} from '@utils/nodeUtils';
+import {SelectionChangeEvent} from '@models/SelectionTypes';
 
 /**
  * SelectionService handles node selection and navigation
@@ -35,6 +36,30 @@ export class SelectionService {
             const nodePath: NodePath = NodePathUtil.createNodePath(target);
             this.selectIt(nodePath, target, propertyName, highlight);
         }
+    }
+
+    /**
+     * Select using a SelectionChangeEvent
+     */
+    selectFromEvent(event: SelectionChangeEvent, highlight: boolean = false): void {
+        this.select(event.path, event.propertyName, highlight);
+    }
+
+    /**
+     * Create a SelectionChangeEvent from the current selection
+     */
+    createSelectionChangeEvent(): SelectionChangeEvent | null {
+        const path = this.getSelectedPath();
+        const propertyName = this.getSelectedPropertyName();
+
+        if (!path) {
+            return null;
+        }
+
+        return {
+            path,
+            propertyName
+        };
     }
 
     /**

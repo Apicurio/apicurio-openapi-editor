@@ -48,3 +48,18 @@ export interface SelectionEvent {
     path: NodePath;
     node: Node | null;
 }
+
+/**
+ * Selection change event - represents a change in the editor selection
+ */
+export interface SelectionChangeEvent {
+    /**
+     * The path to the selected node
+     */
+    path: NodePath;
+
+    /**
+     * The optional property name for fine-grained selection
+     */
+    propertyName?: string | null;
+}

@@ -3,6 +3,7 @@
  */
 
 import {Document, NodePath} from '@apicurio/data-models';
+import {SelectionChangeEvent} from '@models/SelectionTypes';
 
 /**
  * Interface for commands that can be executed and undone
@@ -43,4 +44,17 @@ export interface ICommand {
      * @param propertyName Optional property name for fine-grained selection
      */
     setSelection(selection: NodePath | null, propertyName?: string | null): void;
+
+    /**
+     * Get the selection as a SelectionChangeEvent
+     * This is a convenience method that combines getSelection() and getPropertyName()
+     */
+    getSelectionEvent(): SelectionChangeEvent | null;
+
+    /**
+     * Set the selection from a SelectionChangeEvent
+     * This is a convenience method for setSelection()
+     * @param event The selection change event
+     */
+    setSelectionFromEvent(event: SelectionChangeEvent): void;
 }

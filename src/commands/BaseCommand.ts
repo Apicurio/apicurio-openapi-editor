@@ -4,6 +4,7 @@
 
 import {Document, NodePath} from '@apicurio/data-models';
 import { ICommand } from './ICommand';
+import {SelectionChangeEvent} from '@models/SelectionTypes';
 
 /**
  * Abstract base class for commands that includes selection tracking
@@ -51,5 +52,29 @@ export abstract class BaseCommand implements ICommand {
     setSelection(selection: NodePath | null, propertyName?: string | null): void {
         this._selection = selection;
         this._propertyName = propertyName ?? null;
+    }
+
+    /**
+     * Get the selection as a SelectionChangeEvent
+     * This is a convenience method that combines getSelection() and getPropertyName()
+     */
+    getSelectionEvent(): SelectionChangeEvent | null {
+        if (!this._selection) {
+            return null;
+        }
+
+        return {
+            path: this._selection,
+            propertyName: this._propertyName
+        };
+    }
+
+    /**
+     * Set the selection from a SelectionChangeEvent
+     * This is a convenience method for setSelection()
+     * @param event The selection change event
+     */
+    setSelectionFromEvent(event: SelectionChangeEvent): void {
+        this.setSelection(event.path, event.propertyName);
     }
 }
