@@ -4,15 +4,10 @@
 
 import React, {useState, useEffect} from 'react';
 import {
-    Button,
     Divider,
     Dropdown,
     DropdownItem,
     DropdownList,
-    EmptyState,
-    EmptyStateActions,
-    EmptyStateBody,
-    EmptyStateFooter,
     Form, Label,
     MenuToggle,
     Tab,
@@ -41,6 +36,7 @@ import {PropertyInput} from '@components/common/PropertyInput';
 import {PathLabel} from '@components/common/PathLabel';
 import {ParameterSection} from '@components/common/ParameterSection';
 import {ParameterModal} from '@components/modals/ParameterModal';
+import {OperationForm} from './OperationForm';
 import "./PathForm.css";
 
 /**
@@ -449,6 +445,7 @@ export const PathForm: React.FC = () => {
                 <Dropdown
                     isOpen={isOperationMenuOpen}
                     onOpenChange={setIsOperationMenuOpen}
+                    popperProps={{ position: 'right' }}
                     toggle={(toggleRef) => (
                         <MenuToggle
                             ref={toggleRef}
@@ -524,46 +521,12 @@ export const PathForm: React.FC = () => {
                                     </Label>
                             }
                         >
-                            {currentOperation ? (
-                                <Form style={{ paddingTop: '1rem' }}>
-                                    <PropertyInput
-                                        model={currentOperation}
-                                        propertyName="summary"
-                                        label="Summary"
-                                        placeholder="Short summary of the operation"
-                                    />
-
-                                    <PropertyInput
-                                        model={currentOperation}
-                                        propertyName="operationId"
-                                        label="Operation ID"
-                                        placeholder="Unique operation identifier"
-                                    />
-
-                                    <PropertyInput
-                                        model={currentOperation}
-                                        propertyName="description"
-                                        label="Description"
-                                        type="textarea"
-                                        placeholder="Detailed description of the operation"
-                                    />
-                                </Form>
-                            ) : (
-                                <div style={{ paddingTop: '1rem' }}>
-                                    <EmptyState>
-                                        <EmptyStateBody>
-                                            No {label} operation defined
-                                        </EmptyStateBody>
-                                        <EmptyStateFooter>
-                                            <EmptyStateActions>
-                                                <Button variant="primary" onClick={handleCreateOperation}>
-                                                    Create {label} operation
-                                                </Button>
-                                            </EmptyStateActions>
-                                        </EmptyStateFooter>
-                                    </EmptyState>
-                                </div>
-                            )}
+                            <OperationForm
+                                operation={currentOperation}
+                                method={method}
+                                label={label}
+                                onCreateOperation={handleCreateOperation}
+                            />
                         </Tab>
                     );
                 })}

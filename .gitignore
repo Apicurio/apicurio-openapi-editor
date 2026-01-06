@@ -39,3 +39,5 @@ temp/
 
 # Generated documentation
 PROJECT_INDEX.md
+PROJECT_INDEX.json
+.serena
