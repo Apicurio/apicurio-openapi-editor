@@ -22,19 +22,25 @@ import {
 import {EllipsisVIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
-import {OpenApi30Operation, OpenApi30PathItem, NodePathUtil, NodePathSegment} from '@apicurio/data-models';
+import {
+    OpenApi30Operation,
+    OpenApi30PathItem,
+    NodePathUtil,
+    NodePathSegment,
+    OpenApiParameter
+} from '@apicurio/data-models';
 import {useSelection} from '@hooks/useSelection';
-import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {CreateOperationCommand} from '@commands/CreateOperationCommand';
 import {DeleteOperationCommand} from '@commands/DeleteOperationCommand';
 import {DeletePathCommand} from '@commands/DeletePathCommand';
 import {CompositeCommand} from '@commands/CompositeCommand';
 import {AddParameterCommand} from '@commands/AddParameterCommand';
 import {DeleteParameterCommand} from '@commands/DeleteParameterCommand';
+import {ChangePropertyCommand} from '@commands/ChangePropertyCommand';
 import {PropertyInput} from '@components/common/PropertyInput';
 import {PathLabel} from '@components/common/PathLabel';
 import {ParameterSection} from '@components/common/ParameterSection';
-import {CreateParameterModal} from '@components/modals/CreateParameterModal';
+import {ParameterModal} from '@components/modals/ParameterModal';
 import "./PathForm.css";
 
 /**
@@ -57,9 +63,6 @@ export const PathForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
     const { selectedPath, selectedNode, selectRoot, navigationObject, select } = useSelection();
-
-    // Enable highlight effect
-    useHighlightEffect();
 
     // Extract path information early (before hooks)
     const pathItem: OpenApi30PathItem = navigationObject as OpenApi30PathItem;
@@ -88,7 +91,7 @@ export const PathForm: React.FC = () => {
     /**
      * Get parameters filtered by location
      */
-    const getParametersByLocation = (location: string): any[] => {
+    const getParametersByLocation = (location: string): OpenApiParameter[] => {
         const parameters = pathItem?.getParameters();
         if (!parameters || parameters.length === 0) {
             return [];
@@ -108,8 +111,10 @@ export const PathForm: React.FC = () => {
     const [isCookieParametersExpanded, setIsCookieParametersExpanded] = useState(false);
 
     // Track modal state
-    const [isCreateParameterModalOpen, setIsCreateParameterModalOpen] = useState(false);
-    const [createParameterLocation, setCreateParameterLocation] = useState<string>('query');
+    const [isParameterModalOpen, setIsParameterModalOpen] = useState(false);
+    const [parameterModalMode, setParameterModalMode] = useState<'create' | 'edit'>('create');
+    const [parameterLocation, setParameterLocation] = useState<string>('query');
+    const [editingParameter, setEditingParameter] = useState<any | null>(null);
 
     /**
      * Handle creating a new operation using the command pattern
@@ -167,6 +172,7 @@ export const PathForm: React.FC = () => {
         );
 
         // Execute the composite command
+        compositeCommand.setSelection(NodePathUtil.createNodePath(pathItem));
         executeCommand(compositeCommand, `Delete all operations`);
 
         // Switch to 'get' after deletion
@@ -192,59 +198,119 @@ export const PathForm: React.FC = () => {
      * Handle opening the create parameter modal
      */
     const handleOpenCreateParameterModal = (location: string) => {
-        setCreateParameterLocation(location);
-        setIsCreateParameterModalOpen(true);
+        setParameterModalMode('create');
+        setParameterLocation(location);
+        setEditingParameter(null);
+        setIsParameterModalOpen(true);
     };
 
     /**
-     * Handle closing the create parameter modal
+     * Handle closing the parameter modal
      */
-    const handleCloseCreateParameterModal = () => {
-        setIsCreateParameterModalOpen(false);
+    const handleCloseParameterModal = () => {
+        setIsParameterModalOpen(false);
+        setEditingParameter(null);
     };
 
     /**
-     * Handle creating a new parameter
+     * Handle confirming parameter (create or edit)
      */
-    const handleCreateParameter = (name: string, description: string, required: boolean, type: string) => {
+    const handleConfirmParameter = (name: string, description: string, required: boolean, type: string) => {
         if (!pathItem) {
-            console.error('Cannot create parameter: no path item selected');
+            console.error('Cannot save parameter: no path item selected');
             return;
         }
 
-        const command = new AddParameterCommand(
-            pathItem,
-            name,
-            createParameterLocation,
-            description || null,
-            required,
-            type
-        );
+        if (parameterModalMode === 'create') {
+            // Create new parameter
+            const command = new AddParameterCommand(
+                pathItem,
+                name,
+                parameterLocation,
+                description || null,
+                required,
+                type
+            );
 
-        const locationDisplayName = createParameterLocation.charAt(0).toUpperCase() + createParameterLocation.slice(1);
-        executeCommand(command, `Add ${locationDisplayName} parameter '${name}'`);
+            const locationDisplayName = parameterLocation.charAt(0).toUpperCase() + parameterLocation.slice(1);
+            executeCommand(command, `Add ${locationDisplayName} parameter '${name}'`);
+        } else {
+            // Edit existing parameter
+            if (!editingParameter) {
+                console.error('Cannot edit parameter: no parameter selected');
+                return;
+            }
+
+            const commands = [];
+
+            // Create command for description change
+            const descriptionCommand = new ChangePropertyCommand(
+                editingParameter,
+                'description',
+                description || null
+            );
+            commands.push(descriptionCommand);
+
+            // Create command for required change
+            const requiredCommand = new ChangePropertyCommand(
+                editingParameter,
+                'required',
+                required
+            );
+            commands.push(requiredCommand);
+
+            // Create command for type change (on the schema)
+            const schema = editingParameter.getSchema?.() || editingParameter.schema;
+            if (schema) {
+                const typeCommand = new ChangePropertyCommand(
+                    schema,
+                    'type',
+                    type
+                );
+                commands.push(typeCommand);
+            }
+
+            // Bundle all commands into a composite command
+            const compositeCommand = new CompositeCommand(
+                commands,
+                `Edit parameter '${name}'`
+            );
+
+            // Execute the composite command
+            const locationDisplayName = parameterLocation.charAt(0).toUpperCase() + parameterLocation.slice(1);
+            executeCommand(compositeCommand, `Edit ${locationDisplayName} parameter '${name}'`);
+        }
     };
 
     /**
      * Handle editing a parameter
      */
-    const handleEditParameter = (parameter: any, index: number) => {
-        console.log('Edit parameter:', parameter, index);
-        // TODO: Implement parameter editing
+    const handleEditParameter = (parameter: OpenApiParameter, _index: number) => {
+        // Fire selection event
+        select(parameter);
+
+        // Extract parameter details
+        const paramLocation = parameter.getIn?.() || (parameter as any).in;
+
+        // Open modal in edit mode
+        setParameterModalMode('edit');
+        setParameterLocation(paramLocation);
+        setEditingParameter(parameter);
+        setIsParameterModalOpen(true);
     };
 
     /**
      * Handle deleting a parameter
      */
-    const handleDeleteParameter = (parameter: any, index: number) => {
+    const handleDeleteParameter = (parameter: OpenApiParameter, _index: number) => {
         if (!pathItem) {
             console.error('Cannot delete parameter: no path item selected');
             return;
         }
 
         // Extract parameter details
-        const paramName = parameter.getName?.() || parameter.name;
-        const paramLocation = parameter.getIn?.() || parameter.in;
+        const paramName = parameter.getName?.() || (parameter as any).name;
+        const paramLocation = parameter.getIn?.() || (parameter as any).in;
 
         if (!paramName || !paramLocation) {
             console.error('Cannot delete parameter: invalid parameter');
@@ -333,6 +399,8 @@ export const PathForm: React.FC = () => {
                 isExpanded={isPathParametersExpanded}
                 onToggle={setIsPathParametersExpanded}
                 parameters={getParametersByLocation('path')}
+                onSelectParameter={handleEditParameter}
+                onEditParameter={handleEditParameter}
             />
 
             <ParameterSection
@@ -342,6 +410,7 @@ export const PathForm: React.FC = () => {
                 onToggle={setIsQueryParametersExpanded}
                 parameters={getParametersByLocation('query')}
                 onAddParameter={() => handleOpenCreateParameterModal('query')}
+                onSelectParameter={handleEditParameter}
                 onEditParameter={handleEditParameter}
                 onDeleteParameter={handleDeleteParameter}
             />
@@ -353,6 +422,7 @@ export const PathForm: React.FC = () => {
                 onToggle={setIsHeaderParametersExpanded}
                 parameters={getParametersByLocation('header')}
                 onAddParameter={() => handleOpenCreateParameterModal('header')}
+                onSelectParameter={handleEditParameter}
                 onEditParameter={handleEditParameter}
                 onDeleteParameter={handleDeleteParameter}
             />
@@ -364,6 +434,7 @@ export const PathForm: React.FC = () => {
                 onToggle={setIsCookieParametersExpanded}
                 parameters={getParametersByLocation('cookie')}
                 onAddParameter={() => handleOpenCreateParameterModal('cookie')}
+                onSelectParameter={handleEditParameter}
                 onEditParameter={handleEditParameter}
                 onDeleteParameter={handleDeleteParameter}
             />
@@ -502,12 +573,17 @@ export const PathForm: React.FC = () => {
                 Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
             </p>
 
-            {/* Create Parameter Modal */}
-            <CreateParameterModal
-                isOpen={isCreateParameterModalOpen}
-                parameterLocation={createParameterLocation}
-                onClose={handleCloseCreateParameterModal}
-                onConfirm={handleCreateParameter}
+            {/* Parameter Modal (Create/Edit) */}
+            <ParameterModal
+                isOpen={isParameterModalOpen}
+                mode={parameterModalMode}
+                parameterLocation={parameterLocation}
+                initialName={editingParameter ? (editingParameter.getName?.() || editingParameter.name) : undefined}
+                initialDescription={editingParameter ? (editingParameter.getDescription?.() || editingParameter.description || '') : undefined}
+                initialRequired={editingParameter ? (editingParameter.getRequired?.() || editingParameter.required || false) : undefined}
+                initialType={editingParameter ? (editingParameter.getSchema?.()?.getType?.() || editingParameter.schema?.type || 'string') : undefined}
+                onClose={handleCloseParameterModal}
+                onConfirm={handleConfirmParameter}
             />
         </div>
     );

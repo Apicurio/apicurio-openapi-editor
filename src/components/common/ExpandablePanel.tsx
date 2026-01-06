@@ -6,7 +6,6 @@ import React, {ReactNode} from 'react';
 import {Badge, Button} from '@patternfly/react-core';
 import {AngleDownIcon, AngleRightIcon} from '@patternfly/react-icons';
 import {NodePath, NodePathUtil} from '@apicurio/data-models';
-import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {useSelection} from '@hooks/useSelection';
 import './ExpandablePanel.css';
 
@@ -66,9 +65,6 @@ export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
     children,
 }) => {
     const { select } = useSelection();
-
-    // Enable highlight effect
-    useHighlightEffect();
 
     // Convert NodePath to string if needed
     const pathString = typeof nodePath === 'string' ? nodePath : nodePath?.toString();

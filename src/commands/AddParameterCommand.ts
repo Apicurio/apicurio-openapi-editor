@@ -7,8 +7,8 @@ import {
     Node,
     NodePath,
     NodePathUtil,
-    OpenApi30Parameter,
     OpenApi30Schema,
+    OpenApiParameter,
     OpenApiParametersParent
 } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
@@ -87,7 +87,7 @@ export class AddParameterCommand extends BaseCommand {
         }
 
         // Create new parameter
-        const newParameter = parent.createParameter() as OpenApi30Parameter;
+        const newParameter = parent.createParameter() as OpenApiParameter;
         newParameter.setName(this._parameterName);
         newParameter.setIn(this._parameterLocation);
 

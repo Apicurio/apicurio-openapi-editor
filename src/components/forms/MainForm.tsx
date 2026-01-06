@@ -22,7 +22,6 @@ import {
 import {EllipsisVIcon, PlusIcon, ServerIcon, TagIcon, TrashIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
-import {useHighlightEffect} from '@hooks/useHighlightEffect';
 import {
     Node,
     OpenApi30Document,
@@ -61,9 +60,6 @@ import {DeleteAllServersCommand} from "@commands/DeleteAllServersCommand.ts";
 export const MainForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
-
-    // Enable highlight effect
-    useHighlightEffect();
 
     const [isInfoExpanded, setIsInfoExpanded] = useState(true);
     const [isContactExpanded, setIsContactExpanded] = useState(true);

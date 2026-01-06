@@ -1,8 +1,8 @@
 /**
- * Modal dialog for creating a new parameter (query, header, cookie, path)
+ * Modal dialog for creating or editing a parameter (query, header, cookie, path)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Modal,
     ModalVariant,
@@ -22,9 +22,14 @@ import {
     Checkbox,
 } from '@patternfly/react-core';
 
-export interface CreateParameterModalProps {
+export interface ParameterModalProps {
     isOpen: boolean;
+    mode: 'create' | 'edit';
     parameterLocation: string;
+    initialName?: string;
+    initialDescription?: string;
+    initialRequired?: boolean;
+    initialType?: string;
     onClose: () => void;
     onConfirm: (name: string, description: string, required: boolean, type: string) => void;
 }
@@ -43,14 +48,46 @@ const getLocationDisplayName = (location: string): string => {
 };
 
 /**
- * Modal for creating a new parameter
+ * Modal for creating or editing a parameter
  */
-export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOpen, parameterLocation, onClose, onConfirm }) => {
+export const ParameterModal: React.FC<ParameterModalProps> = ({
+    isOpen,
+    mode,
+    parameterLocation,
+    initialName = '',
+    initialDescription = '',
+    initialRequired = false,
+    initialType = 'string',
+    onClose,
+    onConfirm
+}) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [required, setRequired] = useState(false);
     const [type, setType] = useState('string');
     const [validated, setValidated] = useState<'default' | 'success' | 'error'>('default');
+
+    /**
+     * Initialize form fields when modal opens
+     */
+    useEffect(() => {
+        if (isOpen) {
+            if (mode === 'edit') {
+                setName(initialName);
+                setDescription(initialDescription);
+                setRequired(initialRequired);
+                setType(initialType);
+                setValidated('success'); // Name is already valid in edit mode
+            } else {
+                setName('');
+                setDescription('');
+                // Path parameters are always required
+                setRequired(parameterLocation === 'path');
+                setType('string');
+                setValidated('default');
+            }
+        }
+    }, [isOpen, mode, initialName, initialDescription, initialRequired, initialType, parameterLocation]);
 
     /**
      * Validate the parameter name
@@ -112,7 +149,9 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
      */
     const handleConfirm = () => {
         if (validateName(name)) {
-            onConfirm(name, description, required, type);
+            // Path parameters are always required
+            const isRequired = parameterLocation === 'path' ? true : required;
+            onConfirm(name, description, isRequired, type);
             handleClose();
         } else {
             setValidated('error');
@@ -142,17 +181,19 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
     };
 
     const locationDisplayName = getLocationDisplayName(parameterLocation);
+    const isEditMode = mode === 'edit';
+    const modalTitle = isEditMode ? `Edit ${locationDisplayName} Parameter` : `Create ${locationDisplayName} Parameter`;
 
     return (
         <Modal
             variant={ModalVariant.small}
             isOpen={isOpen}
             onClose={handleClose}
-            aria-labelledby="create-parameter-modal-title"
-            aria-describedby="create-parameter-modal-body"
+            aria-labelledby="parameter-modal-title"
+            aria-describedby="parameter-modal-body"
         >
-            <ModalHeader title={`Create ${locationDisplayName} Parameter`} labelId="create-parameter-modal-title" />
-            <ModalBody id="create-parameter-modal-body">
+            <ModalHeader title={modalTitle} labelId="parameter-modal-title" />
+            <ModalBody id="parameter-modal-body">
                 <Form>
                     <FormGroup label="Name" isRequired fieldId="parameter-name">
                         <TextInput
@@ -165,14 +206,17 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
                             onKeyDown={handleKeyDown}
                             validated={validated}
                             placeholder="limit"
-                            autoFocus
+                            autoFocus={!isEditMode}
+                            isDisabled={isEditMode}
                         />
                         <FormHelperText>
                             <HelperText>
                                 <HelperTextItem variant={validated}>
-                                    {validated === 'error'
-                                        ? 'Parameter name must be alphanumeric (underscores and hyphens allowed, no spaces)'
-                                        : 'Enter the parameter name (e.g., limit, offset, filter)'}
+                                    {isEditMode
+                                        ? 'Parameter name cannot be changed (use Rename action to rename)'
+                                        : validated === 'error'
+                                            ? 'Parameter name must be alphanumeric (underscores and hyphens allowed, no spaces)'
+                                            : 'Enter the parameter name (e.g., limit, offset, filter)'}
                                 </HelperTextItem>
                             </HelperText>
                         </FormHelperText>
@@ -187,6 +231,7 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
                             onChange={handleDescriptionChange}
                             placeholder="Describe the purpose of this parameter"
                             rows={3}
+                            autoFocus={isEditMode}
                         />
                         <FormHelperText>
                             <HelperText>
@@ -224,13 +269,16 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
                             id="parameter-required"
                             name="parameter-required"
                             label="Required parameter"
-                            isChecked={required}
+                            isChecked={parameterLocation === 'path' ? true : required}
+                            isDisabled={parameterLocation === 'path'}
                             onChange={handleRequiredChange}
                         />
                         <FormHelperText>
                             <HelperText>
                                 <HelperTextItem>
-                                    Check if this parameter must be provided in requests
+                                    {parameterLocation === 'path'
+                                        ? 'Path parameters are always required'
+                                        : 'Check if this parameter must be provided in requests'}
                                 </HelperTextItem>
                             </HelperText>
                         </FormHelperText>
@@ -242,7 +290,7 @@ export const CreateParameterModal: React.FC<CreateParameterModalProps> = ({ isOp
                     Cancel
                 </Button>
                 <Button key="confirm" variant="primary" onClick={handleConfirm} isDisabled={validated !== 'success'}>
-                    Create
+                    {isEditMode ? 'Save' : 'Create'}
                 </Button>
             </ModalFooter>
         </Modal>

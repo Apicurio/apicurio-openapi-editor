@@ -9,6 +9,7 @@ import { MainForm } from '@components/forms/MainForm';
 import { PathForm } from '@components/forms/PathForm';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import { SourceForm } from '@components/forms/SourceForm';
+import { useHighlightEffect } from "@hooks/useHighlightEffect.ts";
 
 export interface DetailPanelProps {
     /**
@@ -23,6 +24,9 @@ export interface DetailPanelProps {
  */
 export const DetailPanel: React.FC<DetailPanelProps> = ({ editorMode = 'design' }) => {
     const { selectedPath, navigationObjectType } = useSelection();
+
+    // Enable highlight effect
+    useHighlightEffect();
 
     /**
      * Render the appropriate form based on selection type

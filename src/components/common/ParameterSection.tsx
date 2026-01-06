@@ -16,8 +16,10 @@ import {
     DropdownList,
     Label,
     MenuToggle,
+    Tooltip,
 } from '@patternfly/react-core';
 import { EllipsisVIcon, PlusCircleIcon } from '@patternfly/react-icons';
+import {NodePathUtil, OpenApiParameter} from '@apicurio/data-models';
 import { ExpandablePanel } from './ExpandablePanel';
 
 export interface ParameterSectionProps {
@@ -44,7 +46,7 @@ export interface ParameterSectionProps {
     /**
      * Array of parameters to display
      */
-    parameters: any[];
+    parameters: OpenApiParameter[];
 
     /**
      * Optional callback when the add parameter button is clicked
@@ -54,12 +56,17 @@ export interface ParameterSectionProps {
     /**
      * Optional callback when a parameter edit is requested
      */
-    onEditParameter?: (parameter: any, index: number) => void;
+    onEditParameter?: (parameter: OpenApiParameter, index: number) => void;
 
     /**
      * Optional callback when a parameter delete is requested
      */
-    onDeleteParameter?: (parameter: any, index: number) => void;
+    onDeleteParameter?: (parameter: OpenApiParameter, index: number) => void;
+
+    /**
+     * Optional callback when a parameter is selected
+     */
+    onSelectParameter?: (parameter: OpenApiParameter, index: number) => void;
 }
 
 /**
@@ -74,6 +81,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
     onAddParameter,
     onEditParameter,
     onDeleteParameter,
+    onSelectParameter,
 }) => {
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
@@ -85,19 +93,23 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
             className="parameter-section"
             badgeCount={parameters.length > 0 ? parameters.length : undefined}
             actions={
-                <Button
-                    variant="plain"
-                    aria-label={`Add ${location} parameter`}
-                    icon={<PlusCircleIcon />}
-                    style={{ minWidth: 'auto', padding: '0.25rem' }}
-                    onClick={onAddParameter}
-                />
+                onAddParameter ? (
+                    <Tooltip content="Add parameter">
+                        <Button
+                            variant="plain"
+                            aria-label={`Add ${location} parameter`}
+                            icon={<PlusCircleIcon />}
+                            style={{ minWidth: 'auto', padding: '0.25rem' }}
+                            onClick={onAddParameter}
+                        />
+                    </Tooltip>
+                ) : undefined
             }
         >
             <div className="path-form__sectionbody">
                 {parameters.length === 0 ? (
                     <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
-                        No {location} parameters defined. Use the + icon to create one.
+                        No {location} parameters defined.{onAddParameter && ' Use the + icon to create one.'}
                     </p>
                 ) : (
                     <DataList
@@ -114,9 +126,25 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
                             const paramDescription = param.getDescription?.() || param.description || '';
                             const dropdownId = `${location}-${index}`;
 
+                            // Compute data attributes for selection and highlighting
+                            const pathString = NodePathUtil.createNodePath(param).toString();
+
                             return (
-                                <DataListItem key={index} id={`${index}`}>
-                                    <DataListItemRow>
+                                <DataListItem
+                                    key={index}
+                                    id={`${index}`}
+                                    data-path={pathString}
+                                    data-selectable="true"
+                                >
+                                    <DataListItemRow
+                                        style={{ cursor: onEditParameter ? 'pointer' : 'default' }}
+                                        onClick={() => {
+                                            // Fire selection event
+                                            if (onSelectParameter) {
+                                                onSelectParameter(param, index);
+                                            }
+                                        }}
+                                    >
                                         <DataListItemCells
                                             dataListCells={[
                                                 <DataListCell key="parameter-info">
@@ -141,6 +169,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
                                             aria-labelledby={`parameter-action-${index}`}
                                             id={`parameter-action-${index}`}
                                             aria-label="Parameter actions"
+                                            onClick={(e) => e.stopPropagation()}
                                         >
                                             <Dropdown
                                                 isOpen={openDropdownId === dropdownId}
@@ -152,7 +181,10 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
                                                         ref={toggleRef}
                                                         aria-label="Parameter kebab menu"
                                                         variant="plain"
-                                                        onClick={() => setOpenDropdownId(openDropdownId === dropdownId ? null : dropdownId)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenDropdownId(openDropdownId === dropdownId ? null : dropdownId);
+                                                        }}
                                                         isExpanded={openDropdownId === dropdownId}
                                                     >
                                                         <EllipsisVIcon />
@@ -164,6 +196,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
                                                     <DropdownItem
                                                         key="edit"
                                                         onClick={() => {
+                                                            // Open edit modal
                                                             if (onEditParameter) {
                                                                 onEditParameter(param, index);
                                                             }
