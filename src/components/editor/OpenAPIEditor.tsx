@@ -14,12 +14,13 @@ import { OpenAPIEditorContent } from './OpenAPIEditorContent';
  * This component wraps the editor content with the EditorProvider to make
  * all services available via context.
  */
-export const OpenAPIEditor: React.FC<OpenAPIEditorProps> = ({ initialContent, onChange, features }) => {
+export const OpenAPIEditor: React.FC<OpenAPIEditorProps> = ({ initialContent, onChange, onSelectionChange, features }) => {
     return (
         <EditorProvider>
             <OpenAPIEditorContent
                 initialContent={initialContent}
                 onChange={onChange}
+                onSelectionChange={onSelectionChange}
                 features={features}
             />
         </EditorProvider>

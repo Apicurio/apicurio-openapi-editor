@@ -22,6 +22,7 @@ import {
 import {EllipsisVIcon, PlusIcon, ServerIcon, TagIcon, TrashIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
+import {useSelection} from '@hooks/useSelection';
 import {
     Node,
     OpenApi30Document,
@@ -60,6 +61,7 @@ import {DeleteAllServersCommand} from "@commands/DeleteAllServersCommand.ts";
 export const MainForm: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
+    const { select } = useSelection();
 
     const [isInfoExpanded, setIsInfoExpanded] = useState(true);
     const [isContactExpanded, setIsContactExpanded] = useState(true);
@@ -170,6 +172,8 @@ export const MainForm: React.FC = () => {
      */
     const handleOpenEditDescriptionModal = (tagIndex: string) => {
         const tag = oaiDoc.getTags()[parseInt(tagIndex)];
+        // Fire selection event
+        select(tag);
         setEditTagName(tag.getName());
         setEditTagDescription(tag.getDescription() || '');
     };
@@ -220,6 +224,8 @@ export const MainForm: React.FC = () => {
      */
     const handleOpenEditServerModal = (serverIndex: string) => {
         const server = (oaiDoc as OpenApi30Document).getServers()[parseInt(serverIndex)] as OpenApi30Server;
+        // Fire selection event
+        select(server);
         setEditServerUrl(server.getUrl());
         setEditServerDescription(server.getDescription() || '');
 

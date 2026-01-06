@@ -16,9 +16,10 @@ import './OpenAPIEditorContent.css';
 export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
     initialContent,
     onChange,
+    onSelectionChange,
 }) => {
     const { document, isDirty, version, loadDocument, toObject } = useDocument();
-    const { selectRoot } = useSelection();
+    const { selectedPath, selectedPropertyName, selectRoot } = useSelection();
     const [currentView, setCurrentView] = useState<EditorView>('navigation');
     const [currentMode, setCurrentMode] = useState<EditorMode>('design');
 
@@ -47,6 +48,18 @@ export const OpenAPIEditorContent: React.FC<OpenAPIEditorProps> = ({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [version]);
+
+    /**
+     * Notify parent when selection changes
+     */
+    useEffect(() => {
+        if (onSelectionChange && selectedPath) {
+            onSelectionChange({
+                path: selectedPath,
+                propertyName: selectedPropertyName,
+            });
+        }
+    }, [selectedPath, selectedPropertyName, onSelectionChange]);
 
     return (
         <div className="apicurio-openapi-editor">

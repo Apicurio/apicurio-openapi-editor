@@ -20,7 +20,7 @@ import { CodeEditor, Language } from '@patternfly/react-code-editor';
 import { MoonIcon, SunIcon } from '@patternfly/react-icons';
 import { OpenAPIEditor } from '../../src/components/editor/OpenAPIEditor';
 import './App.css';
-import {DocumentChangeEvent} from "@models/EditorProps.ts";
+import { DocumentChangeEvent, SelectionChangeEvent } from "@models/EditorProps.ts";
 
 /**
  * Empty OpenAPI document
@@ -259,6 +259,7 @@ function App() {
         return savedTheme === 'dark';
     });
     const getContentRef = useRef<(() => object | null) | null>(null);
+    const [currentSelection, setCurrentSelection] = useState<SelectionChangeEvent>();
 
     // Apply theme class to html element
     useEffect(() => {
@@ -414,20 +415,25 @@ function App() {
                                 </Flex>
                             </FlexItem>
                         </Flex>
+                        <div>
+                            <span className="sample-label">Current Selection:</span>
+                            <span className="selection-path">{ currentSelection?.path.toString() }</span>
+                            <span className="selection-property">{ currentSelection?.propertyName }</span>
+                        </div>
                     </MastheadContent>
                 </Masthead>
-            }
-        >
-            <PageSection padding={{ default: 'noPadding' }} isFilled className="editor-page-section">
-                <OpenAPIEditor
-                    initialContent={content}
-                    onChange={handleChange}
-                    features={{
-                        allowImports: true,
-                        allowCustomValidations: true,
-                    }}
-                />
-            </PageSection>
+            }>
+                <PageSection padding={{ default: 'noPadding' }} isFilled className="editor-page-section">
+                    <OpenAPIEditor
+                        initialContent={content}
+                        onChange={handleChange}
+                        onSelectionChange={setCurrentSelection}
+                        features={{
+                            allowImports: true,
+                            allowCustomValidations: true,
+                        }}
+                    />
+                </PageSection>
             </Page>
         </>
     );

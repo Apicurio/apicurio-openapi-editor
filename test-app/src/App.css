@@ -10,3 +10,7 @@
 .editor-page-section, .editor-page-section > div {
     height: 100%;
 }
+
+span.selection-property:not(:empty)::before {
+    content: "@";
+}

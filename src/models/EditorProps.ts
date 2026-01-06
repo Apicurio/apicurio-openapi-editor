@@ -1,3 +1,8 @@
+import { SelectionChangeEvent } from './SelectionTypes';
+
+// Re-export SelectionChangeEvent for convenience
+export type { SelectionChangeEvent };
+
 /**
  * Event fired when the document changes
  */
@@ -37,6 +42,12 @@ export interface OpenAPIEditorProps {
      * Multiple onChange events may fire before getContent() is called.
      */
     onChange?: (event: DocumentChangeEvent) => void;
+
+    /**
+     * Callback fired when the editor selection changes.
+     * The event contains the path to the selected node and optional property name.
+     */
+    onSelectionChange?: (event: SelectionChangeEvent) => void;
 
     /**
      * Optional features configuration
