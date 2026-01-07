@@ -2,7 +2,7 @@
  * Command to create a new path item in the document
  */
 
-import { Document, OpenApi30Document, OpenApi30PathItem } from '@apicurio/data-models';
+import {Document, OpenApi30PathItem, OpenApiDocument} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
@@ -33,7 +33,7 @@ export class CreatePathCommand extends BaseCommand {
      * Execute the command - create the path item
      */
     execute(document: Document): void {
-        const oaiDoc = document as OpenApi30Document;
+        const oaiDoc = document as OpenApiDocument;
         let paths = oaiDoc.getPaths();
 
         // Create paths object if it doesn't exist
@@ -65,7 +65,7 @@ export class CreatePathCommand extends BaseCommand {
             return;
         }
 
-        const oaiDoc = document as OpenApi30Document;
+        const oaiDoc = document as OpenApiDocument;
         const paths = oaiDoc.getPaths();
 
         if (!paths) {

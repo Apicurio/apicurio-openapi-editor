@@ -1,8 +1,15 @@
 /**
- * Command to create a new schema in the components section
+ * Command to create a new schema in the components section (or definitions for OpenAPI 2.0)
  */
 
-import { Document, OpenApi30Document, OpenApi30Schema } from '@apicurio/data-models';
+import {
+    Document,
+    OpenApi30Document,
+    OpenApi30Schema,
+    ModelTypeUtil,
+    OpenApiDocument,
+    OpenApi20Document, OpenApi31Document, OpenApiComponents
+} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
@@ -32,13 +39,39 @@ export class CreateSchemaCommand extends BaseCommand {
      * Execute the command - create a new schema
      */
     execute(document: Document): void {
-        const oaiDoc = document as OpenApi30Document;
+        const oaiDoc = document as OpenApiDocument;
 
+        // For OpenAPI 2.0, create schema in 'definitions'
+        if (ModelTypeUtil.isOpenApi2Model(document)) {
+            // Ensure definitions section exists
+            let definitions = (oaiDoc as any).getDefinitions?.();
+            if (!definitions) {
+                definitions = (oaiDoc as any).createDefinitions();
+                (oaiDoc as any).setDefinitions?.(definitions);
+            }
+
+            // Check if schema already exists
+            if (definitions && definitions[this._schemaName]) {
+                this._schemaExisted = true;
+                return;
+            }
+
+            // Create new schema with default object type
+            const newSchema = (oaiDoc as any).createDefinition?.() as OpenApi30Schema;
+            (newSchema as any).type = 'object';
+
+            // Add the schema to definitions
+            (oaiDoc as any).addDefinition?.(this._schemaName, newSchema);
+            this._schemaExisted = false;
+            return;
+        }
+
+        // For OpenAPI 3.0 and 3.1, create schema in 'components.schemas'
         // Ensure components section exists
-        let components = oaiDoc.getComponents();
+        let components = (oaiDoc as OpenApi30Document | OpenApi31Document).getComponents() as OpenApiComponents;
         if (!components) {
-            components = oaiDoc.createComponents();
-            oaiDoc.setComponents(components);
+            components = (oaiDoc as OpenApi30Document | OpenApi31Document).createComponents() as OpenApiComponents;
+            (oaiDoc as OpenApi30Document | OpenApi31Document).setComponents(components as any);
         }
 
         // Check if schema already exists
@@ -66,9 +99,21 @@ export class CreateSchemaCommand extends BaseCommand {
             return;
         }
 
-        const oaiDoc = document as OpenApi30Document;
-        const components = oaiDoc.getComponents();
+        const oaiDoc = document as OpenApiDocument;
 
+        // For OpenAPI 2.0, remove schema from 'definitions'
+        if (ModelTypeUtil.isOpenApi2Model(document)) {
+            const definitions = (oaiDoc as OpenApi20Document).getDefinitions?.();
+            if (!definitions) {
+                return;
+            }
+            // Remove the schema
+            (oaiDoc as any).removeDefinition?.(this._schemaName);
+            return;
+        }
+
+        // For OpenAPI 3.0 and 3.1, remove schema from 'components.schemas'
+        const components = (oaiDoc as OpenApi30Document | OpenApi31Document).getComponents();
         if (!components) {
             return;
         }

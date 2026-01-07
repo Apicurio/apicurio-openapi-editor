@@ -31,6 +31,174 @@ const emptyAPI = {
 };
 
 /**
+ * OpenAPI 2.0 Example API
+ */
+const openApi20ExampleAPI = {
+    swagger: '2.0',
+    info: {
+        title: 'OpenAPI 2.0 Example API',
+        version: '1.0.0',
+        description: 'A brand new API with no content.  Go nuts!',
+        contact: {
+            name: 'Clark Kent',
+            url: 'http://www.superman.com',
+            email: 'ckent@gmail.com',
+        },
+        license: {
+            name: 'GNU AGPLv3',
+            url: 'https://www.gnu.org/licenses/agpl.txt',
+        },
+    },
+    consumes: ['application/json'],
+    produces: ['application/json'],
+    paths: {
+        '/examples': {
+            get: {
+                responses: {
+                    '200': {
+                        description: 'Successful response - returns an array of `Example` entities.',
+                        schema: {
+                            type: 'array',
+                            items: {
+                                $ref: '#/definitions/Example',
+                            },
+                        },
+                    },
+                },
+                operationId: 'getexamples',
+                summary: 'List All examples',
+                description: 'Gets a list of all `Example` entities.',
+            },
+            post: {
+                parameters: [
+                    {
+                        name: 'body',
+                        description: 'A new `Example` to be created.',
+                        schema: {
+                            $ref: '#/definitions/Example',
+                        },
+                        in: 'body',
+                        required: true,
+                    },
+                ],
+                responses: {
+                    '201': {
+                        description: 'Successful response.',
+                    },
+                },
+                operationId: 'createExample',
+                summary: 'Create a Example',
+                description: 'Creates a new instance of a `Example`.',
+            },
+        },
+        '/examples/{exampleId}': {
+            get: {
+                responses: {
+                    '200': {
+                        description: 'Successful response - returns a single `Example`.',
+                        schema: {
+                            $ref: '#/definitions/Example',
+                        },
+                    },
+                },
+                operationId: 'getExample',
+                summary: 'Get a Example',
+                description: 'Gets the details of a single instance of a `Example`.',
+            },
+            put: {
+                parameters: [
+                    {
+                        name: 'body',
+                        description: 'Updated `Example` information.',
+                        schema: {
+                            $ref: '#/definitions/Example',
+                        },
+                        in: 'body',
+                        required: true,
+                    },
+                ],
+                responses: {
+                    '202': {
+                        description: 'Successful response.',
+                    },
+                },
+                operationId: 'updateExample',
+                summary: 'Update a Example',
+                description: 'Updates an existing `Example`.',
+            },
+            delete: {
+                responses: {
+                    '204': {
+                        description: 'Successful response.',
+                    },
+                },
+                operationId: 'deleteExample',
+                summary: 'Delete a Example',
+                description: 'Deletes an existing `Example`.',
+            },
+            parameters: [
+                {
+                    name: 'exampleId',
+                    description: 'A unique identifier for a `Example`.',
+                    in: 'path',
+                    required: true,
+                    type: 'string',
+                },
+            ],
+        },
+    },
+    definitions: {
+        Example: {
+            title: 'Root Type for Example',
+            description: 'An example data type.',
+            type: 'object',
+            properties: {
+                name: {
+                    type: 'string',
+                },
+                alias: {
+                    type: 'string',
+                },
+                height: {
+                    format: 'int32',
+                    type: 'integer',
+                },
+                age: {
+                    format: 'int32',
+                    type: 'integer',
+                },
+            },
+            example: {
+                name: 'Clark Kent',
+                alias: 'Superman',
+                height: 73,
+                age: 33,
+            },
+        },
+    },
+    securityDefinitions: {
+        basic: {
+            type: 'basic',
+            description: 'Standard BASIC auth.',
+        },
+        key: {
+            type: 'apiKey',
+            description: 'API key based security.',
+            name: 'X-API-Key',
+            in: 'header',
+        },
+    },
+    security: [
+        {
+            basic: [],
+        },
+        {
+            key: [],
+        },
+    ],
+};
+
+/**
  * Pet Store API (standard OpenAPI example)
  */
 const petStoreAPI = {
@@ -304,6 +472,10 @@ function App() {
         setContent(petStoreAPI);
     };
 
+    const handleLoad20Example = () => {
+        setContent(openApi20ExampleAPI);
+    };
+
     const handleLoadApicurioRegistry = async () => {
         setLoading(true);
         try {
@@ -377,6 +549,11 @@ function App() {
                                     <FlexItem>
                                         <Button variant="secondary" onClick={handleLoadPetStore} size="sm">
                                             Pet Store API
+                                        </Button>
+                                    </FlexItem>
+                                    <FlexItem>
+                                        <Button variant="secondary" onClick={handleLoad20Example} size="sm">
+                                            2.0 Example API
                                         </Button>
                                     </FlexItem>
                                     <FlexItem>

@@ -15,7 +15,13 @@ import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { useCommand } from '@hooks/useCommand';
-import { OpenApi30Document, NodePath } from '@apicurio/data-models';
+import {
+    OpenApi30Document,
+    NodePath,
+    OpenApiDocument,
+    OpenApi31Document,
+    OpenApi20Document
+} from '@apicurio/data-models';
 import { CreatePathModal } from '@components/modals/CreatePathModal';
 import { CreateSchemaModal } from '@components/modals/CreateSchemaModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
@@ -23,13 +29,16 @@ import { CreateSchemaCommand } from '@commands/CreateSchemaCommand';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
 import { PathLabel } from '@components/common/PathLabel';
 import './NavigationPanel.css';
+import {
+    OpenApi20Definitions
+} from "@apicurio/data-models/src/io/apicurio/datamodels/models/openapi/v20/OpenApi20Definitions";
 
 /**
  * Navigation panel component
  * Shows lists of paths and schemas
  */
 export const NavigationPanel: React.FC = () => {
-    const { document } = useDocument();
+    const { document, specVersion } = useDocument();
     const { select, selectRoot, navigationObject, navigationObjectType } = useSelection();
     const { executeCommand } = useCommand();
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
@@ -45,7 +54,7 @@ export const NavigationPanel: React.FC = () => {
         if (!document) {
             return [];
         }
-        const oaiDoc = document as OpenApi30Document;
+        const oaiDoc = document as OpenApiDocument;
         const paths = oaiDoc.getPaths();
         if (!paths) {
             return [];
@@ -60,16 +69,28 @@ export const NavigationPanel: React.FC = () => {
         if (!document) {
             return [];
         }
-        const oaiDoc = document as OpenApi30Document;
-        const components = oaiDoc.getComponents();
-        if (!components) {
-            return [];
+
+        const oaiDoc = document as OpenApiDocument;
+
+        if (specVersion === '2.0') {
+            // For OpenAPI 2.0, get schemas from 'definitions'
+            const definitions: OpenApi20Definitions = (oaiDoc as OpenApi20Document).getDefinitions();
+            if (!definitions) {
+                return [];
+            }
+            return definitions.getItemNames();
+        } else {
+            // For OpenAPI 3.0 and 3.1, get schemas from 'components.schemas'
+            const components = (oaiDoc as OpenApi30Document | OpenApi31Document).getComponents();
+            if (!components) {
+                return [];
+            }
+            const schemas = components.getSchemas();
+            if (!schemas) {
+                return [];
+            }
+            return Object.keys(schemas);
         }
-        const schemas = components.getSchemas();
-        if (!schemas) {
-            return [];
-        }
-        return Object.keys(schemas);
     };
 
     const paths = getPaths().sort();
@@ -105,9 +126,24 @@ export const NavigationPanel: React.FC = () => {
      * Handle schema selection
      */
     const handleSchemaClick = (schemaName: string) => {
-        const oaiDoc = document as OpenApi30Document;
-        const schema = oaiDoc.getComponents().getSchemas()[schemaName];
-        select(schema);
+        const oaiDoc = document as OpenApiDocument;
+
+        if (specVersion === '2.0') {
+            // For OpenAPI 2.0, get schema from 'definitions'
+            const definitions = (oaiDoc as any).getDefinitions?.();
+            if (definitions) {
+                const schema = definitions[schemaName];
+                select(schema);
+            }
+            return;
+        } else {
+            // For OpenAPI 3.0 and 3.1, get schema from 'components.schemas'
+            const components = (oaiDoc as OpenApi30Document | OpenApi31Document).getComponents();
+            if (components) {
+                const schema = components.getSchemas()[schemaName];
+                select(schema);
+            }
+        }
     };
 
     /**
@@ -137,8 +173,7 @@ export const NavigationPanel: React.FC = () => {
         executeCommand(command, `Create schema ${schemaName}`);
 
         // Select the newly created schema
-        const nodePath = NodePath.parse(`/components/schemas/${schemaName}`);
-        select(nodePath);
+        handleSchemaClick(schemaName);
     };
 
     return (
