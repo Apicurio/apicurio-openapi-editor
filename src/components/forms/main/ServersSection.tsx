@@ -17,7 +17,14 @@ import {
     MenuToggle
 } from '@patternfly/react-core';
 import { EllipsisVIcon, PlusIcon, ServerIcon, TrashIcon } from '@patternfly/react-icons';
-import { OpenApi30Document, OpenApi30Server, OpenApiServer, Server, ServerVariable } from '@apicurio/data-models';
+import {
+    NodePathUtil,
+    OpenApi30Document,
+    OpenApi30Server,
+    OpenApiServer,
+    Server,
+    ServerVariable
+} from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
@@ -185,7 +192,12 @@ export const ServersSection: React.FC = () => {
                             onSelectDataListItem={(_evt, idx) => handleOpenEditServerModal(idx)}
                         >
                             {servers.map((server: OpenApiServer, index: number) => (
-                                <DataListItem key={index} id={`${index}`}>
+                                <DataListItem
+                                    key={index}
+                                    id={`${index}`}
+                                    data-path={NodePathUtil.createNodePath(server).toString()}
+                                    data-selectable="true"
+                                >
                                     <DataListItemRow>
                                         <DataListItemCells
                                             dataListCells={[

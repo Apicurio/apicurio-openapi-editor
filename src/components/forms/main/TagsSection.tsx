@@ -17,7 +17,7 @@ import {
     MenuToggle
 } from '@patternfly/react-core';
 import { EllipsisVIcon, PlusIcon, TagIcon, TrashIcon } from '@patternfly/react-icons';
-import { OpenApiDocument, Tag } from '@apicurio/data-models';
+import {NodePathUtil, OpenApiDocument, Tag} from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
@@ -164,7 +164,12 @@ export const TagsSection: React.FC = () => {
                             onSelectDataListItem={(_evt, idx) => handleOpenEditDescriptionModal(idx)}
                         >
                             {tags.map((tag: Tag, index: number) => (
-                                <DataListItem key={index} id={`${index}`}>
+                                <DataListItem
+                                    key={index}
+                                    id={`${index}`}
+                                    data-path={NodePathUtil.createNodePath(tag).toString()}
+                                    data-selectable="true"
+                                >
                                     <DataListItemRow>
                                         <DataListItemCells
                                             dataListCells={[
