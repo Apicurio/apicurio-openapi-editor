@@ -4,11 +4,12 @@
 
 import React from 'react';
 import "./MainForm.css";
-import { Title } from '@patternfly/react-core';
+import { Title, Label } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 import { InfoSection } from '@components/forms/main/InfoSection';
 import { ContactSection } from '@components/forms/main/ContactSection';
 import { LicenseSection } from '@components/forms/main/LicenseSection';
+import { HostBasePathSection } from '@components/forms/main/HostBasePathSection';
 import { ServersSection } from '@components/forms/main/ServersSection';
 import { TagsSection } from '@components/forms/main/TagsSection';
 
@@ -24,9 +25,16 @@ export const MainForm: React.FC = () => {
 
     return (
         <div>
-            <Title headingLevel="h2" size="xl">
-                API Information
-            </Title>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Title headingLevel="h2" size="xl">
+                    API Information
+                </Title>
+                {specVersion && (
+                    <Label color="blue">
+                        OpenAPI {specVersion}
+                    </Label>
+                )}
+            </div>
             <p style={{ marginBottom: '1rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Edit the basic information about your API
             </p>
@@ -36,6 +44,11 @@ export const MainForm: React.FC = () => {
             <ContactSection />
 
             <LicenseSection />
+
+            {/* Host & Base Path section - only for OpenAPI 2.0 */}
+            {specVersion === '2.0' && (
+                <HostBasePathSection />
+            )}
 
             {/* Servers section - only for OpenAPI 3.0 and 3.1 */}
             {specVersion !== '2.0' && (
