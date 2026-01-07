@@ -7,6 +7,7 @@ import { Checkbox, Form, FormGroup } from '@patternfly/react-core';
 import { OpenApi20Document } from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
+import { useSelection } from '@hooks/useSelection';
 import { PropertyInput } from '@components/common/PropertyInput';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
@@ -17,6 +18,7 @@ import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 export const HostBasePathSection: React.FC = () => {
     const { document } = useDocument();
     const { executeCommand } = useCommand();
+    const { select } = useSelection();
     const [isExpanded, setIsExpanded] = useState(true);
 
     if (!document) {
@@ -30,6 +32,9 @@ export const HostBasePathSection: React.FC = () => {
      * Handle changing schemes array
      */
     const handleSchemeChange = (scheme: string, checked: boolean) => {
+        // Fire selection event
+        select(oaiDoc, "schemes");
+
         const schemes = [...currentSchemes];
 
         if (checked && !schemes.includes(scheme)) {
@@ -70,7 +75,13 @@ export const HostBasePathSection: React.FC = () => {
                     placeholder="/v1 or /api"
                 />
 
-                <FormGroup label="Schemes" fieldId="schemes">
+                <FormGroup
+                    label="Schemes"
+                    fieldId="schemes"
+                    data-path="/"
+                    data-property-name="schemes"
+                    data-selectable="true"
+                >
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                         <Checkbox
                             id="scheme-http"
