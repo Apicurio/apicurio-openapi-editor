@@ -130,9 +130,9 @@ export const NavigationPanel: React.FC = () => {
 
         if (specVersion === '2.0') {
             // For OpenAPI 2.0, get schema from 'definitions'
-            const definitions = (oaiDoc as any).getDefinitions?.();
+            const definitions = (oaiDoc as OpenApi20Document).getDefinitions();
             if (definitions) {
-                const schema = definitions[schemaName];
+                const schema = definitions.getItem(schemaName);
                 select(schema);
             }
             return;
