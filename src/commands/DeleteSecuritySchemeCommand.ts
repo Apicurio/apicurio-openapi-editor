@@ -6,9 +6,7 @@ import {
     Document,
     ModelTypeUtil,
     OpenApi20Document,
-    OpenApi20SecurityScheme,
     OpenApi30Document,
-    OpenApi30SecurityScheme,
     OpenApi31Document
 } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';

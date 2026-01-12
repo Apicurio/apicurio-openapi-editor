@@ -1,8 +1,8 @@
 /**
- * Modal for creating a new security scheme
+ * Modal for creating or editing a security scheme
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Button,
     Form,
@@ -21,10 +21,11 @@ import {
 } from '@patternfly/react-core';
 import { useDocument } from '@hooks/useDocument';
 
-interface NewSecuritySchemeModalProps {
+interface SecuritySchemeModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: (data: SecuritySchemeData) => void;
+    editData?: SecuritySchemeData | null;
 }
 
 export interface SecuritySchemeData {
@@ -46,14 +47,16 @@ export interface SecuritySchemeData {
 }
 
 /**
- * Modal component for creating a new security scheme
+ * Modal component for creating or editing a security scheme
  */
-export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
+export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
     isOpen,
     onClose,
-    onConfirm
+    onConfirm,
+    editData
 }) => {
     const { specVersion } = useDocument();
+    const isEditMode = !!editData;
 
     const [name, setName] = useState('');
     const [type, setType] = useState('');
@@ -69,7 +72,27 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
 
     const [isTypeSelectOpen, setIsTypeSelectOpen] = useState(false);
     const [isInSelectOpen, setIsInSelectOpen] = useState(false);
+    const [isHttpSchemeSelectOpen, setIsHttpSchemeSelectOpen] = useState(false);
     const [isFlowSelectOpen, setIsFlowSelectOpen] = useState(false);
+
+    /**
+     * Load edit data when modal opens in edit mode
+     */
+    useEffect(() => {
+        if (isOpen && editData) {
+            setName(editData.name || '');
+            setType(editData.type || '');
+            setDescription(editData.description || '');
+            setParameterName(editData.parameterName || '');
+            setInLocation(editData.in || 'header');
+            setHttpScheme(editData.scheme || '');
+            setBearerFormat(editData.bearerFormat || '');
+            setFlow(editData.flow || '');
+            setAuthorizationUrl(editData.authorizationUrl || '');
+            setTokenUrl(editData.tokenUrl || '');
+            setOpenIdConnectUrl(editData.openIdConnectUrl || '');
+        }
+    }, [isOpen, editData]);
 
     /**
      * Get available security scheme types based on spec version
@@ -107,6 +130,29 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                 { value: 'cookie', label: 'Cookie' }
             ];
         }
+    };
+
+    /**
+     * Get available HTTP authentication schemes from IANA registry
+     * https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml
+     */
+    const getHttpSchemes = (): { value: string; label: string }[] => {
+        return [
+            { value: 'Basic', label: 'Basic' },
+            { value: 'Bearer', label: 'Bearer' },
+            { value: 'Concealed', label: 'Concealed' },
+            { value: 'Digest', label: 'Digest' },
+            { value: 'DPoP', label: 'DPoP' },
+            { value: 'GNAP', label: 'GNAP' },
+            { value: 'HOBA', label: 'HOBA' },
+            { value: 'Mutual', label: 'Mutual' },
+            { value: 'Negotiate', label: 'Negotiate' },
+            { value: 'OAuth', label: 'OAuth' },
+            { value: 'PrivateToken', label: 'PrivateToken' },
+            { value: 'SCRAM-SHA-1', label: 'SCRAM-SHA-1' },
+            { value: 'SCRAM-SHA-256', label: 'SCRAM-SHA-256' },
+            { value: 'vapid', label: 'vapid' }
+        ];
     };
 
     /**
@@ -219,6 +265,7 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
 
     const availableTypes = getAvailableTypes();
     const inLocations = getInLocations();
+    const httpSchemes = getHttpSchemes();
     const oauth2Flows = getOAuth2Flows();
 
     return (
@@ -226,11 +273,11 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
             variant="medium"
             isOpen={isOpen}
             onClose={handleClose}
-            aria-labelledby="new-security-scheme-modal-title"
+            aria-labelledby="security-scheme-modal-title"
         >
             <ModalHeader
-                title="Add Security Scheme"
-                labelId="new-security-scheme-modal-title"
+                title={isEditMode ? "Edit Security Scheme" : "Add Security Scheme"}
+                labelId="security-scheme-modal-title"
             />
             <ModalBody>
                 <Form>
@@ -240,6 +287,7 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                             value={name}
                             onChange={(_event, value) => setName(value)}
                             placeholder="e.g., api_key, oauth2"
+                            isDisabled={isEditMode}
                         />
                     </FormGroup>
 
@@ -287,15 +335,6 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                     {/* API Key specific fields */}
                     {type === 'apiKey' && (
                         <>
-                            <FormGroup label="Parameter Name" isRequired fieldId="parameter-name">
-                                <TextInput
-                                    id="parameter-name"
-                                    value={parameterName}
-                                    onChange={(_event, value) => setParameterName(value)}
-                                    placeholder="e.g., X-API-Key, api_key"
-                                />
-                            </FormGroup>
-
                             <FormGroup label="Location" isRequired fieldId="in-location">
                                 <Select
                                     id="in-location"
@@ -326,6 +365,15 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                                     </SelectList>
                                 </Select>
                             </FormGroup>
+
+                            <FormGroup label="Parameter Name" isRequired fieldId="parameter-name">
+                                <TextInput
+                                    id="parameter-name"
+                                    value={parameterName}
+                                    onChange={(_event, value) => setParameterName(value)}
+                                    placeholder="e.g., X-API-Key, api_key"
+                                />
+                            </FormGroup>
                         </>
                     )}
 
@@ -333,22 +381,46 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                     {type === 'http' && specVersion !== '2.0' && (
                         <>
                             <FormGroup label="Scheme" isRequired fieldId="http-scheme">
-                                <TextInput
+                                <Select
                                     id="http-scheme"
-                                    value={httpScheme}
-                                    onChange={(_event, value) => setHttpScheme(value)}
-                                    placeholder="e.g., basic, bearer"
-                                />
+                                    isOpen={isHttpSchemeSelectOpen}
+                                    selected={httpScheme}
+                                    onSelect={(_event, value) => {
+                                        setHttpScheme(value as string);
+                                        setIsHttpSchemeSelectOpen(false);
+                                    }}
+                                    onOpenChange={(isOpen) => setIsHttpSchemeSelectOpen(isOpen)}
+                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                        <MenuToggle
+                                            ref={toggleRef}
+                                            onClick={() => setIsHttpSchemeSelectOpen(!isHttpSchemeSelectOpen)}
+                                            isExpanded={isHttpSchemeSelectOpen}
+                                            style={{ width: '100%' }}
+                                        >
+                                            {httpScheme || 'Select a scheme...'}
+                                        </MenuToggle>
+                                    )}
+                                >
+                                    <SelectList>
+                                        {httpSchemes.map((scheme) => (
+                                            <SelectOption key={scheme.value} value={scheme.value}>
+                                                {scheme.label}
+                                            </SelectOption>
+                                        ))}
+                                    </SelectList>
+                                </Select>
                             </FormGroup>
 
-                            <FormGroup label="Bearer Format" fieldId="bearer-format">
-                                <TextInput
-                                    id="bearer-format"
-                                    value={bearerFormat}
-                                    onChange={(_event, value) => setBearerFormat(value)}
-                                    placeholder="e.g., JWT"
-                                />
-                            </FormGroup>
+                            {httpScheme.toLowerCase() === 'bearer' && (
+                                <FormGroup label="Bearer Format" fieldId="bearer-format">
+                                    <TextInput
+                                        id="bearer-format"
+                                        value={bearerFormat}
+                                        onChange={(_event, value) => setBearerFormat(value)}
+                                        placeholder="e.g., JWT"
+                                    />
+                                </FormGroup>
+                            )}
                         </>
                     )}
 
@@ -429,7 +501,7 @@ export const NewSecuritySchemeModal: React.FC<NewSecuritySchemeModalProps> = ({
                     onClick={handleConfirm}
                     isDisabled={!isFormValid()}
                 >
-                    Add
+                    {isEditMode ? "Save" : "Add"}
                 </Button>
                 <Button variant="link" onClick={handleClose}>
                     Cancel

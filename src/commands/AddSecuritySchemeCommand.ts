@@ -6,28 +6,32 @@ import {
     Document,
     ModelTypeUtil,
     OpenApi20Document,
-    OpenApi20SecurityScheme,
+    OpenApi20SecurityScheme, OpenApi30Components,
     OpenApi30Document,
-    OpenApi30SecurityScheme,
+    OpenApi30SecurityScheme, OpenApi31Components,
     OpenApi31Document
 } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
-import { SecuritySchemeData } from '@components/modals/NewSecuritySchemeModal';
+import { SecuritySchemeData } from '@components/modals/SecuritySchemeModal';
+import {OpenApiOAuthFlow} from "@apicurio/data-models/src/io/apicurio/datamodels/models/openapi/OpenApiOAuthFlow";
 
 /**
  * Command to add a new security scheme definition to the document
  */
 export class AddSecuritySchemeCommand extends BaseCommand {
     private _data: SecuritySchemeData;
+    private _index?: number;
     private _schemeCreated: boolean = false;
 
     /**
      * Constructor
      * @param data Security scheme data
+     * @param index Optional index to insert the scheme at (for maintaining order during edits)
      */
-    constructor(data: SecuritySchemeData) {
+    constructor(data: SecuritySchemeData, index?: number) {
         super();
         this._data = data;
+        this._index = index;
     }
 
     /**
@@ -60,12 +64,45 @@ export class AddSecuritySchemeCommand extends BaseCommand {
 
         // Check if scheme already exists
         const existingScheme = definitions.getItem(this._data.name);
-        if (existingScheme) {
+        if (existingScheme && this._index === undefined) {
             this._schemeCreated = false;
             return;
         }
 
         // Create new security scheme
+        const newScheme = this.createOpenApi20Scheme(definitions);
+
+        // Handle index-based insertion for maintaining order
+        if (this._index !== undefined) {
+            // Get all existing schemes
+            const existingNames = definitions.getItemNames();
+            const allSchemes: Array<{ name: string; scheme: OpenApi20SecurityScheme }> = [];
+
+            // Collect all existing schemes
+            existingNames.forEach(name => {
+                if (name !== this._data.name) { // Skip if re-adding with same name
+                    allSchemes.push({ name, scheme: definitions.getItem(name) });
+                }
+            });
+
+            // Insert new scheme at specified index
+            allSchemes.splice(this._index, 0, { name: this._data.name, scheme: newScheme });
+
+            // Clear and re-add all schemes in order
+            existingNames.forEach(name => definitions.removeItem(name));
+            allSchemes.forEach(({ name, scheme }) => definitions.addItem(name, scheme));
+        } else {
+            // Simple add at end
+            definitions.addItem(this._data.name, newScheme);
+        }
+
+        this._schemeCreated = true;
+    }
+
+    /**
+     * Create OpenAPI 2.0 security scheme
+     */
+    private createOpenApi20Scheme(definitions: any): OpenApi20SecurityScheme {
         const newScheme = definitions.createSecurityScheme() as OpenApi20SecurityScheme;
         newScheme.setType(this._data.type);
 
@@ -96,18 +133,17 @@ export class AddSecuritySchemeCommand extends BaseCommand {
             newScheme.setScopes(scopes);
         }
 
-        definitions.addItem(this._data.name, newScheme);
-        this._schemeCreated = true;
+        return newScheme;
     }
 
     /**
      * Execute for OpenAPI 3.0/3.1
      */
     private executeForOpenApi30(oaiDoc: OpenApi30Document | OpenApi31Document): void {
-        let components = oaiDoc.getComponents();
+        let components: OpenApi30Components | OpenApi31Components = oaiDoc.getComponents();
         if (!components) {
             components = oaiDoc.createComponents();
-            oaiDoc.setComponents(components);
+            oaiDoc.setComponents(components as any);
         }
 
         let securitySchemes = components.getSecuritySchemes();
@@ -116,12 +152,45 @@ export class AddSecuritySchemeCommand extends BaseCommand {
         }
 
         // Check if scheme already exists
-        if (securitySchemes[this._data.name]) {
+        if (securitySchemes[this._data.name] && this._index === undefined) {
             this._schemeCreated = false;
             return;
         }
 
         // Create new security scheme
+        const newScheme = this.createOpenApi30Scheme(components);
+
+        // Handle index-based insertion for maintaining order
+        if (this._index !== undefined) {
+            // Get all existing schemes
+            const existingNames = Object.keys(securitySchemes);
+            const allSchemes: Array<{ name: string; scheme: OpenApi30SecurityScheme }> = [];
+
+            // Collect all existing schemes
+            existingNames.forEach(name => {
+                if (name !== this._data.name) { // Skip if re-adding with same name
+                    allSchemes.push({ name, scheme: securitySchemes[name] as OpenApi30SecurityScheme });
+                }
+            });
+
+            // Insert new scheme at specified index
+            allSchemes.splice(this._index, 0, { name: this._data.name, scheme: newScheme });
+
+            // Clear and re-add all schemes in order
+            existingNames.forEach(name => components.removeSecurityScheme(name));
+            allSchemes.forEach(({ name, scheme }) => components.addSecurityScheme(name, scheme));
+        } else {
+            // Simple add at end
+            components.addSecurityScheme(this._data.name, newScheme);
+        }
+
+        this._schemeCreated = true;
+    }
+
+    /**
+     * Create OpenAPI 3.0/3.1 security scheme
+     */
+    private createOpenApi30Scheme(components: any): OpenApi30SecurityScheme {
         const newScheme = components.createSecurityScheme() as OpenApi30SecurityScheme;
         newScheme.setType(this._data.type);
 
@@ -151,34 +220,34 @@ export class AddSecuritySchemeCommand extends BaseCommand {
 
                 // Create the appropriate flow
                 if (this._data.flow === 'implicit') {
-                    const implicitFlow = flows.createImplicitOAuthFlow();
+                    const implicitFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
                     if (this._data.authorizationUrl) {
                         implicitFlow.setAuthorizationUrl(this._data.authorizationUrl);
                     }
                     // Create empty scopes
-                    const scopes = implicitFlow.createScopes();
+                    const scopes = {};
                     implicitFlow.setScopes(scopes);
                     flows.setImplicit(implicitFlow);
                 } else if (this._data.flow === 'password') {
-                    const passwordFlow = flows.createPasswordOAuthFlow();
+                    const passwordFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
                     if (this._data.tokenUrl) {
                         passwordFlow.setTokenUrl(this._data.tokenUrl);
                     }
                     // Create empty scopes
-                    const scopes = passwordFlow.createScopes();
+                    const scopes = {};
                     passwordFlow.setScopes(scopes);
                     flows.setPassword(passwordFlow);
                 } else if (this._data.flow === 'clientCredentials') {
-                    const clientCredsFlow = flows.createClientCredentialsOAuthFlow();
+                    const clientCredsFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
                     if (this._data.tokenUrl) {
                         clientCredsFlow.setTokenUrl(this._data.tokenUrl);
                     }
                     // Create empty scopes
-                    const scopes = clientCredsFlow.createScopes();
+                    const scopes = {};
                     clientCredsFlow.setScopes(scopes);
                     flows.setClientCredentials(clientCredsFlow);
                 } else if (this._data.flow === 'authorizationCode') {
-                    const authCodeFlow = flows.createAuthorizationCodeOAuthFlow();
+                    const authCodeFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
                     if (this._data.authorizationUrl) {
                         authCodeFlow.setAuthorizationUrl(this._data.authorizationUrl);
                     }
@@ -186,7 +255,7 @@ export class AddSecuritySchemeCommand extends BaseCommand {
                         authCodeFlow.setTokenUrl(this._data.tokenUrl);
                     }
                     // Create empty scopes
-                    const scopes = authCodeFlow.createScopes();
+                    const scopes = {};
                     authCodeFlow.setScopes(scopes);
                     flows.setAuthorizationCode(authCodeFlow);
                 }
@@ -199,8 +268,7 @@ export class AddSecuritySchemeCommand extends BaseCommand {
             }
         }
 
-        components.addSecurityScheme(this._data.name, newScheme);
-        this._schemeCreated = true;
+        return newScheme;
     }
 
     /**

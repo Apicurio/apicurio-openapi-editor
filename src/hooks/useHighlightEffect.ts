@@ -34,7 +34,9 @@ export const useHighlightEffect = () => {
                 targetElement = document.querySelector(
                     `[data-selectable="true"][data-path="${pathString}"][data-property-name="${selectedPropertyName}"]`
                 ) as HTMLElement;
-            } else {
+            }
+
+            if (!targetElement) {
                 // Match just the path, but exclude elements with a property name
                 targetElement = document.querySelector(
                     `[data-selectable="true"][data-path="${pathString}"]:not([data-property-name])`

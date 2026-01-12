@@ -8,9 +8,11 @@ import {
     DataList,
     DataListAction,
     DataListCell,
+    DataListContent,
     DataListItem,
     DataListItemCells,
     DataListItemRow,
+    DataListToggle,
     Dropdown,
     DropdownItem,
     DropdownList,
@@ -31,10 +33,16 @@ import { useDocument } from '@hooks/useDocument';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
-import { NewSecuritySchemeModal, SecuritySchemeData } from '@components/modals/NewSecuritySchemeModal';
+import { SecuritySchemeModal, SecuritySchemeData } from '@components/modals/SecuritySchemeModal';
+import { SecurityRequirementModal, SecurityRequirementData } from '@components/modals/SecurityRequirementModal';
+import { SecuritySchemeDetails } from '@components/forms/main/SecuritySchemeDetails';
 import { AddSecuritySchemeCommand } from '@commands/AddSecuritySchemeCommand';
 import { DeleteSecuritySchemeCommand } from '@commands/DeleteSecuritySchemeCommand';
 import { DeleteAllSecuritySchemesCommand } from '@commands/DeleteAllSecuritySchemesCommand';
+import { AddSecurityRequirementCommand } from '@commands/AddSecurityRequirementCommand';
+import { DeleteSecurityRequirementCommand } from '@commands/DeleteSecurityRequirementCommand';
+import { DeleteAllSecurityRequirementsCommand } from '@commands/DeleteAllSecurityRequirementsCommand';
+import { CompositeCommand } from '@commands/CompositeCommand';
 
 /**
  * Security section component for editing security schemes and requirements
@@ -54,37 +62,47 @@ export const SecuritySection: React.FC = () => {
     const [isRequirementsExpanded, setIsRequirementsExpanded] = useState(true);
     const [openSchemeDropdownIndex, setOpenSchemeDropdownIndex] = useState<number | null>(null);
     const [openRequirementDropdownIndex, setOpenRequirementDropdownIndex] = useState<number | null>(null);
-    const [isNewSchemeModalOpen, setIsNewSchemeModalOpen] = useState(false);
+    const [expandedSchemeRows, setExpandedSchemeRows] = useState<Set<string>>(new Set());
+    const [isSchemeModalOpen, setIsSchemeModalOpen] = useState(false);
+    const [editSchemeData, setEditSchemeData] = useState<SecuritySchemeData | null>(null);
+    const [isRequirementModalOpen, setIsRequirementModalOpen] = useState(false);
+    const [editRequirementData, setEditRequirementData] = useState<SecurityRequirementData | null>(null);
+    const [editRequirementIndex, setEditRequirementIndex] = useState<number | undefined>(undefined);
 
     /**
-     * Get security schemes from the document
+     * Get security schemes from the document, sorted alphabetically by name
      */
     const getSecuritySchemes = (): { name: string; scheme: SecurityScheme }[] => {
+        let schemes: { name: string; scheme: SecurityScheme }[] = [];
+
         if (specVersion === '2.0') {
             const definitions = (oaiDoc as OpenApi20Document).getSecurityDefinitions();
             if (!definitions) return [];
             const names = definitions.getItemNames();
-            return names.map(name => ({
+            schemes = names.map(name => ({
                 name,
                 scheme: definitions.getItem(name)
             }));
         } else {
             const components = (oaiDoc as OpenApi30Document | OpenApi31Document).getComponents();
             if (!components) return [];
-            const schemes = components.getSecuritySchemes();
-            if (!schemes) return [];
-            return Object.keys(schemes).map(name => ({
+            const schemesMap = components.getSecuritySchemes();
+            if (!schemesMap) return [];
+            schemes = Object.keys(schemesMap).map(name => ({
                 name,
-                scheme: schemes[name]
+                scheme: schemesMap[name]
             }));
         }
+
+        // Sort alphabetically by name
+        return schemes.sort((a, b) => a.name.localeCompare(b.name));
     };
 
     /**
      * Get security requirements from the document
      */
     const getSecurityRequirements = (): SecurityRequirement[] => {
-        return oaiDoc.getSecurity() || [];
+        return (oaiDoc as OpenApi20Document | OpenApi30Document | OpenApi31Document).getSecurity() || [];
     };
 
     /**
@@ -110,12 +128,12 @@ export const SecuritySection: React.FC = () => {
     /**
      * Get color for security scheme type badge
      */
-    const getSchemeTypeColor = (scheme: SecurityScheme): "blue" | "cyan" | "green" | "orange" | "purple" | "red" | "grey" => {
+    const getSchemeTypeColor = (scheme: SecurityScheme): 'blue' | 'teal' | 'green' | 'orange' | 'purple' | 'red' | 'orangered' | 'grey' | 'yellow' => {
         const type = scheme.getType();
         if (type === 'basic' || type === 'http') return 'blue';
         if (type === 'apiKey') return 'green';
         if (type === 'oauth2') return 'purple';
-        if (type === 'openIdConnect') return 'cyan';
+        if (type === 'openIdConnect') return 'teal';
         return 'grey';
     };
 
@@ -123,18 +141,99 @@ export const SecuritySection: React.FC = () => {
     const securityRequirements = getSecurityRequirements();
 
     /**
-     * Handle creating a new security scheme
+     * Toggle expansion of a security scheme row
      */
-    const handleCreateSecurityScheme = () => {
-        setIsNewSchemeModalOpen(true);
+    const toggleSchemeRowExpansion = (name: string) => {
+        setExpandedSchemeRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(name)) {
+                newSet.delete(name);
+            } else {
+                newSet.add(name);
+            }
+            return newSet;
+        });
     };
 
     /**
-     * Handle confirming new security scheme
+     * Handle creating a new security scheme
      */
-    const handleConfirmNewSecurityScheme = (data: SecuritySchemeData) => {
-        const command = new AddSecuritySchemeCommand(data);
-        executeCommand(command, `Add security scheme "${data.name}"`);
+    const handleCreateSecurityScheme = () => {
+        setEditSchemeData(null);
+        setIsSchemeModalOpen(true);
+    };
+
+    /**
+     * Handle confirming security scheme (add or update)
+     */
+    const handleConfirmSecurityScheme = (data: SecuritySchemeData) => {
+        if (editSchemeData) {
+            // Edit mode - delete old and add new
+            const deleteCommand = new DeleteSecuritySchemeCommand(editSchemeData.name);
+            const addCommand = new AddSecuritySchemeCommand(data);
+            const compositeCommand = new CompositeCommand(
+                [deleteCommand, addCommand],
+                `Update security scheme "${data.name}"`
+            );
+            executeCommand(compositeCommand, `Update security scheme "${data.name}"`);
+        } else {
+            // Create mode - add new scheme
+            const command = new AddSecuritySchemeCommand(data);
+            executeCommand(command, `Add security scheme "${data.name}"`);
+        }
+    };
+
+    /**
+     * Convert security scheme to SecuritySchemeData for editing
+     */
+    const convertSchemeToData = (name: string, scheme: SecurityScheme): SecuritySchemeData => {
+        const data: SecuritySchemeData = {
+            name,
+            type: scheme.getType() || '',
+            description: scheme.getDescription() || ''
+        };
+
+        const type = scheme.getType();
+
+        if (type === 'apiKey') {
+            data.parameterName = scheme.getName() || '';
+            data.in = scheme.getIn() || 'header';
+        } else if (type === 'http' && specVersion !== '2.0') {
+            const scheme30 = scheme as any;
+            data.scheme = scheme30.getScheme?.() || '';
+            data.bearerFormat = scheme30.getBearerFormat?.() || '';
+        } else if (type === 'oauth2') {
+            if (specVersion === '2.0') {
+                const scheme20 = scheme as any;
+                data.flow = scheme20.getFlow?.() || '';
+                data.authorizationUrl = scheme20.getAuthorizationUrl?.() || '';
+                data.tokenUrl = scheme20.getTokenUrl?.() || '';
+            } else {
+                const scheme30 = scheme as any;
+                const flows = scheme30.getFlows?.();
+                if (flows) {
+                    if (flows.getImplicit?.()) {
+                        data.flow = 'implicit';
+                        data.authorizationUrl = flows.getImplicit().getAuthorizationUrl() || '';
+                    } else if (flows.getPassword?.()) {
+                        data.flow = 'password';
+                        data.tokenUrl = flows.getPassword().getTokenUrl() || '';
+                    } else if (flows.getClientCredentials?.()) {
+                        data.flow = 'clientCredentials';
+                        data.tokenUrl = flows.getClientCredentials().getTokenUrl() || '';
+                    } else if (flows.getAuthorizationCode?.()) {
+                        data.flow = 'authorizationCode';
+                        data.authorizationUrl = flows.getAuthorizationCode().getAuthorizationUrl() || '';
+                        data.tokenUrl = flows.getAuthorizationCode().getTokenUrl() || '';
+                    }
+                }
+            }
+        } else if (type === 'openIdConnect' && specVersion !== '2.0') {
+            const scheme30 = scheme as any;
+            data.openIdConnectUrl = scheme30.getOpenIdConnectUrl?.() || '';
+        }
+
+        return data;
     };
 
     /**
@@ -158,8 +257,13 @@ export const SecuritySection: React.FC = () => {
      * Handle editing a security scheme
      */
     const handleEditSecurityScheme = (name: string) => {
-        // TODO: Open edit modal
-        console.log('Edit security scheme:', name);
+        const schemeEntry = securitySchemes.find(s => s.name === name);
+        if (schemeEntry) {
+            const data = convertSchemeToData(schemeEntry.name, schemeEntry.scheme);
+            setEditSchemeData(data);
+            setIsSchemeModalOpen(true);
+            select(schemeEntry.scheme);
+        }
         setOpenSchemeDropdownIndex(null);
     };
 
@@ -167,24 +271,62 @@ export const SecuritySection: React.FC = () => {
      * Handle creating a new security requirement
      */
     const handleCreateSecurityRequirement = () => {
-        // TODO: Open modal
-        console.log('Create security requirement');
+        setEditRequirementData(null);
+        setEditRequirementIndex(undefined);
+        setIsRequirementModalOpen(true);
+    };
+
+    /**
+     * Handle confirming security requirement (add or update)
+     */
+    const handleConfirmSecurityRequirement = (data: SecurityRequirementData) => {
+        if (editRequirementData && editRequirementIndex !== undefined) {
+            // Edit mode - delete old and add new at same index
+            const deleteCommand = new DeleteSecurityRequirementCommand(editRequirementIndex);
+            const addCommand = new AddSecurityRequirementCommand(data, editRequirementIndex);
+            const compositeCommand = new CompositeCommand(
+                [deleteCommand, addCommand],
+                'Update security requirement'
+            );
+            executeCommand(compositeCommand, 'Update security requirement');
+        } else {
+            // Create mode - add new requirement
+            const command = new AddSecurityRequirementCommand(data);
+            executeCommand(command, 'Add security requirement');
+        }
+    };
+
+    /**
+     * Convert security requirement to SecurityRequirementData for editing
+     */
+    const convertRequirementToData = (requirement: SecurityRequirement): SecurityRequirementData => {
+        const schemes: { [schemeName: string]: string[] } = {};
+        const schemeNames = requirement.getItemNames();
+
+        if (schemeNames) {
+            schemeNames.forEach(schemeName => {
+                const scopes = requirement.getItem(schemeName);
+                schemes[schemeName] = scopes || [];
+            });
+        }
+
+        return { schemes };
     };
 
     /**
      * Handle deleting all security requirements
      */
     const handleDeleteAllSecurityRequirements = () => {
-        // TODO: Implement
-        console.log('Delete all security requirements');
+        const command = new DeleteAllSecurityRequirementsCommand();
+        executeCommand(command, 'Delete all security requirements');
     };
 
     /**
      * Handle deleting a security requirement
      */
     const handleDeleteSecurityRequirement = (index: number) => {
-        // TODO: Implement
-        console.log('Delete security requirement:', index);
+        const command = new DeleteSecurityRequirementCommand(index);
+        executeCommand(command, `Delete security requirement`);
         setOpenRequirementDropdownIndex(null);
     };
 
@@ -192,8 +334,13 @@ export const SecuritySection: React.FC = () => {
      * Handle editing a security requirement
      */
     const handleEditSecurityRequirement = (index: number) => {
-        // TODO: Open edit modal
-        console.log('Edit security requirement:', index);
+        const requirement = securityRequirements[index];
+        if (requirement) {
+            const data = convertRequirementToData(requirement);
+            setEditRequirementData(data);
+            setEditRequirementIndex(index);
+            setIsRequirementModalOpen(true);
+        }
         setOpenRequirementDropdownIndex(null);
     };
 
@@ -204,15 +351,14 @@ export const SecuritySection: React.FC = () => {
         const schemes: string[] = [];
         const scopes: string[] = [];
 
-        const items = requirement.getSecurityRequirementItems();
-        if (items) {
-            items.forEach(item => {
-                const schemeName = item.getName();
-                const itemScopes = item.getScopes();
+        const schemeNames = requirement.getItemNames();
+        if (schemeNames) {
+            schemeNames.forEach(schemeName => {
+                const scopes = requirement.getItem(schemeName);
                 if (schemeName) {
                     schemes.push(schemeName);
-                    if (itemScopes && itemScopes.length > 0) {
-                        scopes.push(...itemScopes);
+                    if (scopes && scopes.length > 0) {
+                        scopes.push(...scopes);
                     }
                 }
             });
@@ -258,80 +404,98 @@ export const SecuritySection: React.FC = () => {
                         <DataList
                             aria-label="Security schemes list"
                             isCompact
-                            selectedDataListItemId=""
+                            onSelectableRowChange={(_evt, idx) => handleEditSecurityScheme(securitySchemes[parseInt(idx)]?.name)}
+                            onSelectDataListItem={(_evt, idx) => handleEditSecurityScheme(securitySchemes[parseInt(idx)]?.name)}
                         >
-                            {securitySchemes.map(({ name, scheme }, index) => (
-                                <DataListItem
-                                    key={name}
-                                    id={`scheme-${index}`}
-                                    data-path={NodePathUtil.createNodePath(scheme).toString()}
-                                    data-selectable="true"
-                                >
-                                    <DataListItemRow>
-                                        <DataListItemCells
-                                            dataListCells={[
-                                                <DataListCell key="name">
-                                                    <div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <ShieldAltIcon style={{ color: '#666' }} />
-                                                            <strong>{name}</strong>
-                                                            <Label color={getSchemeTypeColor(scheme)}>
-                                                                {getSchemeTypeLabel(scheme)}
-                                                            </Label>
-                                                        </div>
-                                                        {scheme.getDescription() && (
-                                                            <div style={{ fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)', marginTop: '0.25rem' }}>
-                                                                {scheme.getDescription()}
+                            {securitySchemes.map(({ name, scheme }, index) => {
+                                const isExpanded = expandedSchemeRows.has(name);
+                                return (
+                                    <DataListItem
+                                        key={name}
+                                        id={`${index}`}
+                                        data-path={NodePathUtil.createNodePath(scheme).toString()}
+                                        data-selectable="true"
+                                        isExpanded={isExpanded}
+                                    >
+                                        <DataListItemRow>
+                                            <DataListToggle
+                                                onClick={() => toggleSchemeRowExpansion(name)}
+                                                isExpanded={isExpanded}
+                                                id={`scheme-toggle-${name}`}
+                                                aria-controls={`scheme-expand-${name}`}
+                                            />
+                                            <DataListItemCells
+                                                dataListCells={[
+                                                    <DataListCell key="name">
+                                                        <div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <ShieldAltIcon style={{ color: '#666' }} />
+                                                                <strong>{name}</strong>
+                                                                <Label color={getSchemeTypeColor(scheme)}>
+                                                                    {getSchemeTypeLabel(scheme)}
+                                                                </Label>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                </DataListCell>
-                                            ]}
-                                        />
-                                        <DataListAction
-                                            aria-labelledby={`scheme-actions-${index}`}
-                                            id={`scheme-actions-${index}`}
-                                            aria-label="Security scheme actions"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <Dropdown
-                                                isOpen={openSchemeDropdownIndex === index}
-                                                onSelect={() => setOpenSchemeDropdownIndex(null)}
-                                                onOpenChange={(isOpen: boolean) => setOpenSchemeDropdownIndex(isOpen ? index : null)}
-                                                popperProps={{ position: 'right' }}
-                                                toggle={(toggleRef) => (
-                                                    <MenuToggle
-                                                        ref={toggleRef}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setOpenSchemeDropdownIndex(openSchemeDropdownIndex === index ? null : index);
-                                                        }}
-                                                        variant="plain"
-                                                        aria-label={`Actions for security scheme ${name}`}
-                                                    >
-                                                        <EllipsisVIcon />
-                                                    </MenuToggle>
-                                                )}
+                                                            {scheme.getDescription() && (
+                                                                <div style={{ fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)', marginTop: '0.25rem' }}>
+                                                                    {scheme.getDescription()}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </DataListCell>
+                                                ]}
+                                            />
+                                            <DataListAction
+                                                aria-labelledby={`scheme-actions-${index}`}
+                                                id={`scheme-actions-${index}`}
+                                                aria-label="Security scheme actions"
+                                                onClick={(e) => e.stopPropagation()}
                                             >
-                                                <DropdownList>
-                                                    <DropdownItem
-                                                        key="edit"
-                                                        onClick={() => handleEditSecurityScheme(name)}
-                                                    >
-                                                        Edit scheme
-                                                    </DropdownItem>
-                                                    <DropdownItem
-                                                        key="delete"
-                                                        onClick={() => handleDeleteSecurityScheme(name)}
-                                                    >
-                                                        Delete scheme
-                                                    </DropdownItem>
-                                                </DropdownList>
-                                            </Dropdown>
-                                        </DataListAction>
-                                    </DataListItemRow>
-                                </DataListItem>
-                            ))}
+                                                <Dropdown
+                                                    isOpen={openSchemeDropdownIndex === index}
+                                                    onSelect={() => setOpenSchemeDropdownIndex(null)}
+                                                    onOpenChange={(isOpen: boolean) => setOpenSchemeDropdownIndex(isOpen ? index : null)}
+                                                    popperProps={{ position: 'right' }}
+                                                    toggle={(toggleRef) => (
+                                                        <MenuToggle
+                                                            ref={toggleRef}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setOpenSchemeDropdownIndex(openSchemeDropdownIndex === index ? null : index);
+                                                            }}
+                                                            variant="plain"
+                                                            aria-label={`Actions for security scheme ${name}`}
+                                                        >
+                                                            <EllipsisVIcon />
+                                                        </MenuToggle>
+                                                    )}
+                                                >
+                                                    <DropdownList>
+                                                        <DropdownItem
+                                                            key="edit"
+                                                            onClick={() => handleEditSecurityScheme(name)}
+                                                        >
+                                                            Edit scheme
+                                                        </DropdownItem>
+                                                        <DropdownItem
+                                                            key="delete"
+                                                            onClick={() => handleDeleteSecurityScheme(name)}
+                                                        >
+                                                            Delete scheme
+                                                        </DropdownItem>
+                                                    </DropdownList>
+                                                </Dropdown>
+                                            </DataListAction>
+                                        </DataListItemRow>
+                                        <DataListContent
+                                            aria-label="Security scheme details"
+                                            id={`scheme-expand-${name}`}
+                                            isHidden={!isExpanded}
+                                        >
+                                            <SecuritySchemeDetails scheme={scheme} specVersion={specVersion} />
+                                        </DataListContent>
+                                    </DataListItem>
+                                );
+                            })}
                         </DataList>
                     )}
                 </div>
@@ -455,10 +619,25 @@ export const SecuritySection: React.FC = () => {
             </ExpandablePanel>
 
             {/* Modals */}
-            <NewSecuritySchemeModal
-                isOpen={isNewSchemeModalOpen}
-                onClose={() => setIsNewSchemeModalOpen(false)}
-                onConfirm={handleConfirmNewSecurityScheme}
+            <SecuritySchemeModal
+                isOpen={isSchemeModalOpen}
+                onClose={() => {
+                    setIsSchemeModalOpen(false);
+                    setEditSchemeData(null);
+                }}
+                onConfirm={handleConfirmSecurityScheme}
+                editData={editSchemeData}
+            />
+
+            <SecurityRequirementModal
+                isOpen={isRequirementModalOpen}
+                onClose={() => {
+                    setIsRequirementModalOpen(false);
+                    setEditRequirementData(null);
+                    setEditRequirementIndex(undefined);
+                }}
+                onConfirm={handleConfirmSecurityRequirement}
+                editData={editRequirementData}
             />
         </>
     );
