@@ -18,7 +18,7 @@ export const SecuritySchemeDetails: React.FC<SecuritySchemeDetailsProps> = ({ sc
 
     if (type === 'basic') {
         return (
-            <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+            <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
                 <p><strong>Type:</strong> Basic Authentication</p>
                 <p style={{ marginTop: '0.5rem', color: 'var(--pf-v6-global--Color--200)' }}>
                     Uses HTTP Basic Authentication with username and password encoded in Base64.
@@ -31,7 +31,7 @@ export const SecuritySchemeDetails: React.FC<SecuritySchemeDetailsProps> = ({ sc
         const paramName = scheme.getName();
         const inLocation = scheme.getIn();
         return (
-            <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+            <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
                 <p><strong>Parameter Name:</strong> {paramName || 'Not specified'}</p>
                 <p style={{ marginTop: '0.5rem' }}><strong>Location:</strong> {inLocation || 'Not specified'}</p>
             </div>
@@ -43,7 +43,7 @@ export const SecuritySchemeDetails: React.FC<SecuritySchemeDetailsProps> = ({ sc
         const httpScheme = scheme30.getScheme?.();
         const bearerFormat = scheme30.getBearerFormat?.();
         return (
-            <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+            <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
                 <p><strong>Scheme:</strong> {httpScheme || 'Not specified'}</p>
                 {bearerFormat && (
                     <p style={{ marginTop: '0.5rem' }}><strong>Bearer Format:</strong> {bearerFormat}</p>
@@ -64,14 +64,14 @@ export const SecuritySchemeDetails: React.FC<SecuritySchemeDetailsProps> = ({ sc
         const scheme30 = scheme as any;
         const openIdConnectUrl = scheme30.getOpenIdConnectUrl?.();
         return (
-            <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+            <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
                 <p><strong>OpenID Connect URL:</strong> {openIdConnectUrl || 'Not specified'}</p>
             </div>
         );
     }
 
     return (
-        <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+        <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
             <p style={{ color: 'var(--pf-v6-global--Color--200)' }}>No additional details available</p>
         </div>
     );
@@ -91,7 +91,7 @@ const OAuth2DetailsV2: React.FC<{ scheme: SecurityScheme }> = ({ scheme }) => {
     const scopeNames = scopes?.getItemNames?.() || [];
 
     return (
-        <div style={{ padding: '1rem', backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
+        <div style={{ backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)' }}>
             <p><strong>Flow:</strong> {flow || 'Not specified'}</p>
             {authUrl && (
                 <p style={{ marginTop: '0.5rem' }}><strong>Authorization URL:</strong> {authUrl}</p>
