@@ -34,6 +34,14 @@ export const SourceForm: React.FC = () => {
     // Track the current format (JSON or YAML)
     const [format, setFormat] = useState<SourceFormat>('json');
 
+    // Track whether dark theme is active by observing the HTML element
+    const [isDarkTheme, setIsDarkTheme] = useState<boolean>(() => {
+        if (typeof window !== 'undefined' && window.document?.documentElement) {
+            return window.document.documentElement.classList.contains('pf-v6-theme-dark');
+        }
+        return false;
+    });
+
     // Track the original source code
     const [originalSource, setOriginalSource] = useState<string>('');
 
@@ -175,6 +183,29 @@ export const SourceForm: React.FC = () => {
             validationTimerRef.current = null;
         }, 500);
     };
+
+    /**
+     * Observe theme changes by watching the HTML element's class attribute
+     */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.document?.documentElement) {
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            const hasDarkTheme = window.document.documentElement.classList.contains('pf-v6-theme-dark');
+            setIsDarkTheme(hasDarkTheme);
+        });
+
+        observer.observe(window.document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
 
     /**
      * Cleanup validation timer on unmount
@@ -363,6 +394,7 @@ export const SourceForm: React.FC = () => {
                     onChange={handleSourceChange}
                     language={format === 'json' ? Language.json : Language.yaml}
                     height="100%"
+                    isDarkTheme={isDarkTheme}
                 />
             </div>
         </div>

@@ -14,7 +14,6 @@ export type { SelectionEvent } from './models/SelectionTypes';
 export { useDocument } from './hooks/useDocument';
 export { useCommand } from './hooks/useCommand';
 export { useSelection } from './hooks/useSelection';
-export { useUI } from './hooks/useUI';
 
 // Context (for advanced usage)
 export { EditorProvider, useEditorServices } from './services/EditorContext';
