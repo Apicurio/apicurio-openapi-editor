@@ -1,8 +1,19 @@
 /**
- * Command to delete a schema from the components section
+ * Command to delete a schema from the document
+ * - OpenAPI 2.0: deletes from definitions section
+ * - OpenAPI 3.0/3.1: deletes from components.schemas section
  */
 
-import { Document, OpenApi30Document, OpenApi30Schema, Library } from '@apicurio/data-models';
+import {
+    Document,
+    ModelTypeUtil,
+    OpenApi20Document,
+    OpenApi20Schema,
+    OpenApi30Document,
+    OpenApi30Schema,
+    OpenApi31Document,
+    Library
+} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
@@ -34,7 +45,50 @@ export class DeleteSchemaCommand extends BaseCommand {
      * Execute the command - delete the schema
      */
     execute(document: Document): void {
-        const oaiDoc = document as OpenApi30Document;
+        if (ModelTypeUtil.isOpenApi2Model(document)) {
+            this.executeForOpenApi20(document as OpenApi20Document);
+        } else {
+            this.executeForOpenApi30(document as OpenApi30Document | OpenApi31Document);
+        }
+    }
+
+    /**
+     * Execute for OpenAPI 2.0
+     */
+    private executeForOpenApi20(oaiDoc: OpenApi20Document): void {
+        const definitions = oaiDoc.getDefinitions();
+
+        if (!definitions) {
+            // No definitions section, nothing to delete
+            this._schemaExisted = false;
+            return;
+        }
+
+        // Get the schema to delete
+        const schema = definitions.getItem(this._schemaName) as OpenApi20Schema;
+
+        if (!schema) {
+            // Schema doesn't exist, nothing to delete
+            this._schemaExisted = false;
+            return;
+        }
+
+        // Find and save the index of the schema for undo
+        const schemaNames = definitions.getItemNames();
+        this._schemaIndex = schemaNames.indexOf(this._schemaName);
+
+        // Save the schema for undo
+        this._oldSchema = Library.writeNode(schema);
+        this._schemaExisted = true;
+
+        // Remove the schema
+        definitions.removeItem(this._schemaName);
+    }
+
+    /**
+     * Execute for OpenAPI 3.0/3.1
+     */
+    private executeForOpenApi30(oaiDoc: OpenApi30Document | OpenApi31Document): void {
         const components = oaiDoc.getComponents();
 
         if (!components) {
@@ -80,17 +134,46 @@ export class DeleteSchemaCommand extends BaseCommand {
             return;
         }
 
-        const oaiDoc = document as OpenApi30Document;
+        if (ModelTypeUtil.isOpenApi2Model(document)) {
+            this.undoForOpenApi20(document as OpenApi20Document);
+        } else {
+            this.undoForOpenApi30(document as OpenApi30Document | OpenApi31Document);
+        }
+    }
+
+    /**
+     * Undo for OpenAPI 2.0
+     */
+    private undoForOpenApi20(oaiDoc: OpenApi20Document): void {
+        let definitions = oaiDoc.getDefinitions();
+
+        // Create definitions object if it doesn't exist
+        if (!definitions) {
+            definitions = oaiDoc.createDefinitions();
+            oaiDoc.setDefinitions(definitions);
+        }
+
+        // Recreate the schema using document method
+        const newSchema = definitions.createSchema() as OpenApi20Schema;
+        Library.readNode(this._oldSchema, newSchema);
+
+        definitions.insertItem(this._schemaName, newSchema, this._schemaIndex);
+    }
+
+    /**
+     * Undo for OpenAPI 3.0/3.1
+     */
+    private undoForOpenApi30(oaiDoc: OpenApi30Document | OpenApi31Document): void {
         let components = oaiDoc.getComponents();
 
         // Create components object if it doesn't exist
         if (!components) {
             components = oaiDoc.createComponents();
-            oaiDoc.setComponents(components);
+            oaiDoc.setComponents(components as any);
         }
 
         // Recreate the schema
-        const newSchema = components.createSchema() as OpenApi30Schema;
+        const newSchema = (components as any).createSchema() as OpenApi30Schema;
         Library.readNode(this._oldSchema, newSchema);
 
         // Add it back
