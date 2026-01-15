@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Button,
+    Checkbox,
     Form,
     FormGroup,
     Modal,
@@ -16,6 +17,9 @@ import {
     SelectList,
     MenuToggle,
     MenuToggleElement,
+    Tab,
+    Tabs,
+    TabTitleText,
     TextInput,
     TextArea
 } from '@patternfly/react-core';
@@ -28,6 +32,15 @@ interface SecuritySchemeModalProps {
     editData?: SecuritySchemeData | null;
 }
 
+/**
+ * OAuth2 flow configuration
+ */
+export interface OAuth2FlowConfig {
+    authorizationUrl?: string;
+    tokenUrl?: string;
+    refreshUrl?: string;
+}
+
 export interface SecuritySchemeData {
     name: string;
     type: string;
@@ -38,10 +51,17 @@ export interface SecuritySchemeData {
     // HTTP fields (3.0+)
     scheme?: string;
     bearerFormat?: string;
-    // OAuth2 fields
+    // OAuth2 fields (2.0 - single flow)
     flow?: string;
     authorizationUrl?: string;
     tokenUrl?: string;
+    // OAuth2 fields (3.0+ - multiple flows)
+    oauth2Flows?: {
+        implicit?: OAuth2FlowConfig;
+        password?: OAuth2FlowConfig;
+        clientCredentials?: OAuth2FlowConfig;
+        authorizationCode?: OAuth2FlowConfig;
+    };
     // OpenID Connect fields (3.0+)
     openIdConnectUrl?: string;
 }
@@ -65,15 +85,33 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
     const [inLocation, setInLocation] = useState('header');
     const [httpScheme, setHttpScheme] = useState('');
     const [bearerFormat, setBearerFormat] = useState('');
+    // OAuth2 2.0 single flow
     const [flow, setFlow] = useState('');
     const [authorizationUrl, setAuthorizationUrl] = useState('');
     const [tokenUrl, setTokenUrl] = useState('');
+    // OAuth2 3.0+ multiple flows - enabled flows
+    const [enabledFlows, setEnabledFlows] = useState<Set<string>>(new Set());
+    // OAuth2 3.0+ multiple flows - implicit
+    const [implicitAuthUrl, setImplicitAuthUrl] = useState('');
+    const [implicitRefreshUrl, setImplicitRefreshUrl] = useState('');
+    // OAuth2 3.0+ multiple flows - password
+    const [passwordTokenUrl, setPasswordTokenUrl] = useState('');
+    const [passwordRefreshUrl, setPasswordRefreshUrl] = useState('');
+    // OAuth2 3.0+ multiple flows - clientCredentials
+    const [clientCredentialsTokenUrl, setClientCredentialsTokenUrl] = useState('');
+    const [clientCredentialsRefreshUrl, setClientCredentialsRefreshUrl] = useState('');
+    // OAuth2 3.0+ multiple flows - authorizationCode
+    const [authCodeAuthUrl, setAuthCodeAuthUrl] = useState('');
+    const [authCodeTokenUrl, setAuthCodeTokenUrl] = useState('');
+    const [authCodeRefreshUrl, setAuthCodeRefreshUrl] = useState('');
+    // OpenID Connect
     const [openIdConnectUrl, setOpenIdConnectUrl] = useState('');
 
     const [isTypeSelectOpen, setIsTypeSelectOpen] = useState(false);
     const [isInSelectOpen, setIsInSelectOpen] = useState(false);
     const [isHttpSchemeSelectOpen, setIsHttpSchemeSelectOpen] = useState(false);
     const [isFlowSelectOpen, setIsFlowSelectOpen] = useState(false);
+    const [activeOAuth2Tab, setActiveOAuth2Tab] = useState<string | number>('implicit');
 
     /**
      * Load edit data when modal opens in edit mode
@@ -91,6 +129,35 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
             setAuthorizationUrl(editData.authorizationUrl || '');
             setTokenUrl(editData.tokenUrl || '');
             setOpenIdConnectUrl(editData.openIdConnectUrl || '');
+
+            // Load OAuth2 3.0+ multiple flows
+            if (editData.oauth2Flows) {
+                const enabled = new Set<string>();
+
+                if (editData.oauth2Flows.implicit) {
+                    enabled.add('implicit');
+                    setImplicitAuthUrl(editData.oauth2Flows.implicit.authorizationUrl || '');
+                    setImplicitRefreshUrl(editData.oauth2Flows.implicit.refreshUrl || '');
+                }
+                if (editData.oauth2Flows.password) {
+                    enabled.add('password');
+                    setPasswordTokenUrl(editData.oauth2Flows.password.tokenUrl || '');
+                    setPasswordRefreshUrl(editData.oauth2Flows.password.refreshUrl || '');
+                }
+                if (editData.oauth2Flows.clientCredentials) {
+                    enabled.add('clientCredentials');
+                    setClientCredentialsTokenUrl(editData.oauth2Flows.clientCredentials.tokenUrl || '');
+                    setClientCredentialsRefreshUrl(editData.oauth2Flows.clientCredentials.refreshUrl || '');
+                }
+                if (editData.oauth2Flows.authorizationCode) {
+                    enabled.add('authorizationCode');
+                    setAuthCodeAuthUrl(editData.oauth2Flows.authorizationCode.authorizationUrl || '');
+                    setAuthCodeTokenUrl(editData.oauth2Flows.authorizationCode.tokenUrl || '');
+                    setAuthCodeRefreshUrl(editData.oauth2Flows.authorizationCode.refreshUrl || '');
+                }
+
+                setEnabledFlows(enabled);
+            }
         }
     }, [isOpen, editData]);
 
@@ -191,6 +258,17 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
         setAuthorizationUrl('');
         setTokenUrl('');
         setOpenIdConnectUrl('');
+        // Reset OAuth2 3.0+ flows
+        setEnabledFlows(new Set());
+        setImplicitAuthUrl('');
+        setImplicitRefreshUrl('');
+        setPasswordTokenUrl('');
+        setPasswordRefreshUrl('');
+        setClientCredentialsTokenUrl('');
+        setClientCredentialsRefreshUrl('');
+        setAuthCodeAuthUrl('');
+        setAuthCodeTokenUrl('');
+        setAuthCodeRefreshUrl('');
     };
 
     /**
@@ -218,9 +296,52 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
             data.scheme = httpScheme.trim();
             data.bearerFormat = bearerFormat.trim();
         } else if (type === 'oauth2') {
-            data.flow = flow;
-            data.authorizationUrl = authorizationUrl.trim();
-            data.tokenUrl = tokenUrl.trim();
+            if (specVersion === '2.0') {
+                // OpenAPI 2.0 - single flow
+                data.flow = flow;
+                data.authorizationUrl = authorizationUrl.trim();
+                data.tokenUrl = tokenUrl.trim();
+            } else {
+                // OpenAPI 3.0+ - multiple flows
+                data.oauth2Flows = {};
+
+                if (enabledFlows.has('implicit')) {
+                    data.oauth2Flows.implicit = {
+                        authorizationUrl: implicitAuthUrl.trim(),
+                    };
+                    if (implicitRefreshUrl.trim()) {
+                        data.oauth2Flows.implicit.refreshUrl = implicitRefreshUrl.trim();
+                    }
+                }
+
+                if (enabledFlows.has('password')) {
+                    data.oauth2Flows.password = {
+                        tokenUrl: passwordTokenUrl.trim(),
+                    };
+                    if (passwordRefreshUrl.trim()) {
+                        data.oauth2Flows.password.refreshUrl = passwordRefreshUrl.trim();
+                    }
+                }
+
+                if (enabledFlows.has('clientCredentials')) {
+                    data.oauth2Flows.clientCredentials = {
+                        tokenUrl: clientCredentialsTokenUrl.trim(),
+                    };
+                    if (clientCredentialsRefreshUrl.trim()) {
+                        data.oauth2Flows.clientCredentials.refreshUrl = clientCredentialsRefreshUrl.trim();
+                    }
+                }
+
+                if (enabledFlows.has('authorizationCode')) {
+                    data.oauth2Flows.authorizationCode = {
+                        authorizationUrl: authCodeAuthUrl.trim(),
+                        tokenUrl: authCodeTokenUrl.trim(),
+                    };
+                    if (authCodeRefreshUrl.trim()) {
+                        data.oauth2Flows.authorizationCode.refreshUrl = authCodeRefreshUrl.trim();
+                    }
+                }
+            }
         } else if (type === 'openIdConnect') {
             data.openIdConnectUrl = openIdConnectUrl.trim();
         }
@@ -240,8 +361,9 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
         } else if (type === 'http') {
             return !!httpScheme.trim();
         } else if (type === 'oauth2') {
-            if (!flow) return false;
             if (specVersion === '2.0') {
+                // OpenAPI 2.0 - validate single flow
+                if (!flow) return false;
                 if (flow === 'implicit' || flow === 'accessCode') {
                     if (!authorizationUrl.trim()) return false;
                 }
@@ -249,11 +371,27 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                     if (!tokenUrl.trim()) return false;
                 }
             } else {
-                if (flow === 'implicit' || flow === 'authorizationCode') {
-                    if (!authorizationUrl.trim()) return false;
+                // OpenAPI 3.0+ - validate multiple flows
+                if (enabledFlows.size === 0) return false;
+
+                // Validate implicit flow
+                if (enabledFlows.has('implicit')) {
+                    if (!implicitAuthUrl.trim()) return false;
                 }
-                if (flow === 'password' || flow === 'clientCredentials' || flow === 'authorizationCode') {
-                    if (!tokenUrl.trim()) return false;
+
+                // Validate password flow
+                if (enabledFlows.has('password')) {
+                    if (!passwordTokenUrl.trim()) return false;
+                }
+
+                // Validate clientCredentials flow
+                if (enabledFlows.has('clientCredentials')) {
+                    if (!clientCredentialsTokenUrl.trim()) return false;
+                }
+
+                // Validate authorizationCode flow
+                if (enabledFlows.has('authorizationCode')) {
+                    if (!authCodeAuthUrl.trim() || !authCodeTokenUrl.trim()) return false;
                 }
             }
         } else if (type === 'openIdConnect') {
@@ -425,7 +563,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                     )}
 
                     {/* OAuth2 specific fields */}
-                    {type === 'oauth2' && (
+                    {type === 'oauth2' && specVersion === '2.0' && (
                         <>
                             <FormGroup label="Flow" isRequired fieldId="oauth2-flow">
                                 <Select
@@ -458,7 +596,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                 </Select>
                             </FormGroup>
 
-                            {(flow === 'implicit' || flow === 'accessCode' || flow === 'authorizationCode') && (
+                            {(flow === 'implicit' || flow === 'accessCode') && (
                                 <FormGroup label="Authorization URL" isRequired fieldId="authorization-url">
                                     <TextInput
                                         id="authorization-url"
@@ -469,7 +607,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                 </FormGroup>
                             )}
 
-                            {(flow === 'password' || flow === 'application' || flow === 'clientCredentials' || flow === 'accessCode' || flow === 'authorizationCode') && (
+                            {(flow === 'password' || flow === 'application' || flow === 'accessCode') && (
                                 <FormGroup label="Token URL" isRequired fieldId="token-url">
                                     <TextInput
                                         id="token-url"
@@ -480,6 +618,198 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                 </FormGroup>
                             )}
                         </>
+                    )}
+
+                    {/* OAuth2 specific fields (3.0+ - multiple flows) */}
+                    {type === 'oauth2' && specVersion !== '2.0' && (
+                        <FormGroup label="OAuth2 Flows" isRequired fieldId="oauth2-flows">
+                            <Tabs
+                                activeKey={activeOAuth2Tab}
+                                onSelect={(_event, tabIndex) => setActiveOAuth2Tab(tabIndex)}
+                                aria-label="OAuth2 flows"
+                            >
+                                {/* Implicit Flow Tab */}
+                                <Tab
+                                    eventKey="implicit"
+                                    title={<TabTitleText>Implicit</TabTitleText>}
+                                    aria-label="Implicit flow"
+                                >
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <Checkbox
+                                            id="flow-implicit-enabled"
+                                            label="Enable Implicit flow"
+                                            isChecked={enabledFlows.has('implicit')}
+                                            onChange={(_event, checked) => {
+                                                const newFlows = new Set(enabledFlows);
+                                                if (checked) {
+                                                    newFlows.add('implicit');
+                                                } else {
+                                                    newFlows.delete('implicit');
+                                                }
+                                                setEnabledFlows(newFlows);
+                                            }}
+                                            style={{ marginBottom: '1rem' }}
+                                        />
+                                        <FormGroup label="Authorization URL" isRequired fieldId="implicit-auth-url">
+                                            <TextInput
+                                                id="implicit-auth-url"
+                                                value={implicitAuthUrl}
+                                                onChange={(_event, value) => setImplicitAuthUrl(value)}
+                                                placeholder="https://example.com/oauth/authorize"
+                                                isDisabled={!enabledFlows.has('implicit')}
+                                            />
+                                        </FormGroup>
+                                        <FormGroup label="Refresh URL" fieldId="implicit-refresh-url">
+                                            <TextInput
+                                                id="implicit-refresh-url"
+                                                value={implicitRefreshUrl}
+                                                onChange={(_event, value) => setImplicitRefreshUrl(value)}
+                                                placeholder="https://example.com/oauth/refresh"
+                                                isDisabled={!enabledFlows.has('implicit')}
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                </Tab>
+
+                                {/* Password Flow Tab */}
+                                <Tab
+                                    eventKey="password"
+                                    title={<TabTitleText>Password</TabTitleText>}
+                                    aria-label="Password flow"
+                                >
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <Checkbox
+                                            id="flow-password-enabled"
+                                            label="Enable Password flow"
+                                            isChecked={enabledFlows.has('password')}
+                                            onChange={(_event, checked) => {
+                                                const newFlows = new Set(enabledFlows);
+                                                if (checked) {
+                                                    newFlows.add('password');
+                                                } else {
+                                                    newFlows.delete('password');
+                                                }
+                                                setEnabledFlows(newFlows);
+                                            }}
+                                            style={{ marginBottom: '1rem' }}
+                                        />
+                                        <FormGroup label="Token URL" isRequired fieldId="password-token-url">
+                                            <TextInput
+                                                id="password-token-url"
+                                                value={passwordTokenUrl}
+                                                onChange={(_event, value) => setPasswordTokenUrl(value)}
+                                                placeholder="https://example.com/oauth/token"
+                                                isDisabled={!enabledFlows.has('password')}
+                                            />
+                                        </FormGroup>
+                                        <FormGroup label="Refresh URL" fieldId="password-refresh-url">
+                                            <TextInput
+                                                id="password-refresh-url"
+                                                value={passwordRefreshUrl}
+                                                onChange={(_event, value) => setPasswordRefreshUrl(value)}
+                                                placeholder="https://example.com/oauth/refresh"
+                                                isDisabled={!enabledFlows.has('password')}
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                </Tab>
+
+                                {/* Client Credentials Flow Tab */}
+                                <Tab
+                                    eventKey="clientCredentials"
+                                    title={<TabTitleText>Client Credentials</TabTitleText>}
+                                    aria-label="Client credentials flow"
+                                >
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <Checkbox
+                                            id="flow-clientCredentials-enabled"
+                                            label="Enable Client Credentials flow"
+                                            isChecked={enabledFlows.has('clientCredentials')}
+                                            onChange={(_event, checked) => {
+                                                const newFlows = new Set(enabledFlows);
+                                                if (checked) {
+                                                    newFlows.add('clientCredentials');
+                                                } else {
+                                                    newFlows.delete('clientCredentials');
+                                                }
+                                                setEnabledFlows(newFlows);
+                                            }}
+                                            style={{ marginBottom: '1rem' }}
+                                        />
+                                        <FormGroup label="Token URL" isRequired fieldId="client-credentials-token-url">
+                                            <TextInput
+                                                id="client-credentials-token-url"
+                                                value={clientCredentialsTokenUrl}
+                                                onChange={(_event, value) => setClientCredentialsTokenUrl(value)}
+                                                placeholder="https://example.com/oauth/token"
+                                                isDisabled={!enabledFlows.has('clientCredentials')}
+                                            />
+                                        </FormGroup>
+                                        <FormGroup label="Refresh URL" fieldId="client-credentials-refresh-url">
+                                            <TextInput
+                                                id="client-credentials-refresh-url"
+                                                value={clientCredentialsRefreshUrl}
+                                                onChange={(_event, value) => setClientCredentialsRefreshUrl(value)}
+                                                placeholder="https://example.com/oauth/refresh"
+                                                isDisabled={!enabledFlows.has('clientCredentials')}
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                </Tab>
+
+                                {/* Authorization Code Flow Tab */}
+                                <Tab
+                                    eventKey="authorizationCode"
+                                    title={<TabTitleText>Authorization Code</TabTitleText>}
+                                    aria-label="Authorization code flow"
+                                >
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <Checkbox
+                                            id="flow-authorizationCode-enabled"
+                                            label="Enable Authorization Code flow"
+                                            isChecked={enabledFlows.has('authorizationCode')}
+                                            onChange={(_event, checked) => {
+                                                const newFlows = new Set(enabledFlows);
+                                                if (checked) {
+                                                    newFlows.add('authorizationCode');
+                                                } else {
+                                                    newFlows.delete('authorizationCode');
+                                                }
+                                                setEnabledFlows(newFlows);
+                                            }}
+                                            style={{ marginBottom: '1rem' }}
+                                        />
+                                        <FormGroup label="Authorization URL" isRequired fieldId="auth-code-auth-url">
+                                            <TextInput
+                                                id="auth-code-auth-url"
+                                                value={authCodeAuthUrl}
+                                                onChange={(_event, value) => setAuthCodeAuthUrl(value)}
+                                                placeholder="https://example.com/oauth/authorize"
+                                                isDisabled={!enabledFlows.has('authorizationCode')}
+                                            />
+                                        </FormGroup>
+                                        <FormGroup label="Token URL" isRequired fieldId="auth-code-token-url">
+                                            <TextInput
+                                                id="auth-code-token-url"
+                                                value={authCodeTokenUrl}
+                                                onChange={(_event, value) => setAuthCodeTokenUrl(value)}
+                                                placeholder="https://example.com/oauth/token"
+                                                isDisabled={!enabledFlows.has('authorizationCode')}
+                                            />
+                                        </FormGroup>
+                                        <FormGroup label="Refresh URL" fieldId="auth-code-refresh-url">
+                                            <TextInput
+                                                id="auth-code-refresh-url"
+                                                value={authCodeRefreshUrl}
+                                                onChange={(_event, value) => setAuthCodeRefreshUrl(value)}
+                                                placeholder="https://example.com/oauth/refresh"
+                                                isDisabled={!enabledFlows.has('authorizationCode')}
+                                            />
+                                        </FormGroup>
+                                    </div>
+                                </Tab>
+                            </Tabs>
+                        </FormGroup>
                     )}
 
                     {/* OpenID Connect specific fields (3.0+ only) */}

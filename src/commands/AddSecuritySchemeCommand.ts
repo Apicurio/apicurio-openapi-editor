@@ -214,10 +214,78 @@ export class AddSecuritySchemeCommand extends BaseCommand {
                 newScheme.setBearerFormat(this._data.bearerFormat);
             }
         } else if (this._data.type === 'oauth2') {
-            if (this._data.flow) {
-                // Create OAuth flows object
-                const flows = newScheme.createOAuthFlows();
+            // Create OAuth flows object
+            const flows = newScheme.createOAuthFlows();
 
+            // Handle multiple flows (OpenAPI 3.0+)
+            if (this._data.oauth2Flows) {
+                // Implicit flow
+                if (this._data.oauth2Flows.implicit) {
+                    const implicitFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
+                    if (this._data.oauth2Flows.implicit.authorizationUrl) {
+                        implicitFlow.setAuthorizationUrl(this._data.oauth2Flows.implicit.authorizationUrl);
+                    }
+                    if (this._data.oauth2Flows.implicit.refreshUrl) {
+                        implicitFlow.setRefreshUrl(this._data.oauth2Flows.implicit.refreshUrl);
+                    }
+                    // Create empty scopes
+                    const scopes = {};
+                    implicitFlow.setScopes(scopes);
+                    flows.setImplicit(implicitFlow);
+                }
+
+                // Password flow
+                if (this._data.oauth2Flows.password) {
+                    const passwordFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
+                    if (this._data.oauth2Flows.password.tokenUrl) {
+                        passwordFlow.setTokenUrl(this._data.oauth2Flows.password.tokenUrl);
+                    }
+                    if (this._data.oauth2Flows.password.refreshUrl) {
+                        passwordFlow.setRefreshUrl(this._data.oauth2Flows.password.refreshUrl);
+                    }
+                    // Create empty scopes
+                    const scopes = {};
+                    passwordFlow.setScopes(scopes);
+                    flows.setPassword(passwordFlow);
+                }
+
+                // Client Credentials flow
+                if (this._data.oauth2Flows.clientCredentials) {
+                    const clientCredsFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
+                    if (this._data.oauth2Flows.clientCredentials.tokenUrl) {
+                        clientCredsFlow.setTokenUrl(this._data.oauth2Flows.clientCredentials.tokenUrl);
+                    }
+                    if (this._data.oauth2Flows.clientCredentials.refreshUrl) {
+                        clientCredsFlow.setRefreshUrl(this._data.oauth2Flows.clientCredentials.refreshUrl);
+                    }
+                    // Create empty scopes
+                    const scopes = {};
+                    clientCredsFlow.setScopes(scopes);
+                    flows.setClientCredentials(clientCredsFlow);
+                }
+
+                // Authorization Code flow
+                if (this._data.oauth2Flows.authorizationCode) {
+                    const authCodeFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;
+                    if (this._data.oauth2Flows.authorizationCode.authorizationUrl) {
+                        authCodeFlow.setAuthorizationUrl(this._data.oauth2Flows.authorizationCode.authorizationUrl);
+                    }
+                    if (this._data.oauth2Flows.authorizationCode.tokenUrl) {
+                        authCodeFlow.setTokenUrl(this._data.oauth2Flows.authorizationCode.tokenUrl);
+                    }
+                    if (this._data.oauth2Flows.authorizationCode.refreshUrl) {
+                        authCodeFlow.setRefreshUrl(this._data.oauth2Flows.authorizationCode.refreshUrl);
+                    }
+                    // Create empty scopes
+                    const scopes = {};
+                    authCodeFlow.setScopes(scopes);
+                    flows.setAuthorizationCode(authCodeFlow);
+                }
+
+                newScheme.setFlows(flows);
+            }
+            // Handle single flow (backward compatibility with old data format)
+            else if (this._data.flow) {
                 // Create the appropriate flow
                 if (this._data.flow === 'implicit') {
                     const implicitFlow: OpenApiOAuthFlow = flows.createOAuthFlow() as OpenApiOAuthFlow;

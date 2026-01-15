@@ -209,22 +209,47 @@ export const SecuritySection: React.FC = () => {
                 data.authorizationUrl = scheme20.getAuthorizationUrl?.() || '';
                 data.tokenUrl = scheme20.getTokenUrl?.() || '';
             } else {
+                // OpenAPI 3.0+ - extract all flows
                 const scheme30 = scheme as any;
                 const flows = scheme30.getFlows?.();
                 if (flows) {
-                    if (flows.getImplicit?.()) {
-                        data.flow = 'implicit';
-                        data.authorizationUrl = flows.getImplicit().getAuthorizationUrl() || '';
-                    } else if (flows.getPassword?.()) {
-                        data.flow = 'password';
-                        data.tokenUrl = flows.getPassword().getTokenUrl() || '';
-                    } else if (flows.getClientCredentials?.()) {
-                        data.flow = 'clientCredentials';
-                        data.tokenUrl = flows.getClientCredentials().getTokenUrl() || '';
-                    } else if (flows.getAuthorizationCode?.()) {
-                        data.flow = 'authorizationCode';
-                        data.authorizationUrl = flows.getAuthorizationCode().getAuthorizationUrl() || '';
-                        data.tokenUrl = flows.getAuthorizationCode().getTokenUrl() || '';
+                    data.oauth2Flows = {};
+
+                    // Extract implicit flow
+                    const implicitFlow = flows.getImplicit?.();
+                    if (implicitFlow) {
+                        data.oauth2Flows.implicit = {
+                            authorizationUrl: implicitFlow.getAuthorizationUrl?.() || '',
+                            refreshUrl: implicitFlow.getRefreshUrl?.() || '',
+                        };
+                    }
+
+                    // Extract password flow
+                    const passwordFlow = flows.getPassword?.();
+                    if (passwordFlow) {
+                        data.oauth2Flows.password = {
+                            tokenUrl: passwordFlow.getTokenUrl?.() || '',
+                            refreshUrl: passwordFlow.getRefreshUrl?.() || '',
+                        };
+                    }
+
+                    // Extract clientCredentials flow
+                    const clientCredentialsFlow = flows.getClientCredentials?.();
+                    if (clientCredentialsFlow) {
+                        data.oauth2Flows.clientCredentials = {
+                            tokenUrl: clientCredentialsFlow.getTokenUrl?.() || '',
+                            refreshUrl: clientCredentialsFlow.getRefreshUrl?.() || '',
+                        };
+                    }
+
+                    // Extract authorizationCode flow
+                    const authorizationCodeFlow = flows.getAuthorizationCode?.();
+                    if (authorizationCodeFlow) {
+                        data.oauth2Flows.authorizationCode = {
+                            authorizationUrl: authorizationCodeFlow.getAuthorizationUrl?.() || '',
+                            tokenUrl: authorizationCodeFlow.getTokenUrl?.() || '',
+                            refreshUrl: authorizationCodeFlow.getRefreshUrl?.() || '',
+                        };
                     }
                 }
             }
