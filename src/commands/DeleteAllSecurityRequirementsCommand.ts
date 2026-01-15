@@ -39,7 +39,7 @@ export class DeleteAllSecurityRequirementsCommand extends BaseCommand {
         this._oldRequirements = [...security];
 
         // Clear all requirements
-        oaiDoc.setSecurity([]);
+        oaiDoc.clearSecurity();
     }
 
     /**
@@ -51,6 +51,8 @@ export class DeleteAllSecurityRequirementsCommand extends BaseCommand {
         }
 
         const oaiDoc = document as OpenApi20Document | OpenApi30Document | OpenApi31Document;
-        oaiDoc.setSecurity([...this._oldRequirements]);
+        this._oldRequirements.forEach(requirement => {
+            oaiDoc.addSecurity(requirement);
+        });
     }
 }

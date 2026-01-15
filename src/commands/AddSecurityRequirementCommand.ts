@@ -4,7 +4,6 @@
 
 import {
     Document,
-    ModelTypeUtil,
     OpenApi20Document,
     OpenApi30Document,
     OpenApi31Document
@@ -44,30 +43,22 @@ export class AddSecurityRequirementCommand extends BaseCommand {
     execute(document: Document): void {
         const oaiDoc = document as OpenApi20Document | OpenApi30Document | OpenApi31Document;
 
-        let security = oaiDoc.getSecurity();
-        if (!security) {
-            security = [];
-        }
-
         // Create new security requirement
         const newRequirement = oaiDoc.createSecurityRequirement();
 
         // Add scheme references and scopes
         Object.keys(this._data.schemes).forEach(schemeName => {
             const scopes = this._data.schemes[schemeName];
-            newRequirement.addSecurityRequirementItem(schemeName, scopes);
+            newRequirement.addItem(schemeName, scopes);
         });
 
         // Handle index-based insertion for maintaining order
-        if (this._index !== undefined && this._index < security.length) {
-            // Insert at specific index
-            security.splice(this._index, 0, newRequirement);
+        if (this._index !== undefined) {
+            oaiDoc.insertSecurity(newRequirement, this._index);
         } else {
-            // Append at end
-            security.push(newRequirement);
+            oaiDoc.addSecurity(newRequirement);
         }
 
-        oaiDoc.setSecurity(security);
         this._requirementAdded = true;
     }
 
@@ -88,8 +79,8 @@ export class AddSecurityRequirementCommand extends BaseCommand {
                 : security.length - 1;
 
             if (index >= 0 && index < security.length) {
-                security.splice(index, 1);
-                oaiDoc.setSecurity(security);
+                const requirement = security[index];
+                oaiDoc.removeSecurity(requirement);
             }
         }
     }

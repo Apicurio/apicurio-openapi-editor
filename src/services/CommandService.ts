@@ -5,7 +5,6 @@
 import {ICommand} from '@commands/ICommand';
 import {useCommandStore} from '@stores/commandStore';
 import {useDocumentStore} from '@stores/documentStore';
-import {useSelectionStore} from '@stores/selectionStore';
 import {SelectionService} from './SelectionService';
 
 /**

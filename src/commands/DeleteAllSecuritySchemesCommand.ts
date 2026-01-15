@@ -88,7 +88,7 @@ export class DeleteAllSecuritySchemesCommand extends BaseCommand {
             let components = oaiDoc.getComponents();
             if (!components) {
                 components = oaiDoc.createComponents();
-                oaiDoc.setComponents(components);
+                oaiDoc.setComponents(components as any);
             }
             this._oldSchemes.forEach((scheme, name) => {
                 components.addSecurityScheme(name, scheme);
