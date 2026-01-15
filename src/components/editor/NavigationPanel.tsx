@@ -8,10 +8,8 @@ import {
     NavList,
     NavItem,
     Divider,
-    Button,
-    SearchInput, Tooltip,
+    SearchInput
 } from '@patternfly/react-core';
-import { PlusCircleIcon } from '@patternfly/react-icons';
 import { useDocument } from '@hooks/useDocument';
 import { useSelection } from '@hooks/useSelection';
 import { useCommand } from '@hooks/useCommand';
@@ -20,18 +18,17 @@ import {
     NodePath,
     OpenApiDocument,
     OpenApi31Document,
-    OpenApi20Document
+    OpenApi20Document,
+    OpenApi20Definitions
 } from '@apicurio/data-models';
 import { CreatePathModal } from '@components/modals/CreatePathModal';
 import { CreateSchemaModal } from '@components/modals/CreateSchemaModal';
 import { CreatePathCommand } from '@commands/CreatePathCommand';
 import { CreateSchemaCommand } from '@commands/CreateSchemaCommand';
-import { ExpandablePanel } from '@components/common/ExpandablePanel';
-import { PathLabel } from '@components/common/PathLabel';
+import { DeletePathCommand } from '@commands/DeletePathCommand';
+import { DeleteSchemaCommand } from '@commands/DeleteSchemaCommand';
+import { NavigationPanelSection, ContextMenuAction } from './NavigationPanelSection';
 import './NavigationPanel.css';
-import {
-    OpenApi20Definitions
-} from "@apicurio/data-models/src/io/apicurio/datamodels/models/openapi/v20/OpenApi20Definitions";
 
 /**
  * Navigation panel component
@@ -43,8 +40,6 @@ export const NavigationPanel: React.FC = () => {
     const { executeCommand } = useCommand();
     const [isCreatePathModalOpen, setIsCreatePathModalOpen] = useState(false);
     const [isCreateSchemaModalOpen, setIsCreateSchemaModalOpen] = useState(false);
-    const [isPathsExpanded, setIsPathsExpanded] = useState(true);
-    const [isSchemasExpanded, setIsSchemasExpanded] = useState(true);
     const [filterText, setFilterText] = useState('');
 
     /**
@@ -117,7 +112,7 @@ export const NavigationPanel: React.FC = () => {
      * Handle path selection
      */
     const handlePathClick = (path: string) => {
-        const oaiDoc = document as OpenApi30Document;
+        const oaiDoc = document as OpenApi30Document | OpenApi20Document | OpenApi31Document;
         const pathItem = oaiDoc.getPaths().getItem(path);
         select(pathItem);
     };
@@ -176,6 +171,44 @@ export const NavigationPanel: React.FC = () => {
         handleSchemaClick(schemaName);
     };
 
+    /**
+     * Handle deleting a path from context menu
+     */
+    const handleDeletePath = (pathName: string) => {
+        const command = new DeletePathCommand(pathName);
+        executeCommand(command, `Delete path ${pathName}`);
+        selectRoot();
+    };
+
+    /**
+     * Handle deleting a schema from context menu
+     */
+    const handleDeleteSchema = (schemaName: string) => {
+        const command = new DeleteSchemaCommand(schemaName);
+        executeCommand(command, `Delete schema ${schemaName}`);
+        selectRoot();
+    };
+
+    /**
+     * Define context menu actions for paths
+     */
+    const pathActions: ContextMenuAction[] = [
+        {
+            label: 'Delete path',
+            onClick: handleDeletePath,
+        },
+    ];
+
+    /**
+     * Define context menu actions for schemas
+     */
+    const schemaActions: ContextMenuAction[] = [
+        {
+            label: 'Delete schema',
+            onClick: handleDeleteSchema,
+        },
+    ];
+
     return (
         <>
             <Nav aria-label="Navigation" onSelect={() => {}}>
@@ -204,100 +237,49 @@ export const NavigationPanel: React.FC = () => {
                     <Divider />
 
                     {/* Paths Section */}
-                    <ExpandablePanel
+                    <NavigationPanelSection
                         title="Paths"
-                        isExpanded={isPathsExpanded}
-                        onToggle={setIsPathsExpanded}
-                        badgeCount={filteredPaths.length}
-                        actions={
-                            <Button
-                                variant="plain"
-                                aria-label="Add path"
-                                onClick={() => setIsCreatePathModalOpen(true)}
-                                icon={<PlusCircleIcon />}
-                                style={{ minWidth: 'auto', padding: '0.25rem' }}
-                            />
-                        }
-                    >
-                        {filteredPaths.length === 0 ? (
-                            <NavItem itemId="no-paths" disabled>
-                                {filterText ? 'No matching paths' : 'No paths defined'}
-                            </NavItem>
-                        ) : (
-                            filteredPaths.map((path) => {
-                                const isActive = navigationObjectType === "pathItem" && navigationObject?.mapPropertyName() === path;
-                                return (
-                                    <NavItem
-                                        key={path}
-                                        itemId={`path-${path}`}
-                                        isActive={isActive}
-                                        onClick={() => handlePathClick(path)}
-                                    >
-                                        <a style={{width: "100%", overflowX: "hidden", textWrap: "nowrap"}}>
-                                            <Tooltip content={<div>{path}</div>}>
-                                                <PathLabel path={path} />
-                                            </Tooltip>
-                                        </a>
-                                    </NavItem>
-                                );
-                            })
-                        )}
-                    </ExpandablePanel>
+                        items={filteredPaths}
+                        actions={pathActions}
+                        onCreateItem={() => setIsCreatePathModalOpen(true)}
+                        itemType="path"
+                        isFiltered={!!filterText}
+                        onItemClick={handlePathClick}
+                        isItemActive={(path) => navigationObjectType === "pathItem" && navigationObject?.mapPropertyName() === path}
+                        nodePath="/paths"
+                        isTooltipEnabled={true}
+                    />
 
                     <Divider />
 
                     {/* Schemas Section */}
-                    <ExpandablePanel
+                    <NavigationPanelSection
                         title="Schemas"
-                        isExpanded={isSchemasExpanded}
-                        onToggle={setIsSchemasExpanded}
-                        badgeCount={filteredSchemas.length}
-                        actions={
-                            <Button
-                                variant="plain"
-                                aria-label="Add schema"
-                                onClick={() => setIsCreateSchemaModalOpen(true)}
-                                icon={<PlusCircleIcon />}
-                                style={{ minWidth: 'auto', padding: '0.25rem' }}
-                            />
-                        }
-                    >
-                        {filteredSchemas.length === 0 ? (
-                            <NavItem itemId="no-schemas" disabled>
-                                {filterText ? 'No matching schemas' : 'No schemas defined'}
-                            </NavItem>
-                        ) : (
-                            filteredSchemas.map((schemaName) => {
-                                const isActive = navigationObjectType === "schema" && navigationObject?.mapPropertyName() === schemaName;
-                                return (
-                                    <NavItem
-                                        key={schemaName}
-                                        itemId={`schema-${schemaName}`}
-                                        isActive={isActive}
-                                        onClick={() => handleSchemaClick(schemaName)}
-                                    >
-                                        {schemaName}
-                                    </NavItem>
-                                );
-                            })
-                        )}
-                    </ExpandablePanel>
-            </NavList>
-        </Nav>
+                        itemType="schema"
+                        items={filteredSchemas}
+                        isFiltered={!!filterText}
+                        actions={schemaActions}
+                        onCreateItem={() => setIsCreateSchemaModalOpen(true)}
+                        onItemClick={handleSchemaClick}
+                        isItemActive={(schemaName) => navigationObjectType === "schema" && navigationObject?.mapPropertyName() === schemaName}
+                        nodePath={specVersion === '2.0' ? '/definitions' : '/components/schemas'}
+                    />
+                </NavList>
+            </Nav>
 
-        {/* Create Path Modal */}
-        <CreatePathModal
-            isOpen={isCreatePathModalOpen}
-            onClose={() => setIsCreatePathModalOpen(false)}
-            onConfirm={handleCreatePath}
-        />
+            {/* Create Path Modal */}
+            <CreatePathModal
+                isOpen={isCreatePathModalOpen}
+                onClose={() => setIsCreatePathModalOpen(false)}
+                onConfirm={handleCreatePath}
+            />
 
-        {/* Create Schema Modal */}
-        <CreateSchemaModal
-            isOpen={isCreateSchemaModalOpen}
-            onClose={() => setIsCreateSchemaModalOpen(false)}
-            onConfirm={handleCreateSchema}
-        />
+            {/* Create Schema Modal */}
+            <CreateSchemaModal
+                isOpen={isCreateSchemaModalOpen}
+                onClose={() => setIsCreateSchemaModalOpen(false)}
+                onConfirm={handleCreateSchema}
+            />
         </>
     );
 };
