@@ -16,7 +16,6 @@ import {
     SelectOption,
     SelectList,
     MenuToggle,
-    MenuToggleElement,
     Tab,
     Tabs,
     TabTitleText,
@@ -439,7 +438,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                 setIsTypeSelectOpen(false);
                             }}
                             onOpenChange={(isOpen) => setIsTypeSelectOpen(isOpen)}
-                            toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            toggle={(toggleRef) => (
                                 <MenuToggle
                                     ref={toggleRef}
                                     onClick={() => setIsTypeSelectOpen(!isTypeSelectOpen)}
@@ -483,7 +482,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                         setIsInSelectOpen(false);
                                     }}
                                     onOpenChange={(isOpen) => setIsInSelectOpen(isOpen)}
-                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                    toggle={(toggleRef) => (
                                         <MenuToggle
                                             ref={toggleRef}
                                             onClick={() => setIsInSelectOpen(!isInSelectOpen)}
@@ -528,7 +527,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                         setIsHttpSchemeSelectOpen(false);
                                     }}
                                     onOpenChange={(isOpen) => setIsHttpSchemeSelectOpen(isOpen)}
-                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                    toggle={(toggleRef) => (
                                         <MenuToggle
                                             ref={toggleRef}
                                             onClick={() => setIsHttpSchemeSelectOpen(!isHttpSchemeSelectOpen)}
@@ -575,7 +574,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
                                         setIsFlowSelectOpen(false);
                                     }}
                                     onOpenChange={(isOpen) => setIsFlowSelectOpen(isOpen)}
-                                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                                    toggle={(toggleRef) => (
                                         <MenuToggle
                                             ref={toggleRef}
                                             onClick={() => setIsFlowSelectOpen(!isFlowSelectOpen)}
