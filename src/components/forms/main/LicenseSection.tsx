@@ -2,26 +2,19 @@
  * License section for editing license information
  */
 
-import React, { useState } from 'react';
-import {
-    Button,
-    Form,
-    Label,
-    Stack,
-    StackItem
-} from '@patternfly/react-core';
-import { CheckCircleIcon, ExclamationCircleIcon, InfoCircleIcon, PencilAltIcon } from '@patternfly/react-icons';
-import { Node, NodePathUtil, OpenApiDocument } from '@apicurio/data-models';
-import { useDocument } from '@hooks/useDocument';
-import { useCommand } from '@hooks/useCommand';
-import { PropertyInput } from '@components/common/PropertyInput';
-import { ExpandablePanel } from '@components/common/ExpandablePanel';
-import { LicenseChooserModal } from '@components/modals/LicenseChooserModal';
-import { CompositeCommand } from '@commands/CompositeCommand';
-import { EnsureChildNodeCommand } from '@commands/EnsureChildNodeCommand';
-import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
-import { ICommand } from '@commands/ICommand';
-import { findLicenseByName, LicenseMetaData } from '../../../data/licenses';
+import React, {useState} from 'react';
+import {Button} from '@patternfly/react-core';
+import {PencilAltIcon} from '@patternfly/react-icons';
+import {NodePathUtil, OpenApiDocument} from '@apicurio/data-models';
+import {useDocument} from '@hooks/useDocument';
+import {useCommand} from '@hooks/useCommand';
+import {ExpandablePanel} from '@components/common/ExpandablePanel';
+import {LicenseChooserModal} from '@components/modals/LicenseChooserModal';
+import {CompositeCommand} from '@commands/CompositeCommand';
+import {EnsureChildNodeCommand} from '@commands/EnsureChildNodeCommand';
+import {ChangePropertyCommand} from '@commands/ChangePropertyCommand';
+import {ICommand} from '@commands/ICommand';
+import {findLicenseByName, LicenseMetaData} from '../../../data/licenses';
 import './LicenseSection.css';
 import {LicenseInfo} from "@components/common/LicenseInfo.tsx";
 

@@ -51,7 +51,7 @@ export const useHighlightEffect = () => {
             // This is important when switching tabs - the tab content needs time to mount
             setTimeout(() => {
                 // Re-query the element to ensure we have the latest reference
-                let scrollTarget = targetElement;
+                const scrollTarget = targetElement;
 
                 // Scroll into view
                 scrollTarget.scrollIntoView({
