@@ -380,11 +380,11 @@ export const SecuritySection: React.FC = () => {
         const schemeNames = requirement.getItemNames();
         if (schemeNames) {
             schemeNames.forEach(schemeName => {
-                const scopes = requirement.getItem(schemeName);
+                const schemeScopes = requirement.getItem(schemeName);
                 if (schemeName) {
                     schemes.push(schemeName);
-                    if (scopes && scopes.length > 0) {
-                        scopes.push(...scopes);
+                    if (schemeScopes && schemeScopes.length > 0) {
+                        scopes.push(...schemeScopes);
                     }
                 }
             });
