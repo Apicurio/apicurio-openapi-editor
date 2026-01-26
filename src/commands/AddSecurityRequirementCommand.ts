@@ -49,7 +49,8 @@ export class AddSecurityRequirementCommand extends BaseCommand {
         // Add scheme references and scopes
         Object.keys(this._data.schemes).forEach(schemeName => {
             const scopes = this._data.schemes[schemeName];
-            newRequirement.addItem(schemeName, scopes);
+            // Clone the scopes array to avoid mutations to the original data
+            newRequirement.addItem(schemeName, [...scopes]);
         });
 
         // Handle index-based insertion for maintaining order

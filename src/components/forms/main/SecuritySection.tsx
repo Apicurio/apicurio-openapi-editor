@@ -331,7 +331,8 @@ export const SecuritySection: React.FC = () => {
         if (schemeNames) {
             schemeNames.forEach(schemeName => {
                 const scopes = requirement.getItem(schemeName);
-                schemes[schemeName] = scopes || [];
+                // Clone the scopes array to avoid mutations to the original data
+                schemes[schemeName] = scopes ? [...scopes] : [];
             });
         }
 
