@@ -1,0 +1,47 @@
+.license-info {
+    margin-bottom: 30px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.license-info:hover {
+    background-color: #eee;
+}
+.pf-v6-theme-dark .license-info:hover {
+    background-color: #666;
+}
+
+.license-info.selected {
+    background-color: #eef;
+}
+.pf-v6-theme-dark .license-info.selected {
+    background-color: #667;
+}
+
+.license-title-and-description {
+    flex: 0 0 40%
+}
+
+.license-extra-info-columns {
+    flex: 0 0 60%
+}
+
+.license-title-and-description > h2 {
+    font-size: 24px;
+    color: rgb(20, 154, 212);
+    font-family: Chivo, "Helvetica Neue", Helvetica, Arial, serif;
+    font-weight: bold;
+}
+
+.license-title-and-description > span {
+}
+
+.license-extra-info-columns .license-info-column {
+    flex: 0 0 33%;
+}
+
+.license-info-column-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}

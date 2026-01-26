@@ -3,22 +3,36 @@
  */
 
 import React, { useState } from 'react';
-import { Form } from '@patternfly/react-core';
+import {
+    Button,
+    Form,
+    Label,
+    Stack,
+    StackItem
+} from '@patternfly/react-core';
+import { CheckCircleIcon, ExclamationCircleIcon, InfoCircleIcon, PencilAltIcon } from '@patternfly/react-icons';
 import { Node, NodePathUtil, OpenApiDocument } from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
+import { useCommand } from '@hooks/useCommand';
 import { PropertyInput } from '@components/common/PropertyInput';
 import { ExpandablePanel } from '@components/common/ExpandablePanel';
+import { LicenseChooserModal } from '@components/modals/LicenseChooserModal';
 import { CompositeCommand } from '@commands/CompositeCommand';
 import { EnsureChildNodeCommand } from '@commands/EnsureChildNodeCommand';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 import { ICommand } from '@commands/ICommand';
+import { findLicenseByName, LicenseMetaData } from '../../../data/licenses';
+import './LicenseSection.css';
+import {LicenseInfo} from "@components/common/LicenseInfo.tsx";
 
 /**
  * License section component for editing license information
  */
 export const LicenseSection: React.FC = () => {
     const { document } = useDocument();
+    const { executeCommand } = useCommand();
     const [isExpanded, setIsExpanded] = useState(true);
+    const [isChooserOpen, setIsChooserOpen] = useState(false);
 
     if (!document) {
         return null;
@@ -27,49 +41,62 @@ export const LicenseSection: React.FC = () => {
     const oaiDoc = document as OpenApiDocument;
     const info = oaiDoc.getInfo();
     const license = info ? info.getLicense() : null;
+    const licenseName = license ? license.getName() : '';
+
+    // Try to find license info from our database
+    const licenseMD: LicenseMetaData | undefined = findLicenseByName(licenseName);
 
     /**
-     * Command factory for changing license properties
-     * Ensures the info and license nodes exist before changing properties
+     * Handle license selection from the chooser modal
      */
-    const ChangeLicensePropertyCommandFactory = (
-        _model: Node,
-        propertyName: string,
-        value: string,
-        description: string
-    ): ICommand => {
-        return new CompositeCommand([
+    const handleLicenseSelect = (selectedLicense: LicenseMetaData) => {
+        const commands: ICommand[] = [
             new EnsureChildNodeCommand(NodePathUtil.createNodePath(oaiDoc), "info"),
             new EnsureChildNodeCommand(NodePathUtil.parseNodePath("/info"), "license"),
-            new ChangePropertyCommand("/info/license", propertyName, value)
-        ], description);
+            new ChangePropertyCommand("/info/license", "name", selectedLicense.name),
+            new ChangePropertyCommand("/info/license", "url", selectedLicense.url)
+        ];
+
+        executeCommand(
+            new CompositeCommand(commands, `Set license to ${selectedLicense.name}`),
+            `Set license to ${selectedLicense.name}`
+        );
     };
 
     return (
-        <ExpandablePanel
-            title="License"
-            nodePath="/info/license"
-            isExpanded={isExpanded}
-            onToggle={setIsExpanded}
-            className="main-form__section"
-        >
-            <Form className="main-form__sectionbody">
-                <PropertyInput
-                    model={license}
-                    propertyName="name"
-                    label="License Name"
-                    placeholder="e.g., Apache 2.0, MIT"
-                    commandFactory={ChangeLicensePropertyCommandFactory}
-                />
+        <>
+            <ExpandablePanel
+                title="License"
+                nodePath="/info/license"
+                isExpanded={isExpanded}
+                onToggle={setIsExpanded}
+                className="main-form__section"
+                actions={
+                    <Button
+                        variant="plain"
+                        icon={<PencilAltIcon />}
+                        onClick={() => setIsChooserOpen(true)}
+                    />
+                }
+            >
+                <div className="main-form__sectionbody">
+                    {/* License Display */}
+                    {licenseMD ? (
+                        <LicenseInfo
+                            license={licenseMD}
+                            onClick={() => setIsChooserOpen(true)}
+                        />
+                    ) : <span><em>No license configured.  Use the pencil icon to set one.</em></span>}
+                </div>
+            </ExpandablePanel>
 
-                <PropertyInput
-                    model={license}
-                    propertyName="url"
-                    label="License URL"
-                    placeholder="URL to license text"
-                    commandFactory={ChangeLicensePropertyCommandFactory}
-                />
-            </Form>
-        </ExpandablePanel>
+            {/* License Chooser Modal */}
+            <LicenseChooserModal
+                isOpen={isChooserOpen}
+                onClose={() => setIsChooserOpen(false)}
+                onSelect={handleLicenseSelect}
+                currentLicenseName={licenseName}
+            />
+        </>
     );
 };
