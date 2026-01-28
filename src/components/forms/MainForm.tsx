@@ -5,6 +5,7 @@
 import React from 'react';
 import "./MainForm.css";
 import { Title, Label } from '@patternfly/react-core';
+import { Extensible, Node } from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
 import { InfoSection } from '@components/forms/main/InfoSection';
 import { ContactSection } from '@components/forms/main/ContactSection';
@@ -13,6 +14,7 @@ import { HostBasePathSection } from '@components/forms/main/HostBasePathSection'
 import { ServersSection } from '@components/forms/main/ServersSection';
 import { TagsSection } from '@components/forms/main/TagsSection';
 import { SecuritySection } from '@components/forms/main/SecuritySection';
+import { VendorExtensionsSection } from '@components/forms/main/VendorExtensionsSection';
 
 /**
  * Main form component for editing API info
@@ -59,6 +61,8 @@ export const MainForm: React.FC = () => {
             <TagsSection />
 
             <SecuritySection />
+
+            <VendorExtensionsSection parent={document as unknown as Node & Extensible} />
 
             <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
                 Changes are saved when you press Enter or when a field loses focus. Use Undo/Redo buttons to revert changes.
