@@ -77,6 +77,7 @@ export const LicenseSection: React.FC = () => {
                     {licenseMD ? (
                         <LicenseInfo
                             license={licenseMD}
+                            isStandalone={true}
                             onClick={() => setIsChooserOpen(true)}
                         />
                     ) : <span><em>No license configured.  Use the pencil icon to set one.</em></span>}

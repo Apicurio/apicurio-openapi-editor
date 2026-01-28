@@ -12,6 +12,7 @@ interface LicenseInfoProps {
     license: LicenseInfoData;
     isSelected?: boolean;
     isCurrent?: boolean;
+    isStandalone?: boolean;
     onClick?: (license: LicenseInfoData) => void;
 }
 
@@ -22,6 +23,7 @@ export const LicenseInfo: React.FC<LicenseInfoProps> = ({
     license,
     isSelected = false,
     isCurrent = false,
+    isStandalone = false,
     onClick
 }) => {
     const handleClick = () => {
@@ -34,7 +36,7 @@ export const LicenseInfo: React.FC<LicenseInfoProps> = ({
         <Flex
             flexWrap={{ default: "nowrap" }}
             width="100%"
-            className={`license-info ${isSelected ? 'selected' : ''} ${isCurrent ? 'current' : ''}`}
+            className={`license-info ${isSelected ? 'selected' : ''} ${isCurrent ? 'current' : ''} ${isStandalone ? 'standalone' : ''}`}
             onClick={handleClick}
         >
             <FlexItem className="license-title-and-description license-column">

@@ -9,7 +9,10 @@
     background-color: #eee;
 }
 .pf-v6-theme-dark .license-info:hover {
-    background-color: #666;
+    background-color: #444;
+}
+.pf-v6-theme-dark .license-info.standalone:hover {
+    background-color: #383838;
 }
 
 .license-info.selected {
