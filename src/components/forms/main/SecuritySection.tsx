@@ -401,7 +401,7 @@ export const SecuritySection: React.FC = () => {
                 nodePath={specVersion === '2.0' ? '/securityDefinitions' : '/components/securitySchemes'}
                 isExpanded={isSchemesExpanded}
                 onToggle={setIsSchemesExpanded}
-                className="main-form__section"
+                className="form__section"
                 actions={
                     <>
                         <Button
@@ -421,7 +421,7 @@ export const SecuritySection: React.FC = () => {
                     </>
                 }
             >
-                <div className="main-form__sectionbody">
+                <div className="form__sectionbody">
                     {securitySchemes.length === 0 ? (
                         <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
                             No security schemes defined. Use the + icon to create one.
@@ -533,7 +533,7 @@ export const SecuritySection: React.FC = () => {
                 nodePath="/security"
                 isExpanded={isRequirementsExpanded}
                 onToggle={setIsRequirementsExpanded}
-                className="main-form__section"
+                className="form__section"
                 actions={
                     <>
                         <Button
@@ -553,7 +553,7 @@ export const SecuritySection: React.FC = () => {
                     </>
                 }
             >
-                <div className="main-form__sectionbody">
+                <div className="form__sectionbody">
                     {securityRequirements.length === 0 ? (
                         <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
                             No security requirements defined. Use the + icon to create one.

@@ -1,7 +1,7 @@
-.parameter-section {
-    margin-bottom: 15px;
+.path-form .form__section {
+    margin-bottom: 10px;
 }
 
-.path-form__sectionbody {
+.path-form .form__sectionbody {
     padding: 5px;
 }

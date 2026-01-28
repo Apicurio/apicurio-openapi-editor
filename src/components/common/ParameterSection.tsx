@@ -90,7 +90,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
             title={title}
             isExpanded={isExpanded}
             onToggle={onToggle}
-            className="parameter-section"
+            className="form__section"
             badgeCount={parameters.length > 0 ? parameters.length : undefined}
             actions={
                 onAddParameter ? (
@@ -106,7 +106,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
                 ) : undefined
             }
         >
-            <div className="path-form__sectionbody">
+            <div className="form__sectionbody">
                 {parameters.length === 0 ? (
                     <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
                         No {location} parameters defined.{onAddParameter && ' Use the + icon to create one.'}

@@ -130,7 +130,7 @@ export const TagsSection: React.FC = () => {
                 nodePath="/tags"
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
-                className="main-form__section"
+                className="form__section"
                 actions={
                     <>
                         <Button
@@ -150,7 +150,7 @@ export const TagsSection: React.FC = () => {
                     </>
                 }
             >
-                <div className="main-form__sectionbody">
+                <div className="form__sectionbody">
                     {tags.length === 0 ? (
                         <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
                             No tags defined. Use the + icon to create one.

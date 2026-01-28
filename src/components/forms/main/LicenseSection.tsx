@@ -63,7 +63,7 @@ export const LicenseSection: React.FC = () => {
                 nodePath="/info/license"
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
-                className="main-form__section"
+                className="form__section"
                 actions={
                     <Button
                         variant="plain"
@@ -72,7 +72,7 @@ export const LicenseSection: React.FC = () => {
                     />
                 }
             >
-                <div className="main-form__sectionbody">
+                <div className="form__sectionbody">
                     {/* License Display */}
                     {licenseMD ? (
                         <LicenseInfo

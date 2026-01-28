@@ -76,9 +76,9 @@ export const InfoSection: React.FC = () => {
             nodePath="/info"
             isExpanded={isExpanded}
             onToggle={setIsExpanded}
-            className="main-form__section"
+            className="form__section"
         >
-            <Form className="main-form__sectionbody">
+            <Form className="form__sectionbody">
                 <PropertyInput
                     model={info!}
                     propertyName="title"
