@@ -2,13 +2,14 @@
  * Path form for editing path metadata and operations
  */
 
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Divider,
     Dropdown,
     DropdownItem,
     DropdownList,
-    Form, Label,
+    Form,
+    Label,
     MenuToggle,
     Tab,
     Tabs,
@@ -18,11 +19,13 @@ import {EllipsisVIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
 import {
+    Node,
+    NodePathSegment,
+    NodePathUtil,
     OpenApi30Operation,
     OpenApi30PathItem,
-    NodePathUtil,
-    NodePathSegment,
-    OpenApiParameter
+    OpenApiParameter,
+    OpenApiServersParent
 } from '@apicurio/data-models';
 import {useSelection} from '@hooks/useSelection';
 import {CreateOperationCommand} from '@commands/CreateOperationCommand';
@@ -37,6 +40,7 @@ import {PathLabel} from '@components/common/PathLabel';
 import {ParameterSection} from '@components/common/ParameterSection';
 import {ParameterModal} from '@components/modals/ParameterModal';
 import {OperationForm} from './OperationForm';
+import {ServersSection} from '@components/forms/main/ServersSection';
 import "./PathForm.css";
 
 /**
@@ -56,7 +60,7 @@ const HTTP_METHODS = [
 ];
 
 export const PathForm: React.FC = () => {
-    const { document } = useDocument();
+    const { document, specVersion } = useDocument();
     const { executeCommand } = useCommand();
     const { selectedPath, selectedNode, selectRoot, navigationObject, select } = useSelection();
 
@@ -83,6 +87,13 @@ export const PathForm: React.FC = () => {
             setSelectedOperation(method);
         }
     }, [selectedPath, selectedNode, pathItem, document]);
+
+    /**
+     * Check if path has parameter placeholders
+     */
+    const hasPathParameters = (path: string): boolean => {
+        return path.includes('{');
+    };
 
     /**
      * Get parameters filtered by location
@@ -333,7 +344,7 @@ export const PathForm: React.FC = () => {
     }
 
     return (
-        <div>
+        <div className="path-form">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <Title headingLevel="h2" size="xl">
                     Path: <PathLabel path={pathName} />
@@ -389,15 +400,22 @@ export const PathForm: React.FC = () => {
 
             <Divider style={{ margin: '1.5rem 0' }} />
 
-            <ParameterSection
-                title="Path Parameters"
-                location="path"
-                isExpanded={isPathParametersExpanded}
-                onToggle={setIsPathParametersExpanded}
-                parameters={getParametersByLocation('path')}
-                onSelectParameter={handleEditParameter}
-                onEditParameter={handleEditParameter}
-            />
+            {/* Servers section - only for OpenAPI 3.0 and 3.1 */}
+            {specVersion !== '2.0' && (
+                <ServersSection parent={pathItem as unknown as Node & OpenApiServersParent} />
+            )}
+
+            {hasPathParameters(pathName) && (
+                <ParameterSection
+                    title="Path Parameters"
+                    location="path"
+                    isExpanded={isPathParametersExpanded}
+                    onToggle={setIsPathParametersExpanded}
+                    parameters={getParametersByLocation('path')}
+                    onSelectParameter={handleEditParameter}
+                    onEditParameter={handleEditParameter}
+                />
+            )}
 
             <ParameterSection
                 title="Query Parameters"

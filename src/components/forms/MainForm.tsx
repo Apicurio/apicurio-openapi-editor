@@ -5,7 +5,7 @@
 import React from 'react';
 import "./MainForm.css";
 import { Title, Label } from '@patternfly/react-core';
-import { Extensible, Node } from '@apicurio/data-models';
+import { Extensible, Node, OpenApiServersParent } from '@apicurio/data-models';
 import { useDocument } from '@hooks/useDocument';
 import { InfoSection } from '@components/forms/main/InfoSection';
 import { ContactSection } from '@components/forms/main/ContactSection';
@@ -27,7 +27,7 @@ export const MainForm: React.FC = () => {
     }
 
     return (
-        <div>
+        <div className="__main_form">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                 <Title headingLevel="h2" size="xl">
                     API Information
@@ -55,7 +55,7 @@ export const MainForm: React.FC = () => {
 
             {/* Servers section - only for OpenAPI 3.0 and 3.1 */}
             {specVersion !== '2.0' && (
-                <ServersSection />
+                <ServersSection parent={document as unknown as Node & OpenApiServersParent} />
             )}
 
             <TagsSection />
