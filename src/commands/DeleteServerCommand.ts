@@ -1,14 +1,25 @@
 /**
- * Command to delete a server from the document
+ * Command to delete a server from any node that supports servers
  */
 
-import { Document, OpenApi30Document, OpenApiServer, Library } from '@apicurio/data-models';
+import { Document, Node, NodePath, NodePathUtil, OpenApi30Server, OpenApiServer, Library } from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
- * Command to delete a server definition
+ * Interface for nodes that support server operations
+ */
+interface ServerParent {
+    getServers(): OpenApiServer[];
+    createServer(): OpenApi30Server;
+    removeServer(server: OpenApiServer): void;
+    insertServer(server: OpenApi30Server, index: number): void;
+}
+
+/**
+ * Command to delete a server definition from any node that supports servers
  */
 export class DeleteServerCommand extends BaseCommand {
+    private parentPath: NodePath;
     private _serverUrl: string;
     private _oldServer: any = null;
     private _serverExisted: boolean = false;
@@ -16,10 +27,12 @@ export class DeleteServerCommand extends BaseCommand {
 
     /**
      * Constructor
+     * @param parent The parent node (Document or PathItem) that supports servers
      * @param serverUrl The server URL to delete
      */
-    constructor(serverUrl: string) {
+    constructor(parent: Node, serverUrl: string) {
         super();
+        this.parentPath = NodePathUtil.createNodePath(parent);
         this._serverUrl = serverUrl;
     }
 
@@ -34,9 +47,12 @@ export class DeleteServerCommand extends BaseCommand {
      * Execute the command - delete the server
      */
     execute(document: Document): void {
-        const oaiDoc = document as OpenApi30Document;
-        const servers = oaiDoc.getServers();
+        const parent = this.getParentNode(document);
+        if (!parent) {
+            throw new Error(`Parent node not found: ${this.parentPath.toString()}`);
+        }
 
+        const servers = parent.getServers();
         if (!servers) {
             this._serverExisted = false;
             return;
@@ -58,7 +74,7 @@ export class DeleteServerCommand extends BaseCommand {
         this._serverExisted = true;
 
         // Remove the server
-        oaiDoc.removeServer(server);
+        parent.removeServer(server);
     }
 
     /**
@@ -69,13 +85,23 @@ export class DeleteServerCommand extends BaseCommand {
             return;
         }
 
-        const oaiDoc = document as OpenApi30Document;
+        const parent = this.getParentNode(document);
+        if (!parent) {
+            return;
+        }
 
         // Recreate the server
-        const newServer = oaiDoc.createServer();
+        const newServer = parent.createServer();
         Library.readNode(this._oldServer, newServer);
 
         // Add it back at the same position
-        oaiDoc.insertServer(newServer, this._serverIndex);
+        parent.insertServer(newServer, this._serverIndex);
+    }
+
+    /**
+     * Get the parent node from the document using the stored NodePath
+     */
+    private getParentNode(document: Document): ServerParent | null {
+        return NodePathUtil.resolveNodePath(this.parentPath, document) as unknown as ServerParent;
     }
 }

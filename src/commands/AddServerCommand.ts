@@ -1,25 +1,38 @@
 /**
- * Command to add a new server to the document
+ * Command to add a new server to any node that supports servers
  */
 
-import {Document, OpenApi30Document, OpenApi30Server, OpenApiServer} from '@apicurio/data-models';
+import {Document, Node, NodePath, NodePathUtil, OpenApi30Server, OpenApiServer} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
- * Command to add a new server definition to the document
+ * Interface for nodes that support server operations
+ */
+interface ServerParent {
+    getServers(): OpenApiServer[];
+    createServer(): OpenApi30Server;
+    addServer(server: OpenApi30Server): void;
+    removeServer(server: OpenApiServer): void;
+}
+
+/**
+ * Command to add a new server definition to any node that supports servers
  */
 export class AddServerCommand extends BaseCommand {
+    private parentPath: NodePath;
     private _serverUrl: string;
     private _serverDescription: string;
     private _serverCreated: boolean = false;
 
     /**
      * Constructor
+     * @param parent The parent node (Document or PathItem) that supports servers
      * @param serverUrl The URL of the server to create
      * @param serverDescription Optional description for the server
      */
-    constructor(serverUrl: string, serverDescription?: string) {
+    constructor(parent: Node, serverUrl: string, serverDescription?: string) {
         super();
+        this.parentPath = NodePathUtil.createNodePath(parent);
         this._serverUrl = serverUrl;
         this._serverDescription = serverDescription || '';
     }
@@ -51,10 +64,13 @@ export class AddServerCommand extends BaseCommand {
      * Execute the command - add a new server
      */
     execute(document: Document): void {
-        const oaiDoc = document as OpenApi30Document;
+        const parent = this.getParentNode(document);
+        if (!parent) {
+            throw new Error(`Parent node not found: ${this.parentPath.toString()}`);
+        }
 
         // Check if server already exists
-        const existingServers = oaiDoc.getServers();
+        const existingServers = parent.getServers();
         if (existingServers) {
             const existingServer = existingServers.find((server: OpenApiServer) => server.getUrl() === this._serverUrl);
             if (existingServer) {
@@ -64,7 +80,7 @@ export class AddServerCommand extends BaseCommand {
         }
 
         // Create new server
-        const newServer = oaiDoc.createServer() as OpenApi30Server;
+        const newServer = parent.createServer() as OpenApi30Server;
         newServer.setUrl(this._serverUrl);
         if (this._serverDescription) {
             newServer.setDescription(this._serverDescription);
@@ -77,8 +93,8 @@ export class AddServerCommand extends BaseCommand {
             newServer.addVariable(variableName, serverVariable);
         }
 
-        // Add the server to the document
-        oaiDoc.addServer(newServer);
+        // Add the server to the parent
+        parent.addServer(newServer);
         this._serverCreated = true;
     }
 
@@ -91,9 +107,12 @@ export class AddServerCommand extends BaseCommand {
             return;
         }
 
-        const oaiDoc = document as OpenApi30Document;
-        const servers = oaiDoc.getServers();
+        const parent = this.getParentNode(document);
+        if (!parent) {
+            return;
+        }
 
+        const servers = parent.getServers();
         if (!servers) {
             return;
         }
@@ -101,8 +120,15 @@ export class AddServerCommand extends BaseCommand {
         // Find and remove the server
         const server = servers.find((s: OpenApiServer) => s.getUrl() === this._serverUrl);
         if (server) {
-            oaiDoc.removeServer(server);
+            parent.removeServer(server);
         }
+    }
+
+    /**
+     * Get the parent node from the document using the stored NodePath
+     */
+    private getParentNode(document: Document): ServerParent | null {
+        return NodePathUtil.resolveNodePath(this.parentPath, document) as unknown as ServerParent;
     }
 
 }

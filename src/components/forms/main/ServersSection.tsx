@@ -2,7 +2,7 @@
  * Servers section for editing server definitions
  */
 
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Button,
     DataList,
@@ -16,44 +16,51 @@ import {
     DropdownList,
     MenuToggle
 } from '@patternfly/react-core';
-import { EllipsisVIcon, PlusIcon, ServerIcon, TrashIcon } from '@patternfly/react-icons';
+import {EllipsisVIcon, PlusIcon, ServerIcon, TrashIcon} from '@patternfly/react-icons';
 import {
+    Node,
     NodePathUtil,
-    OpenApi30Document,
     OpenApi30Server,
     OpenApiServer,
+    OpenApiServersParent,
     Server,
     ServerVariable
 } from '@apicurio/data-models';
-import { useDocument } from '@hooks/useDocument';
-import { useCommand } from '@hooks/useCommand';
-import { useSelection } from '@hooks/useSelection';
-import { ExpandablePanel } from '@components/common/ExpandablePanel';
-import { ServerUrl } from '@components/common/ServerUrl';
-import { NewServerModal } from '@components/modals/NewServerModal';
-import { EditServerModal, ServerVariableData } from '@components/modals/EditServerModal';
-import { AddServerCommand } from '@commands/AddServerCommand';
-import { DeleteServerCommand } from '@commands/DeleteServerCommand';
-import { DeleteAllServersCommand } from '@commands/DeleteAllServersCommand';
-import { CompositeCommand } from '@commands/CompositeCommand';
-import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
+import {useCommand} from '@hooks/useCommand';
+import {useSelection} from '@hooks/useSelection';
+import {ExpandablePanel} from '@components/common/ExpandablePanel';
+import {ServerUrl} from '@components/common/ServerUrl';
+import {NewServerModal} from '@components/modals/NewServerModal';
+import {EditServerModal, ServerVariableData} from '@components/modals/EditServerModal';
+import {AddServerCommand} from '@commands/AddServerCommand';
+import {DeleteServerCommand} from '@commands/DeleteServerCommand';
+import {DeleteAllServersCommand} from '@commands/DeleteAllServersCommand';
+import {CompositeCommand} from '@commands/CompositeCommand';
+import {ChangePropertyCommand} from '@commands/ChangePropertyCommand';
+
+export interface ServersSectionProps {
+    /**
+     * The parent node (Document or PathItem) that supports servers
+     */
+    parent: Node & OpenApiServersParent;
+
+    /**
+     * Optional title for the section (defaults to "Servers")
+     */
+    title?: string;
+}
 
 /**
- * Servers section component for editing server definitions
+ * Servers section component for editing server definitions on any node that supports servers
  */
-export const ServersSection: React.FC = () => {
-    const { document } = useDocument();
+export const ServersSection: React.FC<ServersSectionProps> = ({ parent, title = "Servers" }) => {
     const { executeCommand } = useCommand();
     const { select } = useSelection();
 
-    if (!document) {
-        return null;
-    }
+    const servers = parent.getServers() || [];
+    const nodePath = NodePathUtil.createNodePath(parent);
 
-    const oaiDoc = document as OpenApi30Document;
-    const servers = oaiDoc.getServers() || [];
-
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(() => servers.length > 0);
     const [isNewServerModalOpen, setIsNewServerModalOpen] = useState(false);
     const [openServerDropdownIndex, setOpenServerDropdownIndex] = useState<number | null>(null);
     const [editServerUrl, setEditServerUrl] = useState<string | null>(null);
@@ -75,7 +82,7 @@ export const ServersSection: React.FC = () => {
      * Handle creating a new server
      */
     const handleCreateServer = (serverUrl: string, serverDescription: string) => {
-        const command = new AddServerCommand(serverUrl, serverDescription);
+        const command = new AddServerCommand(parent, serverUrl, serverDescription);
         executeCommand(command, `Add server "${serverUrl}"`);
     };
 
@@ -83,7 +90,7 @@ export const ServersSection: React.FC = () => {
      * Handle deleting all servers
      */
     const handleDeleteAllServers = () => {
-        const command = new DeleteAllServersCommand();
+        const command = new DeleteAllServersCommand(parent);
         executeCommand(command, 'Delete all servers');
     };
 
@@ -91,7 +98,7 @@ export const ServersSection: React.FC = () => {
      * Handle deleting a specific server
      */
     const handleDeleteServer = (serverUrl: string) => {
-        const command = new DeleteServerCommand(serverUrl);
+        const command = new DeleteServerCommand(parent, serverUrl);
         executeCommand(command, `Delete server "${serverUrl}"`);
         setOpenServerDropdownIndex(null);
     };
@@ -100,7 +107,7 @@ export const ServersSection: React.FC = () => {
      * Handle opening edit server modal
      */
     const handleOpenEditServerModal = (serverIndex: string) => {
-        const server = oaiDoc.getServers()[parseInt(serverIndex)] as OpenApi30Server;
+        const server = servers[parseInt(serverIndex)] as OpenApi30Server;
         // Fire selection event
         select(server);
         setEditServerUrl(server.getUrl());
@@ -154,11 +161,11 @@ export const ServersSection: React.FC = () => {
     return (
         <>
             <ExpandablePanel
-                title="Servers"
-                nodePath="/servers"
+                title={title}
+                nodePath={nodePath}
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
-                className="main-form__section"
+                className="form__section"
                 actions={
                     <>
                         <Button
@@ -178,7 +185,7 @@ export const ServersSection: React.FC = () => {
                     </>
                 }
             >
-                <div className="main-form__sectionbody">
+                <div className="form__sectionbody">
                     {servers.length === 0 ? (
                         <p style={{ color: 'var(--pf-v6-global--Color--200)', fontStyle: 'italic' }}>
                             No servers defined. Use the + icon to create one.
