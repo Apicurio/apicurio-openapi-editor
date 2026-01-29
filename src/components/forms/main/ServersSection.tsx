@@ -166,6 +166,7 @@ export const ServersSection: React.FC<ServersSectionProps> = ({ parent, title = 
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
                 className="form__section"
+                badgeCount={servers.length}
                 actions={
                     <>
                         <Button

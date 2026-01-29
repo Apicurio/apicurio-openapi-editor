@@ -402,6 +402,7 @@ export const SecuritySection: React.FC = () => {
                 isExpanded={isSchemesExpanded}
                 onToggle={setIsSchemesExpanded}
                 className="form__section"
+                badgeCount={securitySchemes.length}
                 actions={
                     <>
                         <Button
@@ -534,6 +535,7 @@ export const SecuritySection: React.FC = () => {
                 isExpanded={isRequirementsExpanded}
                 onToggle={setIsRequirementsExpanded}
                 className="form__section"
+                badgeCount={securityRequirements.length}
                 actions={
                     <>
                         <Button

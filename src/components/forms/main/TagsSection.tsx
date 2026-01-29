@@ -131,6 +131,7 @@ export const TagsSection: React.FC = () => {
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
                 className="form__section"
+                badgeCount={tags.length}
                 actions={
                     <>
                         <Button
