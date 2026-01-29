@@ -53,7 +53,7 @@ export const VendorExtensionsSection: React.FC<VendorExtensionsSectionProps> = (
     nodePath.append(new NodePathSegment("x-*", false));
     const { select } = useSelection();
 
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(() => extensionNames.length > 0);
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editExtensionName, setEditExtensionName] = useState<string | null>(null);
@@ -131,6 +131,7 @@ export const VendorExtensionsSection: React.FC<VendorExtensionsSectionProps> = (
                 isExpanded={isExpanded}
                 onToggle={setIsExpanded}
                 className="form__section"
+                badgeCount={extensionNames.length}
                 actions={
                     <>
                         <Button
