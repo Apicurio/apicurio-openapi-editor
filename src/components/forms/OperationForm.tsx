@@ -220,7 +220,7 @@ export const OperationForm: React.FC<OperationFormProps> = ({
 
     if (operation) {
         return (
-            <div style={{ paddingTop: '1rem' }}>
+            <div style={{ paddingTop: '1rem', paddingLeft: '20px', paddingRight: '20px' }}>
                 <Form>
                     <PropertyInput
                         model={operation}

@@ -2,7 +2,14 @@
  * Command to create a new operation on a path item
  */
 
-import { Document, OpenApi30PathItem, OpenApi30Operation, NodePath, NodePathUtil } from '@apicurio/data-models';
+import {
+    Document,
+    OpenApi30PathItem,
+    OpenApi30Operation,
+    NodePath,
+    NodePathUtil,
+    OpenApi31PathItem, OpenApi20PathItem
+} from '@apicurio/data-models';
 import { BaseCommand } from './BaseCommand';
 
 /**
@@ -18,7 +25,7 @@ export class CreateOperationCommand extends BaseCommand {
      * @param pathItem The path item to create the operation on
      * @param method The HTTP method (get, post, put, delete, options, head, patch, trace)
      */
-    constructor(pathItem: OpenApi30PathItem, method: string) {
+    constructor(pathItem: OpenApi20PathItem | OpenApi30PathItem | OpenApi31PathItem, method: string) {
         super();
         this._pathItemPath = NodePathUtil.createNodePath(pathItem);
         this._method = method.toLowerCase();

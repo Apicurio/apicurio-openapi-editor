@@ -19,11 +19,14 @@ import {EllipsisVIcon} from '@patternfly/react-icons';
 import {useDocument} from '@hooks/useDocument';
 import {useCommand} from '@hooks/useCommand';
 import {
+    Extensible,
     Node,
     NodePathSegment,
     NodePathUtil,
+    OpenApi20PathItem,
     OpenApi30Operation,
     OpenApi30PathItem,
+    OpenApi31PathItem,
     OpenApiParameter,
     OpenApiServersParent
 } from '@apicurio/data-models';
@@ -41,6 +44,7 @@ import {ParameterSection} from '@components/common/ParameterSection';
 import {ParameterModal} from '@components/modals/ParameterModal';
 import {OperationForm} from './OperationForm';
 import {ServersSection} from '@components/forms/main/ServersSection';
+import {VendorExtensionsSection} from '@components/forms/main/VendorExtensionsSection';
 import "./PathForm.css";
 
 /**
@@ -65,7 +69,7 @@ export const PathForm: React.FC = () => {
     const { selectedPath, selectedNode, selectRoot, navigationObject, select } = useSelection();
 
     // Extract path information early (before hooks)
-    const pathItem: OpenApi30PathItem = navigationObject as OpenApi30PathItem;
+    const pathItem: OpenApi20PathItem | OpenApi30PathItem | OpenApi31PathItem = navigationObject as OpenApi20PathItem | OpenApi30PathItem | OpenApi31PathItem;
     const pathName = pathItem.mapPropertyName();
 
     // Track selected operation tab
@@ -452,6 +456,8 @@ export const PathForm: React.FC = () => {
                 onEditParameter={handleEditParameter}
                 onDeleteParameter={handleDeleteParameter}
             />
+
+            <VendorExtensionsSection parent={pathItem as unknown as Node & Extensible} />
 
             <Divider style={{ margin: '1.5rem 0' }} />
 
