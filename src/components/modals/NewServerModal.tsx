@@ -118,6 +118,7 @@ export const NewServerModal: React.FC<NewServerModalProps> = ({ isOpen, onClose,
             onClose={handleClose}
             aria-labelledby="new-server-modal-title"
             aria-describedby="new-server-modal-body"
+            elementToFocus="#server-url"
         >
             <ModalHeader title="Create New Server" labelId="new-server-modal-title" />
             <ModalBody id="new-server-modal-body">

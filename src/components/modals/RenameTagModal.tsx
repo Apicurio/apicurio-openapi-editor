@@ -126,6 +126,7 @@ export const RenameTagModal: React.FC<RenameTagModalProps> = ({ isOpen, currentN
             onClose={handleClose}
             aria-labelledby="rename-tag-modal-title"
             aria-describedby="rename-tag-modal-body"
+            elementToFocus="#tag-name"
         >
             <ModalHeader title="Rename Tag" labelId="rename-tag-modal-title" />
             <ModalBody id="rename-tag-modal-body">
