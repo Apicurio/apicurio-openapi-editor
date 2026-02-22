@@ -114,6 +114,7 @@ export const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({ isOpen, on
             onClose={handleClose}
             aria-labelledby="create-schema-modal-title"
             aria-describedby="create-schema-modal-body"
+            elementToFocus="#schema-name"
         >
             <ModalHeader title="Create New Schema" labelId="create-schema-modal-title" />
             <ModalBody id="create-schema-modal-body">

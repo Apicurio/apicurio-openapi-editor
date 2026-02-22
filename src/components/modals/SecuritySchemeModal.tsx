@@ -411,6 +411,7 @@ export const SecuritySchemeModal: React.FC<SecuritySchemeModalProps> = ({
             isOpen={isOpen}
             onClose={handleClose}
             aria-labelledby="security-scheme-modal-title"
+            elementToFocus="#scheme-name"
         >
             <ModalHeader
                 title={isEditMode ? "Edit Security Scheme" : "Add Security Scheme"}

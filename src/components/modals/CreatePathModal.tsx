@@ -107,6 +107,7 @@ export const CreatePathModal: React.FC<CreatePathModalProps> = ({ isOpen, onClos
             onClose={handleClose}
             aria-labelledby="create-path-modal-title"
             aria-describedby="create-path-modal-body"
+            elementToFocus="#path-name"
         >
             <ModalHeader title="Create New Path" labelId="create-path-modal-title" />
             <ModalBody id="create-path-modal-body">

@@ -118,6 +118,7 @@ export const NewTagModal: React.FC<NewTagModalProps> = ({ isOpen, onClose, onCon
             onClose={handleClose}
             aria-labelledby="new-tag-modal-title"
             aria-describedby="new-tag-modal-body"
+            elementToFocus="#tag-name"
         >
             <ModalHeader title="Create New Tag" labelId="new-tag-modal-title" />
             <ModalBody id="new-tag-modal-body">
