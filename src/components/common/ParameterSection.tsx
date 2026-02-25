@@ -91,7 +91,7 @@ export const ParameterSection: React.FC<ParameterSectionProps> = ({
             isExpanded={isExpanded}
             onToggle={onToggle}
             className="form__section"
-            badgeCount={parameters.length > 0 ? parameters.length : undefined}
+            badgeCount={parameters.length}
             actions={
                 onAddParameter ? (
                     <Tooltip content="Add parameter">

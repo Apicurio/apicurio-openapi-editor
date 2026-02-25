@@ -103,7 +103,7 @@ export const ExpandablePanel: React.FC<ExpandablePanelProps> = ({
                     aria-expanded={isExpanded}
                 >
                     {title}
-                    {badgeCount !== undefined && (
+                    {(badgeCount !== undefined && badgeCount > 0) && (
                         <Badge isRead style={{ marginLeft: '0.5rem' }}>
                             {badgeCount}
                         </Badge>
