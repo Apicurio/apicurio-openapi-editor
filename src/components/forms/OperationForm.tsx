@@ -16,6 +16,7 @@ import { OpenApi30Operation, OpenApiParameter } from '@apicurio/data-models';
 import { PropertyInput } from '@components/common/PropertyInput';
 import { ParameterSection } from '@components/common/ParameterSection';
 import { RequestBodySection } from '@components/common/RequestBodySection';
+import { ResponsesSection } from '@components/common/ResponsesSection';
 import { ParameterModal } from '@components/modals/ParameterModal';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
@@ -299,6 +300,10 @@ export const OperationForm: React.FC<OperationFormProps> = ({
 
                 {specVersion !== '2.0' && operation && (
                     <RequestBodySection operation={operation} method={method} />
+                )}
+
+                {operation && (
+                    <ResponsesSection operation={operation} />
                 )}
 
                 {/* Parameter Modal (Create/Edit) */}
