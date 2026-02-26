@@ -52,6 +52,7 @@ export interface OperationFormProps {
  */
 export const OperationForm: React.FC<OperationFormProps> = ({
     operation,
+    method,
     label,
     onCreateOperation
 }) => {
@@ -297,7 +298,7 @@ export const OperationForm: React.FC<OperationFormProps> = ({
                 />
 
                 {specVersion !== '2.0' && operation && (
-                    <RequestBodySection operation={operation} />
+                    <RequestBodySection operation={operation} method={method} />
                 )}
 
                 {/* Parameter Modal (Create/Edit) */}

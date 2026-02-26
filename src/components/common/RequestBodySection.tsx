@@ -17,7 +17,7 @@ import {
     DropdownList,
     Label,
     MenuToggle,
-    Tooltip, Form, Card,
+    Tooltip, Form, Card, Alert,
 } from '@patternfly/react-core';
 import {
     EllipsisVIcon,
@@ -45,11 +45,19 @@ import { DeleteMediaTypeCommand } from '@commands/DeleteMediaTypeCommand';
 import { ChangeMediaTypeSchemaCommand } from '@commands/ChangeMediaTypeSchemaCommand';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
 
+/** HTTP methods where a request body is unusual */
+const UNUSUAL_BODY_METHODS = ['get', 'delete', 'options', 'head', 'trace'];
+
 export interface RequestBodySectionProps {
     /**
      * The operation to edit the request body for
      */
     operation: OpenApi30Operation;
+
+    /**
+     * The HTTP method (e.g. "get", "post", "put")
+     */
+    method: string;
 }
 
 /**
@@ -111,7 +119,7 @@ function getAvailableSchemas(document: any): string[] {
 /**
  * Request body section component for editing the request body on an operation
  */
-export const RequestBodySection: React.FC<RequestBodySectionProps> = ({ operation }) => {
+export const RequestBodySection: React.FC<RequestBodySectionProps> = ({ operation, method }) => {
     const { executeCommand } = useCommand();
     const { select } = useSelection();
     const { document } = useDocument();
@@ -270,6 +278,14 @@ export const RequestBodySection: React.FC<RequestBodySectionProps> = ({ operatio
                 }
             >
                 <Card style={{ padding: '20px' }}>
+                    {UNUSUAL_BODY_METHODS.includes(method.toLowerCase()) && (
+                        <Alert
+                            variant="warning"
+                            isInline
+                            title={`A request body is unusual for ${method.toUpperCase()} operations and may not be supported by all clients.`}
+                            style={{ marginBottom: '1rem' }}
+                        />
+                    )}
                     <Form>
                         <PropertyInput
                             model={requestBody}
