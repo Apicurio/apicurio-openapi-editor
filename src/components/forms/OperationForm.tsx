@@ -15,9 +15,11 @@ import {
 import { OpenApi30Operation, OpenApiParameter } from '@apicurio/data-models';
 import { PropertyInput } from '@components/common/PropertyInput';
 import { ParameterSection } from '@components/common/ParameterSection';
+import { RequestBodySection } from '@components/common/RequestBodySection';
 import { ParameterModal } from '@components/modals/ParameterModal';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
+import { useDocument } from '@hooks/useDocument';
 import { AddParameterCommand } from '@commands/AddParameterCommand';
 import { DeleteParameterCommand } from '@commands/DeleteParameterCommand';
 import { ChangePropertyCommand } from '@commands/ChangePropertyCommand';
@@ -55,6 +57,7 @@ export const OperationForm: React.FC<OperationFormProps> = ({
 }) => {
     const { executeCommand } = useCommand();
     const { select } = useSelection();
+    const { specVersion } = useDocument();
 
     // Track expandable panel state
     const [isPathParametersExpanded, setIsPathParametersExpanded] = useState(false);
@@ -292,6 +295,10 @@ export const OperationForm: React.FC<OperationFormProps> = ({
                     onEditParameter={handleEditParameter}
                     onDeleteParameter={handleDeleteParameter}
                 />
+
+                {specVersion !== '2.0' && operation && (
+                    <RequestBodySection operation={operation} />
+                )}
 
                 {/* Parameter Modal (Create/Edit) */}
                 <ParameterModal
