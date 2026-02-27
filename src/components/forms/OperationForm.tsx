@@ -17,6 +17,7 @@ import { PropertyInput } from '@components/common/PropertyInput';
 import { ParameterSection } from '@components/common/ParameterSection';
 import { RequestBodySection } from '@components/common/RequestBodySection';
 import { ResponsesSection } from '@components/common/ResponsesSection';
+import { OperationSecuritySection } from '@components/common/OperationSecuritySection';
 import { ParameterModal } from '@components/modals/ParameterModal';
 import { useCommand } from '@hooks/useCommand';
 import { useSelection } from '@hooks/useSelection';
@@ -304,6 +305,10 @@ export const OperationForm: React.FC<OperationFormProps> = ({
 
                 {operation && (
                     <ResponsesSection operation={operation} />
+                )}
+
+                {operation && (
+                    <OperationSecuritySection operation={operation} />
                 )}
 
                 {/* Parameter Modal (Create/Edit) */}
