@@ -20,7 +20,6 @@ import {
     MenuToggle,
     Tab,
     Tabs,
-    TabTitleText,
     Tooltip,
 } from '@patternfly/react-core';
 import {
@@ -161,6 +160,35 @@ function getAvailableSchemas(document: any): string[] {
         return [];
     }
     return Object.keys(schemas).sort();
+}
+
+/**
+ * Get the Label color for a response status code
+ */
+function getStatusCodeColor(statusCode: string): 'green' | 'blue' | 'teal' | 'orange' | 'red' | 'grey' {
+    if (statusCode === 'default') {
+        return 'grey';
+    }
+    const code = parseInt(statusCode, 10);
+    if (isNaN(code)) {
+        return 'grey';
+    }
+    if (code >= 100 && code < 200) {
+        return 'teal';
+    }
+    if (code >= 200 && code < 300) {
+        return 'green';
+    }
+    if (code >= 300 && code < 400) {
+        return 'blue';
+    }
+    if (code >= 400 && code < 500) {
+        return 'orange';
+    }
+    if (code >= 500 && code < 600) {
+        return 'red';
+    }
+    return 'grey';
 }
 
 /**
@@ -461,7 +489,11 @@ export const ResponsesSection: React.FC<ResponsesSectionProps> = ({ operation })
                             <Tab
                                 key={statusCode}
                                 eventKey={statusCode}
-                                title={<TabTitleText>{statusCode}</TabTitleText>}
+                                title={
+                                    <Label color={getStatusCodeColor(statusCode)}>
+                                        {statusCode}
+                                    </Label>
+                                }
                             >
                                 <div style={{ padding: '1rem 0' }}>
                                     {/* Description */}
